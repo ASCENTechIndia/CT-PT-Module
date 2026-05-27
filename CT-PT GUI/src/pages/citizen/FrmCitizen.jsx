@@ -15,7 +15,13 @@ const FrmCitizen = () => {
   // Dropdown options
   const wardOptions = ["Ward A", "Ward B", "Ward C", "Ward D", "Ward E"];
   const toiletOptions = ["Toilet 1", "Toilet 2", "Toilet 3"];
-  const complaintTypeOptions = ["Sanitation", "Water Leakage", "Road Damage", "Street Light", "Other"];
+  const complaintTypeOptions = [
+    "Sanitation",
+    "Water Leakage",
+    "Road Damage",
+    "Street Light",
+    "Other",
+  ];
   const unitOptions = Array.from({ length: 10 }, (_, i) => i + 1);
 
   // Handle multiple image upload & preview
@@ -58,6 +64,13 @@ const FrmCitizen = () => {
     <div className="main-wrapper">
       {/* Header Section */}
       <div className="top-header">
+        <div>
+          <img
+            src="/assets/images/dhule-logo.png"
+            alt=""
+            style={{ height: "50px" }}
+          />
+        </div>
         <div className="page-heading">
           <div className="page-title">Register Your Complaint</div>
           <div className="page-subtitle">
@@ -91,7 +104,9 @@ const FrmCitizen = () => {
             {/* Select Toilet */}
             <div className="field-box">
               <i className="bi bi-building"></i>
-              <select {...register("toilet", { required: "Toilet is required" })}>
+              <select
+                {...register("toilet", { required: "Toilet is required" })}
+              >
                 <option value="">Select Toilet</option>
                 {toiletOptions.map((toilet) => (
                   <option key={toilet} value={toilet}>
@@ -109,7 +124,11 @@ const FrmCitizen = () => {
             {/* Select Complaint Type - NEW */}
             <div className="field-box">
               <i className="bi bi-ui-checks-grid"></i>
-              <select {...register("complaintType", { required: "Complaint type is required" })}>
+              <select
+                {...register("complaintType", {
+                  required: "Complaint type is required",
+                })}
+              >
                 <option value="">Select Complaint Type</option>
                 {complaintTypeOptions.map((type) => (
                   <option key={type} value={type}>

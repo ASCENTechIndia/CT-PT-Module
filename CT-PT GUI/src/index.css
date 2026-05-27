@@ -17,7 +17,7 @@ body {
 .top-header {
   background: linear-gradient(135deg, #2f88c5, #58abe2);
   color: #fff;
-  padding: 6px 22px 66px;
+  padding: 25px 22px 50px;
   border-bottom-left-radius: 35px;
   border-bottom-right-radius: 35px;
   position: relative;
@@ -53,10 +53,6 @@ body {
 .logo-text p {
   margin: 0;
   font-size: 13px;
-}
-
-.page-heading {
-  margin-top: 28px;
 }
 
 .page-title {
