@@ -20,6 +20,7 @@ import Alerts from './pages/Alerts';
 import Modals from './pages/Modals';
 import Blank from './pages/Blank';
 import CreateAgent from './pages/CreateAgent';
+import FrmCitizen from "./pages/citizen/FrmCitizen";
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -56,6 +57,7 @@ function App() {
             <Route path="/modals" element={<Modals />} />
             <Route path="/blank" element={<Blank />} />
             <Route path="/create-agent" element={<CreateAgent />} />
+            <Route path="/citizen" element={<FrmCitizen />} />
 
             {/* Error Routes */}
             <Route path="/500" element={<ServerError />} />
