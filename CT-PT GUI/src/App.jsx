@@ -4,6 +4,8 @@ import './App.css'
 // Providers
 import { ThemeProvider } from './context/ThemeContext';
 import { SidebarProvider } from './context/SidebarContext';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -33,39 +35,41 @@ import ServerError from './pages/ServerError';
 
 function App() {
   return (
-    <ThemeProvider>
-      <SidebarProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+    <AuthProvider>
+      <ThemeProvider>
+        <SidebarProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Auth Routes - Public */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Main Routes */}
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/add-user" element={<AddUser />} />
-            <Route path="/user-details" element={<UserDetails />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/forms" element={<Forms />} />
-            <Route path="/tables" element={<Tables />} />
-            <Route path="/charts" element={<Charts />} />
-            <Route path="/components" element={<Components />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/modals" element={<Modals />} />
-            <Route path="/blank" element={<Blank />} />
-            <Route path="/create-agent" element={<CreateAgent />} />
-            <Route path="/citizen" element={<FrmCitizen />} />
+              {/* Main Routes - Protected */}
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+              <Route path="/add-user" element={<ProtectedRoute><AddUser /></ProtectedRoute>} />
+              <Route path="/user-details" element={<ProtectedRoute><UserDetails /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/forms" element={<ProtectedRoute><Forms /></ProtectedRoute>} />
+              <Route path="/tables" element={<ProtectedRoute><Tables /></ProtectedRoute>} />
+              <Route path="/charts" element={<ProtectedRoute><Charts /></ProtectedRoute>} />
+              <Route path="/components" element={<ProtectedRoute><Components /></ProtectedRoute>} />
+              <Route path="/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
+              <Route path="/modals" element={<ProtectedRoute><Modals /></ProtectedRoute>} />
+              <Route path="/blank" element={<ProtectedRoute><Blank /></ProtectedRoute>} />
+              <Route path="/create-agent" element={<ProtectedRoute><CreateAgent /></ProtectedRoute>} />
+              <Route path="/register-complaint" element={<FrmCitizen />} />
 
-            {/* Error Routes */}
-            <Route path="/500" element={<ServerError />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </SidebarProvider>
-    </ThemeProvider>
+              {/* Error Routes */}
+              <Route path="/500" element={<ServerError />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SidebarProvider>
+      </ThemeProvider>
+    </AuthProvider>
   )
 }
 

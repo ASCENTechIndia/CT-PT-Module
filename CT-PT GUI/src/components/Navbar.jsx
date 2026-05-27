@@ -1,13 +1,21 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useSidebar } from '../context/SidebarContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
   const { toggleSidebar } = useSidebar();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <nav className="navbar admin-navbar navbar-expand bg-white">
@@ -35,7 +43,7 @@ export default function Navbar() {
         </form>
 
         <div className="navbar-actions ms-auto">
-          <button 
+          {/* <button 
             className="icon-button theme-toggle" 
             type="button" 
             onClick={toggleTheme}
@@ -43,7 +51,7 @@ export default function Navbar() {
             title="Switch color theme"
           >
             <i className={`bi ${isDarkMode ? 'bi-brightness-high' : 'bi-moon-stars'}`} aria-hidden="true"></i>
-          </button>
+          </button> */}
 
           <div className="dropdown">
             <button 
@@ -90,7 +98,7 @@ export default function Navbar() {
                 <li><Link className="dropdown-item" to="/profile" onClick={() => setShowProfile(false)}>Profile</Link></li>
                 <li><Link className="dropdown-item" to="/settings" onClick={() => setShowProfile(false)}>Account settings</Link></li>
                 <li><hr className="dropdown-divider" /></li>
-                <li><Link className="dropdown-item" to="/login" onClick={() => setShowProfile(false)}>Sign out</Link></li>
+                <li><button className="dropdown-item" onClick={handleLogout}>Sign out</button></li>
               </ul>
             )}
           </div>
