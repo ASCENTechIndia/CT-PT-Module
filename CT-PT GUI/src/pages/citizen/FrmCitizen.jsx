@@ -12,19 +12,16 @@ const FrmCitizen = () => {
     reset,
   } = useForm();
 
-  // Ward options (sample – replace with actual data)
+  // Dropdown options
   const wardOptions = ["Ward A", "Ward B", "Ward C", "Ward D", "Ward E"];
   const toiletOptions = ["Toilet 1", "Toilet 2", "Toilet 3"];
-
-  // Unit options 1 to 10
+  const complaintTypeOptions = ["Sanitation", "Water Leakage", "Road Damage", "Street Light", "Other"];
   const unitOptions = Array.from({ length: 10 }, (_, i) => i + 1);
 
   // Handle multiple image upload & preview
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setSelectedImages(files);
-
-    // Generate preview URLs
     const urls = files.map((file) => URL.createObjectURL(file));
     setPreviewUrls(urls);
   };
@@ -37,23 +34,23 @@ const FrmCitizen = () => {
   }, [previewUrls]);
 
   const onSubmit = (data) => {
-    // Combine form data with images
     const formData = new FormData();
     formData.append("ward", data.ward);
+    formData.append("toilet", data.toilet);
+    formData.append("complaintType", data.complaintType);
     formData.append("citizenName", data.citizenName);
     formData.append("mobileNumber", data.mobileNumber);
+    formData.append("remark", data.remark);
     formData.append("unit", data.unit);
     selectedImages.forEach((image, index) => {
       formData.append(`complaintImage${index}`, image);
     });
 
-    // For now, just log to console (you will send to Node.js later)
     console.log("Form Data:", Object.fromEntries(formData));
     alert("Complaint submitted successfully!");
-    reset(); // reset form fields
+    reset();
     setSelectedImages([]);
     setPreviewUrls([]);
-    // Also reset file input
     document.getElementById("imageUpload").value = "";
   };
 
@@ -73,7 +70,7 @@ const FrmCitizen = () => {
       <div className="form-container">
         <div className="form-card">
           <form onSubmit={handleSubmit(onSubmit)}>
-            {/* Ward Dropdown */}
+            {/* Select Ward */}
             <div className="field-box">
               <i className="bi bi-diagram-3"></i>
               <select {...register("ward", { required: "Ward is required" })}>
@@ -91,20 +88,39 @@ const FrmCitizen = () => {
               </p>
             )}
 
+            {/* Select Toilet */}
             <div className="field-box">
-              <i className="bi bi-diagram-3"></i>
+              <i className="bi bi-building"></i>
               <select {...register("toilet", { required: "Toilet is required" })}>
                 <option value="">Select Toilet</option>
-                {toiletOptions.map((ward) => (
-                  <option key={ward} value={ward}>
-                    {ward}
+                {toiletOptions.map((toilet) => (
+                  <option key={toilet} value={toilet}>
+                    {toilet}
                   </option>
                 ))}
-              </select> 
+              </select>
             </div>
             {errors.toilet && (
               <p style={{ color: "red", fontSize: "12px", marginTop: "-10px" }}>
                 {errors.toilet.message}
+              </p>
+            )}
+
+            {/* Select Complaint Type - NEW */}
+            <div className="field-box">
+              <i className="bi bi-ui-checks-grid"></i>
+              <select {...register("complaintType", { required: "Complaint type is required" })}>
+                <option value="">Select Complaint Type</option>
+                {complaintTypeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {errors.complaintType && (
+              <p style={{ color: "red", fontSize: "12px", marginTop: "-10px" }}>
+                {errors.complaintType.message}
               </p>
             )}
 
@@ -144,9 +160,24 @@ const FrmCitizen = () => {
               </p>
             )}
 
+            {/* Remark - NEW (textarea) */}
+            <div className="field-box">
+              <i className="bi bi-chat-left-text"></i>
+              <textarea
+                placeholder="Remark (additional details)"
+                rows="3"
+                {...register("remark", { required: "Remark is required" })}
+              ></textarea>
+            </div>
+            {errors.remark && (
+              <p style={{ color: "red", fontSize: "12px", marginTop: "-10px" }}>
+                {errors.remark.message}
+              </p>
+            )}
+
             {/* Unit Dropdown */}
             <div className="field-box">
-              <i className="bi bi-ui-checks-grid"></i>
+              <i className="bi bi-grid-3x3-gap-fill"></i>
               <select {...register("unit", { required: "Unit is required" })}>
                 <option value="">Select Unit</option>
                 {unitOptions.map((unit) => (
