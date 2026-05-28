@@ -1,4 +1,4 @@
-const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService} = require('./registerComplaint.service');
+const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, compListService} = require('./registerComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 function requestMeta(req) {
@@ -75,6 +75,15 @@ async function registerComplaint(req, res, next) {
   }
 }
 
+async function getComplaintList(req, res, next) {
+  try {
+    const rows = await compListService(req.query.ulbid);
+    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Complaint List completed' );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Complaint List search error');
+    return next(error);
+  }
+}
 
-
-module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint };
+module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, getComplaintList };

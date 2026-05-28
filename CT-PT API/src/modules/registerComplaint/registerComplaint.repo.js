@@ -38,7 +38,6 @@ async function repoComplaintTypeList(ulbid) {
 
 
 async function regComplaintRepo(payload) {
-
   const statement = `
     BEGIN
       aorts.aorts_citizencomplaint_ins(
@@ -63,7 +62,7 @@ async function regComplaintRepo(payload) {
  );
     END;
   `;
-    const binds = {
+  const binds = {
     // in_UserId: payload.userId,
     in_UserId: payload.userId,
     in_ULBId: payload.ulbId,
@@ -75,66 +74,104 @@ async function regComplaintRepo(payload) {
     in_unitno: payload.unitNo,
     in_complaintstatus: payload.complaintStatus,
     in_complntremark: payload.complntRemark,
-  
-  in_unitimg1: {
-    val: payload.unitImg1
-      ? Buffer.from(payload.unitImg1, "base64")
-      : null,
-    type: oracledb.BLOB
-  },
 
-  in_unitimg2: {
-    val: payload.unitImg2
-      ? Buffer.from(payload.unitImg2, "base64")
-      : null,
-    type: oracledb.BLOB
-  },
+    in_unitimg1: {
+      val: payload.unitImg1 ? Buffer.from(payload.unitImg1, "base64") : null,
+      type: oracledb.BLOB,
+    },
 
-  in_unitimg3: {
-    val: payload.unitImg3
-      ? Buffer.from(payload.unitImg3, "base64")
-      : null,
-    type: oracledb.BLOB
-  },
+    in_unitimg2: {
+      val: payload.unitImg2 ? Buffer.from(payload.unitImg2, "base64") : null,
+      type: oracledb.BLOB,
+    },
 
-  in_unitimg4: {
-    val: payload.unitImg4
-      ? Buffer.from(payload.unitImg4, "base64")
-      : null,
-    type: oracledb.BLOB
-  },
+    in_unitimg3: {
+      val: payload.unitImg3 ? Buffer.from(payload.unitImg3, "base64") : null,
+      type: oracledb.BLOB,
+    },
 
-  in_unitimg5: {
-    val: payload.unitImg5
-      ? Buffer.from(payload.unitImg5, "base64")
-      : null,
-    type: oracledb.BLOB
-  },
-    
+    in_unitimg4: {
+      val: payload.unitImg4 ? Buffer.from(payload.unitImg4, "base64") : null,
+      type: oracledb.BLOB,
+    },
+
+    in_unitimg5: {
+      val: payload.unitImg5 ? Buffer.from(payload.unitImg5, "base64") : null,
+      type: oracledb.BLOB,
+    },
+
     OUT_ERRORCODE: {
-  dir: oracledb.BIND_OUT,
-  type: oracledb.NUMBER
-},
+      dir: oracledb.BIND_OUT,
+      type: oracledb.NUMBER,
+    },
 
-OUT_ERRORMSG: {
-  dir: oracledb.BIND_OUT,
-  type: oracledb.STRING,
-  maxSize: 1000
-}
-
+    OUT_ERRORMSG: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
   };
-    const result = await executeProcedure({
+  const result = await executeProcedure({
     statement,
     binds,
-    useTx: false
+    useTx: false,
   });
 
   const out = result.outBinds;
 
- return {
-  errorCode: out.OUT_ERRORCODE,
-  message: out.OUT_ERRORMSG
-};
+  return {
+    errorCode: out.OUT_ERRORCODE,
+    message: out.OUT_ERRORMSG,
+  };
 }
 
-module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo };
+async function lobToBase64(lob) {
+  if (!lob) return null;
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    lob.on("data", (chunk) => {
+      chunks.push(chunk);
+    });
+    lob.on("end", () => {
+      const buffer = Buffer.concat(chunks);
+      resolve(buffer.toString("base64"));
+    });
+    lob.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
+
+async function compListRepo(ulbid) {
+  let sql = `
+    select *
+    from aorts_ctptcitizencomplaint_mas
+    where num_complaint_ulbid = :ulbid
+  `;
+  const binds = {
+    ulbid: Number(ulbid),
+  };
+  const result = await executeQuery(sql, binds);
+  const rows = result.rows || [];
+  for (const row of rows) {
+    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG1,
+    );
+    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG2,
+    );
+    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG3,
+    );
+    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG4,
+    );
+    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG5,
+    );
+  }
+
+  return rows;
+}
+
+module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo };
