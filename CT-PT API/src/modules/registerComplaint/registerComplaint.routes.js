@@ -11,6 +11,6 @@ router.get('/wardList', getWardList);
 router.get('/toiletList', getToiletList);
 router.get('/complaintTypeList', getComplaintTypeList);
 router.post('/insertComplaint', validate(complaintRegistrationSchema), registerComplaint );
-router.get('/getComplaintList', getComplaintList);
+router.get('/getCitizenComplaintList', getComplaintList);
 
 module.exports = router;
