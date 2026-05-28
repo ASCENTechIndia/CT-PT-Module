@@ -23,6 +23,7 @@ import Modals from './pages/Modals';
 import Blank from './pages/Blank';
 import CreateAgent from './pages/CreateAgent';
 import FrmCitizen from "./pages/citizen/FrmCitizen";
+import ComplaintsTable from "./pages/supervisior/ComplaintsTable"
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -61,6 +62,7 @@ function App() {
               <Route path="/blank" element={<ProtectedRoute><Blank /></ProtectedRoute>} />
               <Route path="/create-agent" element={<ProtectedRoute><CreateAgent /></ProtectedRoute>} />
               <Route path="/register-complaint" element={<FrmCitizen />} />
+              <Route path="/conplaint-table" element={<ComplaintsTable />} />
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />
