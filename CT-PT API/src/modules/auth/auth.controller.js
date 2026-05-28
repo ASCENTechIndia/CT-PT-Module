@@ -13,7 +13,7 @@ async function login(req, res, next) {
 
     } catch (_error) {
       logApiError(req, 400, 'Invalid encrypted password', 'Login failed: invalid encrypted password payload');
-      console.log("Password encryption error:", encryptPass);
+      // console.log("Password encryption error:", encryptPass);
       return res.fail('Invalid encrypted password', 400);
     }
 
