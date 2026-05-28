@@ -1,4 +1,4 @@
-const { authComplaintService, getCompListForSupService } = require('./authComplaint.service');
+const { authComplaintService, getCompListForSupService, getCompListSIService } = require('./authComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 
@@ -52,5 +52,17 @@ async function getCompListForSup(req, res, next) {
   }
 }
 
+async function getCompListForSI(req, res, next) {
+  try {
+    const rows = await getCompListSIService(req.query.ulbid);
+    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Complaint List for SI completed' );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Complaint List for SI  search error');
+  return next(error);
+  }
+}
 
-module.exports = { authComplaint,  getCompListForSup };
+
+
+module.exports = { authComplaint, getCompListForSup, getCompListForSI };
