@@ -4,8 +4,8 @@ import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
 
-const ApplicationList = () => {
-  const { user } = useAuth();
+const ApplicationListSI = () => {
+    const { user } = useAuth();
   const [applications, setApplications] = useState([]);
   const [stageWiseImages, setStageWiseImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ const ApplicationList = () => {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        "/authComplaint/getCompListForSup?ulbid=4"
+        "/authComplaint/getCompListForSI?ulbid=4"
       );
 
       if (response.success && response.data) {
@@ -134,7 +134,7 @@ const ApplicationList = () => {
         userId: user.userId, // TODO: Get from user context/login
         applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
         ulbId: 4,
-        mode: 1, // 1 for supervisor
+        mode: 2, // 1 for supervisor
         status: "A", // A for approve
         remark: supervisorRemark,
       };
@@ -180,7 +180,7 @@ const ApplicationList = () => {
         userId: user.userId, // TODO: Get from user context/login
         applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
         ulbId: 4,
-        mode: 1, // 1 for supervisor
+        mode: 2, // 1 for supervisor
         status: "R", // R for reject
         remark: supervisorRemark,
       };
@@ -407,20 +407,41 @@ const ApplicationList = () => {
                           </div>
                           <div className="col-md-12">
                             <label className="form-label fw-semibold text-muted">
-                              Remark
+                              Vendor Remark
                             </label>
                             <p className="h6 mb-0">
                               {selectedApplication.VAR_EMPCTPTENTRY_REMARK}
                             </p>
                           </div>
+                          {/* <div className="col-md-12">
+                            <label className="form-label fw-semibold text-muted">
+                              Supervisor Remark
+                            </label>
+                            <p className="h6 mb-0">
+                              {selectedApplication.VAR_EMPCTPTENTRY_REMARK}
+                            </p>
+                          </div> */}
                         </div>
                       </div>
                     </div>
 
+                    <div className="card mb-3">
+                      <div className="card-header">
+                        <h6 className="mb-0">Supervisor Action</h6>
+                      </div>
+                      <div className="card-body">
+                        <label className="form-label fw-semibold">
+                          Remark
+                        </label>
+                        <small className="text-muted mt-2 d-block">
+                         {selectedApplication.SUPERVISOR_REMARK}
+                         </small>
+                      </div>
+                    </div>
                     {/* Supervisor Action */}
                     <div className="card">
                       <div className="card-header">
-                        <h6 className="mb-0">Supervisor Action</h6>
+                        <h6 className="mb-0">Sanitary Inspector Action</h6>
                       </div>
                       <div className="card-body">
                         <label className="form-label fw-semibold">
@@ -549,4 +570,4 @@ const ApplicationList = () => {
   );
 };
 
-export default ApplicationList;
+export default ApplicationListSI;

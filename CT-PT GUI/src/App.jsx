@@ -25,7 +25,7 @@ import CreateAgent from './pages/CreateAgent';
 import FrmCitizen from "./pages/citizen/FrmCitizen";
 import ComplaintsTable from "./pages/supervisior/ComplaintsTable"
 import ApplicationList from "./pages/supervisior/ApplicationList"
-
+import ApplicationListSI from "./pages/supervisior/ApplicationListSI"
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -65,6 +65,7 @@ function App() {
               <Route path="/register-complaint" element={<FrmCitizen />} />
               <Route path="/complaint-list" element={<ComplaintsTable />} />
               <Route path="/application-list" element={<ApplicationList />} />
+              <Route path="/application-list-sanitary" element={<ApplicationListSI />} />
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />

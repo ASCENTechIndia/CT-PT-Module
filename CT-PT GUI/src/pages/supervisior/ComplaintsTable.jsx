@@ -38,7 +38,7 @@ const ComplaintsTable = () => {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        "/registerComplaint/getComplaintList?ulbid=4"
+        "/registerComplaint/getCitizenComplaintList?ulbid=4"
       );
 
       if (response.success && response.data) {
