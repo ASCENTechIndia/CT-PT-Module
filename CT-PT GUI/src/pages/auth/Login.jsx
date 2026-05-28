@@ -15,6 +15,7 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors },
+    reset
   } = useForm({
     defaultValues: {
       userId: "",
@@ -23,7 +24,7 @@ export default function Login() {
   });
 
   const onSubmit = async (values) => {
-    console.log(values);
+    // console.log(values);
     // e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -31,7 +32,7 @@ export default function Login() {
     try {
       // Validate inputs
       if (!values.userId || !values.password) {
-        setError('Email and password are required.');
+        setError('User ID and password are required.');
         setIsLoading(false);
         return;
       }
@@ -49,25 +50,35 @@ export default function Login() {
         "logFlag": "Y"
       };
 
-      console.log(payload);
+      // console.log(payload);
 
       // Simulate API call (replace with actual API)
       const response = await apiClient.post(`/auth/login`, payload);
-      console.log(response);
-      // In a real app, you would call your backend API here
-      const userData = {
-        id: Math.random().toString(36).substring(7),
-        email,
-        name: email.split('@')[0],
-        rememberMe,
-        loginTime: new Date().toISOString(),
-      };
+      // console.log(response);
 
-      // Call login to update auth context and store in localStorage
-      login(userData);
+
+      if (response.success) {
+        const userData = response?.data?.user;
+        login(userData);
+        reset();
+        navigate("/");
+      } else {
+        setError('Login failed. Please try again.');
+      }
+      // return;
+      // In a real app, you would call your backend API here
+      // const userData = {
+      //   id: Math.random().toString(36).substring(7),
+      //   email,
+      //   name: email.split('@')[0],
+      //   rememberMe,
+      //   loginTime: new Date().toISOString(),
+      // };
+
+      // // Call login to update auth context and store in localStorage
+      // login(userData);
 
       // Redirect to dashboard
-      navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
@@ -79,7 +90,13 @@ export default function Login() {
     <div>
       <main className="auth-page">
         <section className="auth-card">
-          {/* <Link className="auth-brand" to="/"><span className="brand-icon"><i className="bi bi-grid-1x2-fill" aria-hidden="true"></i></span><span><strong>adminHMD</strong><small>Sign in to your admin workspace.</small></span></Link> */}
+          <div className="auth-brand">
+            <img src={logo} alt="Dhule Municipal Corporation Logo" className='m-auto' />
+          {/* <span className="brand-icon"> */}
+            {/* <i className="bi bi-grid-1x2-fill" aria-hidden="true"></i> */}
+          {/* </span> */}
+          {/* <span><strong>adminHMD</strong><small>Sign in to your admin workspace.</small></span> */}
+          </div>
           <form
             className="needs-validation"
             noValidate
