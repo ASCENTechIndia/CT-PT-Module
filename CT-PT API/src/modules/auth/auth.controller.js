@@ -25,7 +25,7 @@ async function login(req, res, next) {
       payload.ipaddr,
       payload.hostname,
       payload.source,
-      payload.deptid
+      // payload.deptid
     );
     // console.log("Login result:", result);
     if (!result.success) {

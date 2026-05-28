@@ -7,7 +7,7 @@ const loginSchema = z.object({
   ipaddr: z.string().optional().nullable().default(''),
   source: z.string().optional().nullable().default('RW'),
   hostname: z.string().optional().nullable().default(''),
-  deptid: z.coerce.number().int().optional().default(1507),
+  // deptid: z.coerce.number().int().optional().default(1507),
 });
 
 module.exports = {
