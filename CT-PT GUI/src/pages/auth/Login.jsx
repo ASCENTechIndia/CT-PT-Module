@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useForm } from 'react-hook-form';
 import apiClient from '../../services/apiClient';
-import logo from "../../../public/assets/images/dhule-logo.png"
+import logo from "../../../public/assets/images/dhule-logo.png";
+import GetIPAddress from '../../utils/IpHelper';
+import config from '../../utils/config';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -42,20 +44,20 @@ export default function Login() {
       //   setIsLoading(false);
       //   return;
       // }
+      const ipAddress = await GetIPAddress();
       const payload = {
         "userId": values.userId,
         "password": values.password,
-        "corpId": 10001,
-        "ulbId": 4,
-        "logFlag": "Y"
+        "macaddr": config.macAddress,
+        "ipaddr": ipAddress,
+        "hostname": config.hostName,
+        "source": config.source
       };
 
-      // console.log(payload);
+
 
       // Simulate API call (replace with actual API)
       const response = await apiClient.post(`/auth/login`, payload);
-      // console.log(response);
-
 
       if (response.success) {
         const userData = response?.data?.user;
@@ -92,10 +94,10 @@ export default function Login() {
         <section className="auth-card">
           <div className="auth-brand">
             <img src={logo} alt="Dhule Municipal Corporation Logo" className='m-auto' />
-          {/* <span className="brand-icon"> */}
+            {/* <span className="brand-icon"> */}
             {/* <i className="bi bi-grid-1x2-fill" aria-hidden="true"></i> */}
-          {/* </span> */}
-          {/* <span><strong>adminHMD</strong><small>Sign in to your admin workspace.</small></span> */}
+            {/* </span> */}
+            {/* <span><strong>adminHMD</strong><small>Sign in to your admin workspace.</small></span> */}
           </div>
           <form
             className="needs-validation"
@@ -134,17 +136,17 @@ export default function Login() {
                   }`}
                 id="UserID"
                 type="text"
-                inputMode="numeric"
+                // inputMode="numeric"
                 maxLength={10}
-                onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^0-9]/g, "");
-                }}
+                // onInput={(e) => {
+                //   e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                // }}
                 {...register("userId", {
                   required: "User ID is required",
-                  pattern: {
-                    value: /^[0-9]+$/,
-                    message: "User ID must be numeric only",
-                  },
+                  // pattern: {
+                  //   value: /^[0-9]+$/,
+                  //   message: "User ID must be numeric only",
+                  // },
                 })}
               />
 
