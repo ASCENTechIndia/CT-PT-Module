@@ -42,31 +42,36 @@ async function getComplaintTypeList(req, res, next) {
 }
 
 async function registerComplaint(req, res, next) {
-   try {
+  try {
     const payload = req.body;
+
     const out = await regComplaintService(payload);
 
-    const isSuccess = String(out.Out_errorCode) === '9999';
+    console.log("OUT:", out);
+
+    const isSuccess = String(out.errorCode) === "9999";
+
     if (isSuccess) {
-      logApiSuccess(req, 200, `Complaint Registered Successfully`);
+      logApiSuccess(req, 200, "Complaint Registered Successfully");
     } else {
-      logApiError(req, 400, out.Out_ErrorMsg, `Complaint Registration failed`);
+      logApiError(req, 400, out.message, "Complaint Registration failed");
     }
 
     auditLog({
-      action: 'COMPLAINT_REGISTRATION',
-      actor: req.user?.userId || 'system',
- module: 'users',
-      entityId: out.Out_User,
-      status: isSuccess ? 'SUCCESS' : 'FAILED',
-      details: { outErrorCode: out.Out_errorCode, outErrorMsg: out.Out_ErrorMsg },
+      action: "COMPLAINT_REGISTRATION",
+      actor: req.user?.userId || "system",
+      module: "users",
+      status: isSuccess ? "SUCCESS" : "FAILED",
+      details: {
+        outErrorCode: out.errorCode,
+        outErrorMsg: out.message,
+      },
       requestMeta: requestMeta(req),
     });
-
     return res.ok(out);
   } catch (error) {
-logApiError(req, 500, error.message, 'Complaint Registration error');
- return next(error);
+    logApiError(req, 500, error.message, "Complaint Registration error");
+    return next(error);
   }
 }
 
