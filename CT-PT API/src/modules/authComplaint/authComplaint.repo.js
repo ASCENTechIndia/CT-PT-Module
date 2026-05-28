@@ -186,7 +186,7 @@ async function compListforSIRepo(ulbid) {
 
       st.var_ctptstage_status,
       st.var_ctptstage_name,
-
+     e.var_empctptentry_supremark AS Supervisor_remark,
       var_empctptentry_supflag,
       var_empctptentry_siflag,
 
