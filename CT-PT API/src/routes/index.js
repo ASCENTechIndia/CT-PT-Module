@@ -12,5 +12,6 @@ router.get('/ready', (req, res) => {
 });
 
 router.use('/auth', authRoutes);
+router.use('/registerComplaint',require('../modules/registerComplaint/registerComplaint.routes'));
 
 module.exports = router;
