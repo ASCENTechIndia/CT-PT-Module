@@ -1,4 +1,4 @@
-const { repoWardList, repoToiletList, repoComplaintTypeList } = require('./registerComplaint.repo');
+const { repoWardList, repoToiletList, repoComplaintTypeList,regComplaintRepo } = require('./registerComplaint.repo');
 
 async function serviceWardList(ulbid) {
   return repoWardList(ulbid);
@@ -9,4 +9,8 @@ async function serviceToiletList(ulbid, wardid) {
 async function serviceComplaintTypeList(ulbid) {
   return repoComplaintTypeList(ulbid);
 }
-module.exports = { serviceWardList, serviceToiletList, serviceComplaintTypeList };
+
+async function regComplaintService(payload) {
+  return regComplaintRepo(payload);
+}
+module.exports = { serviceWardList, serviceToiletList, serviceComplaintTypeList, regComplaintService };

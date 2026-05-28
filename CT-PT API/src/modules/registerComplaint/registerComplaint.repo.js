@@ -36,4 +36,105 @@ async function repoComplaintTypeList(ulbid) {
   return result.rows || [];
 }
 
-module.exports = { repoWardList, repoToiletList, repoComplaintTypeList };
+
+async function regComplaintRepo(payload) {
+
+  const statement = `
+    BEGIN
+      aorts.aorts_citizencomplaint_ins(
+        :in_UserId,
+        :in_ULBId,
+        :in_wardid,
+        :in_toiletid,
+        :in_complainttypeid,
+        :in_citizenmn,
+        :in_mobileno,
+        :in_unitno,
+        :in_complaintstatus,
+        :in_complntremark,
+        :in_unitimg1,
+        :in_unitimg2,
+        :in_unitimg3,
+        :in_unitimg4,
+        :in_unitimg5,
+        :OUT_ERRORCODE,
+       :OUT_ERRORMSG
+
+ );
+    END;
+  `;
+    const binds = {
+    // in_UserId: payload.userId,
+    in_UserId: payload.userId,
+    in_ULBId: payload.ulbId,
+    in_wardid: payload.wardId,
+    in_toiletid: payload.toiletId,
+    in_complainttypeid: payload.complaintTypeId,
+    in_citizenmn: payload.citizenMn,
+    in_mobileno: payload.mobileNo,
+    in_unitno: payload.unitNo,
+    in_complaintstatus: payload.complaintStatus,
+    in_complntremark: payload.complntRemark,
+  
+  in_unitimg1: {
+    val: payload.unitImg1
+      ? Buffer.from(payload.unitImg1, "base64")
+      : null,
+    type: oracledb.BLOB
+  },
+
+  in_unitimg2: {
+    val: payload.unitImg2
+      ? Buffer.from(payload.unitImg2, "base64")
+      : null,
+    type: oracledb.BLOB
+  },
+
+  in_unitimg3: {
+    val: payload.unitImg3
+      ? Buffer.from(payload.unitImg3, "base64")
+      : null,
+    type: oracledb.BLOB
+  },
+
+  in_unitimg4: {
+    val: payload.unitImg4
+      ? Buffer.from(payload.unitImg4, "base64")
+      : null,
+    type: oracledb.BLOB
+  },
+
+  in_unitimg5: {
+    val: payload.unitImg5
+      ? Buffer.from(payload.unitImg5, "base64")
+      : null,
+    type: oracledb.BLOB
+  },
+    
+    OUT_ERRORCODE: {
+  dir: oracledb.BIND_OUT,
+  type: oracledb.NUMBER
+},
+
+OUT_ERRORMSG: {
+  dir: oracledb.BIND_OUT,
+  type: oracledb.STRING,
+  maxSize: 1000
+}
+
+  };
+    const result = await executeProcedure({
+    statement,
+    binds,
+    useTx: false
+  });
+
+  const out = result.outBinds;
+
+ return {
+  errorCode: out.OUT_ERRORCODE,
+  message: out.OUT_ERRORMSG
+};
+}
+
+module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo };

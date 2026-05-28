@@ -1,7 +1,13 @@
-const {serviceWardList,serviceToiletList,serviceComplaintTypeList} = require('./registerComplaint.service');
+const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService} = require('./registerComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
-
+function requestMeta(req) {
+  return {
+    ip: req.ip,
+    method: req.method,
+    path: req.originalUrl,
+  };
+}
 async function getWardList(req, res, next) {
   try {
     const rows = await serviceWardList(req.query.ulbid);
@@ -35,4 +41,35 @@ async function getComplaintTypeList(req, res, next) {
   }
 }
 
-module.exports = { getWardList, getToiletList, getComplaintTypeList };
+async function registerComplaint(req, res, next) {
+   try {
+    const payload = req.body;
+    const out = await regComplaintService(payload);
+
+    const isSuccess = String(out.Out_errorCode) === '9999';
+    if (isSuccess) {
+      logApiSuccess(req, 200, `Complaint Registered Successfully`);
+    } else {
+      logApiError(req, 400, out.Out_ErrorMsg, `Complaint Registration failed`);
+    }
+
+    auditLog({
+      action: 'COMPLAINT_REGISTRATION',
+      actor: req.user?.userId || 'system',
+ module: 'users',
+      entityId: out.Out_User,
+      status: isSuccess ? 'SUCCESS' : 'FAILED',
+      details: { outErrorCode: out.Out_errorCode, outErrorMsg: out.Out_ErrorMsg },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(out);
+  } catch (error) {
+logApiError(req, 500, error.message, 'Complaint Registration error');
+ return next(error);
+  }
+}
+
+
+
+module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint };
