@@ -19,8 +19,8 @@ export default function Sidebar() {
     // { path: '/modals', icon: 'bi-window-stack', label: 'Modals' },
     // { path: '/settings', icon: 'bi-gear', label: 'Settings' },
     // { path: '/blank', icon: 'bi-file-earmark', label: 'Blank Page' },
-    { path: "/", icon: 'bi-envelope-paper', label: 'Complaints' },
-    { path: "/", icon: "bi-file-earmark-text", label: 'Applications'}
+    { path: "/complaint-list", icon: 'bi-envelope-paper', label: 'Complaints' },
+    { path: "/application-list", icon: "bi-file-earmark-text", label: 'Applications'}
   ];
 
   return (

@@ -24,6 +24,7 @@ import Blank from './pages/Blank';
 import CreateAgent from './pages/CreateAgent';
 import FrmCitizen from "./pages/citizen/FrmCitizen";
 import ComplaintsTable from "./pages/supervisior/ComplaintsTable"
+import ApplicationList from "./pages/supervisior/ApplicationList"
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -47,7 +48,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* Main Routes - Protected */}
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/" element={<ProtectedRoute><ComplaintsTable /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
               <Route path="/add-user" element={<ProtectedRoute><AddUser /></ProtectedRoute>} />
               <Route path="/user-details" element={<ProtectedRoute><UserDetails /></ProtectedRoute>} />
@@ -62,7 +63,8 @@ function App() {
               <Route path="/blank" element={<ProtectedRoute><Blank /></ProtectedRoute>} />
               <Route path="/create-agent" element={<ProtectedRoute><CreateAgent /></ProtectedRoute>} />
               <Route path="/register-complaint" element={<FrmCitizen />} />
-              <Route path="/conplaint-table" element={<ComplaintsTable />} />
+              <Route path="/complaint-list" element={<ComplaintsTable />} />
+              <Route path="/application-list" element={<ApplicationList />} />
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />
