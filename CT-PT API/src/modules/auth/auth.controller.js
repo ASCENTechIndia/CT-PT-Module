@@ -1,26 +1,33 @@
 const { loginUser } = require('./auth.service');
 const { logApiSuccess, logApiError } = require('../../utils/log');
-const { decryptPassword } = require('../../utils/login-password-crypto');
+const { encryptPassword } = require('../../utils/login-password-crypto');
 
 async function login(req, res, next) {
   try {
     const payload = req.body;
 
-    let decryptedPassword;
+// console.log("Login payload:", payload);
+    let encryptPass;
     try {
-      // decryptedPassword = decryptPassword(payload.password);
+      encryptPass = encryptPassword(payload.password);
 
     } catch (_error) {
       logApiError(req, 400, 'Invalid encrypted password', 'Login failed: invalid encrypted password payload');
+      // console.log("Password encryption error:", encryptPass);
       return res.fail('Invalid encrypted password', 400);
     }
 
-    // const normalizedUserId = payload.userId.startsWith('E')
-    //   ? payload.userId
-    //   : `E${payload.userId}`;
 
-    const result = await loginUser(payload.userId, payload.password, payload.corpId, payload.ulbId, payload.logFlag);
-
+    const result = await loginUser(
+      payload.userId,
+      encryptPass,
+      payload.macaddr,
+      payload.ipaddr,
+      payload.hostname,
+      payload.source,
+      // payload.deptid
+    );
+    // console.log("Login result:", result);
     if (!result.success) {
       logApiError(req, 401, result.message, `Login failed for user: ${payload.userId}`);
       return res.fail(result.message, 401, { errorCode: result.errorCode });
