@@ -4,103 +4,68 @@ const { executeQuery } = require('../../db/queryExecutor');
 const { executeProcedure } = require('../../db/procedureExecutor');
 const { config } = require('../../config/env');
 
-async function loginWithStoredProcedure(userId, password) {
+async function loginWithStoredProcedure(userId, password, corpId = 1, ulbId = 1, logFlag = 'Y') {
   const plsql = `
     BEGIN
-      aoup_login_fetch(
-        :in_UserId,
+      aorts.aorts_login_ins(
+        :in_CorpId,
+        :in_username,
         :in_password,
-        :Out_CompId,
-        :Out_UserName,
-        :Out_LastLogin,
-        :Out_LastLogOut,
-        :Out_LastChangePwd,
-        :Out_IsBlock,
-        :Out_Type,
-        :Out_DesgId,
-        :Out_brid,
-        :Out_branchname,
-        :Out_brcompid,
-        :Out_compname,
-        :Out_typename,
-        :Out_desgname,
-        :Out_brcategory,
-        :Out_role,
-        :out_ErrorCode,
-        :Out_ErrorMsg
+        :in_ulbID,
+        :in_logflag,
+        :out_ulbid,
+        :out_userUniqueId,
+        :out_userFullName,
+        :out_lastlogin,
+        :out_lastlogout,
+        :out_errcode,
+        :out_errmsg
       );
     END;
   `;
 
   const binds = {
-    in_UserId: userId,
+    in_CorpId: corpId,
+    in_username: userId,
     in_password: password,
-    Out_CompId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-    Out_UserName: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 200 },
-    Out_LastLogin: { dir: oracledb.BIND_OUT, type: oracledb.DATE },
-    Out_LastLogOut: { dir: oracledb.BIND_OUT, type: oracledb.DATE },
-    Out_LastChangePwd: { dir: oracledb.BIND_OUT, type: oracledb.DATE },
-    Out_IsBlock: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 20 },
-    Out_Type: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-    Out_DesgId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-    Out_brid: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-    Out_branchname: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 200 },
-    Out_brcompid: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-    Out_compname: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 200 },
-    Out_typename: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
-    Out_desgname: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 200 },
-    Out_brcategory: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-    Out_role: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 200 },
-    out_ErrorCode: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-    Out_ErrorMsg: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 4000 },
+    in_ulbID: ulbId,
+    in_logflag: logFlag,
+    out_ulbid: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+    out_userUniqueId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+    out_userFullName: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 500 },
+    out_lastlogin: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
+    out_lastlogout: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 100 },
+    out_errcode: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+    out_errmsg: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 1000 },
   };
 
   const result = await executeProcedure({ statement: plsql, binds, useTx: false });
   const out = result.outBinds;
 
-  const errorCode = String(out.out_ErrorCode ?? '0');
-  if (errorCode !== '-100') {
+  const errorCode = String(out.out_errcode ?? '0');
+  if (errorCode !== '9999') {
     return {
       success: false,
       errorCode,
-      message: out.Out_ErrorMsg || 'Login failed',
+      message: out.out_errmsg || 'Login failed',
     };
   }
-const proofTypeResult = await executeQuery(
-  `SELECT NUM_USERMST_USERPROOFTYPE 
-   FROM etech.aoup_usermst_def 
-   WHERE VAR_USERMST_USERID = :userId`,
-  { userId }
-);
-const userProofType = proofTypeResult.rows?.[0]?.NUM_USERMST_USERPROOFTYPE;
+
   const user = {
     userId,
-    compId: out.Out_CompId,
-    userName: out.Out_UserName,
-    lastLogin: out.Out_LastLogin,
-    lastLogout: out.Out_LastLogOut,
-    lastChangePwd: out.Out_LastChangePwd,
-    isBlocked: out.Out_IsBlock,
-    type: out.Out_Type,
-    desgId: out.Out_DesgId,
-    brid: out.Out_brid,
-    branchName: out.Out_branchname,
-    brCompId: out.Out_brcompid,
-    compName: out.Out_compname,
-    typeName: out.Out_typename,
-    desgName: out.Out_desgname,
-    brCategory: out.Out_brcategory,
-    role: out.Out_role,
-    userProofType
+    userUniqueId: out.out_userUniqueId,
+    userFullName: out.out_userFullName,
+    ulbId: out.out_ulbid,
+    lastLogin: out.out_lastlogin,
+    lastLogout: out.out_lastlogout,
   };
 
   const token = jwt.sign(
     {
       sub: user.userId,
       userId: user.userId,
-      brCategory: user.brCategory,
-      brid: user.brid,
-      role: user.role,
+      userUniqueId: user.userUniqueId,
+      ulbId: user.ulbId,
     },
     config.jwtSecret,
     { expiresIn: config.jwtExpiresIn }
