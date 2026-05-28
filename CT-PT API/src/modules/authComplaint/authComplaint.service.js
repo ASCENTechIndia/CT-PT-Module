@@ -1,8 +1,13 @@
-const { compListforSupRepo } = require('./authComplaint.repo');
+const { authComplaintRepo, compListforSupRepo } = require('./authComplaint.repo');
 
+async function authComplaintService(payload) {
+  return authComplaintRepo(payload);
+}
 
 async function getCompListForSupService(ulbid) {
   return compListforSupRepo(ulbid);
 }
 
-module.exports = { getCompListForSupService };
+module.exports = {
+  authComplaintService, getCompListForSupService
+};
