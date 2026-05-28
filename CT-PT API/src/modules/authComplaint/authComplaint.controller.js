@@ -1,4 +1,6 @@
-const { authComplaintService, getCompListForSupService, getCompListSIService } = require('./authComplaint.service');
+const { authComplaintService, getCompListForSupService, getCompListSIService,
+    getImagesService
+ } = require('./authComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 
@@ -63,6 +65,16 @@ async function getCompListForSI(req, res, next) {
   }
 }
 
+async function getImagesCon(req, res, next) {
+  try {
+    const { ulbid, toiletId, applid } = req.query;
+    const rows = await getImagesService(ulbid, toiletId, applid);
+    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Images retrieved successfully' );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Error retrieving images');
+    return next(error);
+  }
+}
 
-
-module.exports = { authComplaint, getCompListForSup, getCompListForSI };
+module.exports = { authComplaint, getCompListForSup, getCompListForSI, getImagesCon };
