@@ -4,7 +4,8 @@ const { executeQuery } = require('../../db/queryExecutor');
 const { executeProcedure } = require('../../db/procedureExecutor');
 const { config } = require('../../config/env');
 
-async function loginWithStoredProcedure(userId, password, corpId = 1, ulbId = 1, logFlag = 'Y') {
+async function loginWithStoredProcedure(userId, password, corpId , ulbId , logFlag = 'Y') {
+  console.log('Login attempt for userId:', userId, 'CorpId:', corpId, 'ULBId:', ulbId, 'LogFlag:', logFlag, 'Password provided:', password);
   const plsql = `
     BEGIN
       aorts.aorts_login_ins(
