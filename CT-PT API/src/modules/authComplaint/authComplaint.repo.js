@@ -249,7 +249,51 @@ async function compListforSIRepo(ulbid) {
   return rows;
 }
 
+async function getImages(ulbid, toiletId, applid) {
+  let sql = `
+SELECT num_empctptentry_id, dat_empctptentry_date, num_empctptentry_stageid,
+        var_empctptentry_remark, num_empctptentry_ulbid,
+        bolb_empctptentry_image,
+        bolb_empctptentry_image2, bolb_empctptentry_image3,
+        var_ctptstage_status, var_ctptstage_name
+        FROM aorts_empctptentry_mst
+        INNER JOIN admins.aoma_user_def ON num_user_userid = var_empctptentry_userid
+        LEFT JOIN aorts_ctptlist_mas ctpt ON ctpt.num_ctpttype_id = num_empctptentry_toiletid
+        LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = num_empctptentry_stageid
+        WHERE num_empctptentry_ulbid= :ulbid 
+        AND num_empctptentry_toiletid= :toiletId
+AND TRUNC(dat_empctptentry_insdate)= (SELECT TRUNC(dat_empctptentry_date) FROM aorts_empctptentry_mst WHERE num_empctptentry_id= :applid )
+ORDER BY num_empctptentry_stageid ASC
+  `;
+
+  const binds = {
+    ulbid: Number(ulbid),
+    toiletId: Number(toiletId),
+    applid: Number(applid),
+  };
+
+  const result = await executeQuery(sql, binds);
+
+  const rows = result.rows || [];
+
+  for (const row of rows) {
+    row.BOLB_EMPCTPTENTRY_IMAGE = await lobToBase64(
+      row.BOLB_EMPCTPTENTRY_IMAGE, 
+    );
+
+    row.BOLB_EMPCTPTENTRY_IMAGE2 = await lobToBase64(
+      row.BOLB_EMPCTPTENTRY_IMAGE2,
+    );
+
+    row.BOLB_EMPCTPTENTRY_IMAGE3 = await lobToBase64(
+      row.BOLB_EMPCTPTENTRY_IMAGE3,
+    );
+  }
+
+  return rows;
+}
+
 
 module.exports = {
-  authComplaintRepo, compListforSupRepo, compListforSIRepo
+  authComplaintRepo, compListforSupRepo, compListforSIRepo, getImages
 };

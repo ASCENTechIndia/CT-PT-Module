@@ -1,4 +1,4 @@
-const { authComplaintRepo, compListforSupRepo, compListforSIRepo } = require('./authComplaint.repo');
+const { authComplaintRepo, compListforSupRepo, compListforSIRepo, getImages } = require('./authComplaint.repo');
 
 async function authComplaintService(payload) {
   return authComplaintRepo(payload);
@@ -12,6 +12,10 @@ async function getCompListSIService(ulbid) {
   return compListforSIRepo(ulbid);
 }
 
+async function getImagesService(ulbid, toiletId, applid) {
+  return getImages(ulbid, toiletId, applid);
+}
+
 module.exports = {
-  authComplaintService, getCompListForSupService, getCompListSIService
+  authComplaintService, getCompListForSupService, getCompListSIService, getImagesService
 };
