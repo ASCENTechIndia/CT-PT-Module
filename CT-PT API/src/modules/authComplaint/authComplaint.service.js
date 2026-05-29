@@ -4,12 +4,12 @@ async function authComplaintService(payload) {
   return authComplaintRepo(payload);
 }
 
-async function getCompListForSupService( ulbid, page, limit ) {
-   return compListforSupRepo( ulbid, page, limit ); 
+async function getCompListForSupService( ulbid, fromDate,toDate,status, page, limit ) {
+   return compListforSupRepo( ulbid, fromDate,toDate,status, page, limit ); 
   }
 
-async function getCompListSIService(ulbid, page, limit) {
-  return compListforSIRepo(ulbid, page, limit);
+async function getCompListSIService(ulbid, fromDate, toDate, status, page, limit) {
+  return compListforSIRepo(ulbid, fromDate, toDate, status, page, limit);
 }
 
 async function getImagesService(ulbid, toiletId, applid) {
