@@ -1,28 +1,123 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import apiClient from "../../services/apiClient";
+import ResponseModal from "../../components/ResponseModal";
+import "../../assets/css/form-validation.css";
 
 const FrmCitizen = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [wardOptions, setWardOptions] = useState([]);
+  const [toiletOptions, setToiletOptions] = useState([]);
+  const [complaintTypeOptions, setComplaintTypeOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedWard, setSelectedWard] = useState("");
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState("info"); // success, error, warning, info
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+
+  const ulbId = 4; // Default ULB ID
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm();
+    watch,
+  } = useForm({
+    mode: "onBlur",
+    reValidateMode: "onChange",
+  });
 
-  // Dropdown options
-  const wardOptions = ["Ward A", "Ward B", "Ward C", "Ward D", "Ward E"];
-  const toiletOptions = ["Toilet 1", "Toilet 2", "Toilet 3"];
-  const complaintTypeOptions = [
-    "Sanitation",
-    "Water Leakage",
-    "Road Damage",
-    "Street Light",
-    "Other",
-  ];
-  const unitOptions = Array.from({ length: 10 }, (_, i) => i + 1);
+  const unitOptions = Array.from({ length: 5}, (_, i) => i + 1);
+
+  // Helper function to show modal
+  const showModal = (type, title, message) => {
+    setModalType(type);
+    setModalTitle(title);
+    setModalMessage(message);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  // Fetch Ward List on component mount
+  useEffect(() => {
+    const fetchWardList = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get("/registerComplaint/wardList", {
+          params: { ulbid: ulbId },
+        });
+        if (response.success && response.data) {
+          setWardOptions(response.data);
+        }
+      } catch (err) {
+        const errorMsg = err.message;
+        setError(errorMsg);
+        showModal("error", "Warning", "Failed to fetch ward list");
+        console.error("Error fetching ward list:", err);
+      }
+    };
+
+    fetchWardList();
+  }, []);
+
+  // Fetch Complaint Type List on component mount
+  useEffect(() => {
+    const fetchComplaintTypeList = async () => {
+      try {
+        const response = await apiClient.get(
+          "/registerComplaint/complaintTypeList",
+          { params: { ulbid: ulbId } }
+        );
+        if (response.success && response.data) {
+          setComplaintTypeOptions(response.data);
+        }
+      } catch (err) {
+        const errorMsg = err.message;
+        setError(errorMsg);
+        showModal("error", "Warning", "Failed to fetch complaint types");
+        console.error("Error fetching complaint types:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComplaintTypeList();
+  }, []);
+
+  // Fetch Toilet List when ward is selected
+  useEffect(() => {
+    if (selectedWard) {
+      const fetchToiletList = async () => {
+        try {
+          const response = await apiClient.get(
+            "/registerComplaint/toiletList",
+            {
+              params: { ulbid: ulbId, wardid: selectedWard },
+            }
+          );
+          if (response.success && response.data) {
+            setToiletOptions(response.data);
+          }
+        } catch (err) {
+          const errorMsg = err.message;
+          setError(errorMsg);
+          showModal("error", "Warning", "Failed to fetch toilet list");
+          console.error("Error fetching toilet list:", err);
+        }
+      };
+
+      fetchToiletList();
+    }
+  }, [selectedWard]);
 
   // Handle multiple image upload & preview
   const handleImageChange = (e) => {
@@ -39,25 +134,81 @@ const FrmCitizen = () => {
     };
   }, [previewUrls]);
 
-  const onSubmit = (data) => {
-    const formData = new FormData();
-    formData.append("ward", data.ward);
-    formData.append("toilet", data.toilet);
-    formData.append("complaintType", data.complaintType);
-    formData.append("citizenName", data.citizenName);
-    formData.append("mobileNumber", data.mobileNumber);
-    formData.append("remark", data.remark);
-    formData.append("unit", data.unit);
-    selectedImages.forEach((image, index) => {
-      formData.append(`complaintImage${index}`, image);
+  // Convert file to Base64
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result.split(",")[1]; // Extract base64 part
+        resolve(result);
+      };
+      reader.onerror = (error) => reject(error);
     });
+  };
 
-    console.log("Form Data:", Object.fromEntries(formData));
-    alert("Complaint submitted successfully!");
-    reset();
-    setSelectedImages([]);
-    setPreviewUrls([]);
-    document.getElementById("imageUpload").value = "";
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+      
+      // Convert images to base64
+      const base64Images = [];
+      for (let i = 0; i < selectedImages.length; i++) {
+        const base64 = await fileToBase64(selectedImages[i]);
+        base64Images.push(base64);
+      }
+
+      // Prepare complaint payload
+      const complaintPayload = {
+        userId: "GUEST",
+        ulbId: ulbId,
+        wardId: parseInt(data.ward),
+        toiletId: parseInt(data.toilet), // Toilet location string from API
+        complaintTypeId: parseInt(data.complaintType),
+        citizenMn: data.citizenName,
+        mobileNo: parseInt(data.mobileNumber),
+        unitNo: parseInt(data.unit),
+        complaintStatus: "P",
+        complntRemark: data.remark,
+        unitImg1: base64Images[0] || null,
+        unitImg2: base64Images[1] || null,
+        unitImg3: base64Images[2] || null,
+        unitImg4: base64Images[3] || null,
+        unitImg5: base64Images[4] || null,
+      };
+
+      console.log("Submitting complaint:", complaintPayload);
+
+      // Call API
+      const response = await apiClient.post(
+        "/registerComplaint/insertComplaint",
+        complaintPayload
+      );
+
+      if (response.success) {
+        setError(null);
+        showModal(
+          "success",
+          "Success!","Complaint submitted successfully!"
+        );
+        reset();
+        setSelectedImages([]);
+        setPreviewUrls([]);
+        document.getElementById("imageUpload").value = "";
+        setSelectedWard(""); // Reset ward selection
+      } else {
+        const errorMsg = response.message || "Failed to submit complaint";
+        setError(errorMsg);
+        showModal("error", "Error", errorMsg);
+      }
+    } catch (err) {
+      const errorMessage = err.message || "Error submitting complaint";
+      setError(errorMessage);
+      showModal("error", "Error", errorMessage);
+      console.error("Complaint submission error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,16 +232,36 @@ const FrmCitizen = () => {
 
       {/* Form Section */}
       <div className="form-container">
+        {error && (
+          <div style={{ color: "red", padding: "10px", marginBottom: "10px" }}>
+            Error: {error}
+          </div>
+        )}
+        {loading && (
+          <div style={{ color: "blue", padding: "10px", marginBottom: "10px" }}>
+            Loading form data...
+          </div>
+        )}
         <div className="form-card">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Select Ward */}
             <div className="field-box">
               <i className="bi bi-diagram-3"></i>
-              <select {...register("ward", { required: "Ward is required" })}>
+              <select
+                {...register("ward", { required: "Ward is required" })}
+                onChange={(e) => {
+                  setSelectedWard(e.target.value);
+                  setToiletOptions([]); // Reset toilet options
+                }}
+                className={errors.ward ? "input-error" : ""}
+              >
                 <option value="">Select Ward</option>
                 {wardOptions.map((ward) => (
-                  <option key={ward} value={ward}>
-                    {ward}
+                  <option
+                    key={ward.NUM_CTPTTYPE_WARDID}
+                    value={ward.NUM_CTPTTYPE_WARDID}
+                  >
+                    Ward {ward.NUM_CTPTTYPE_WARDID}
                   </option>
                 ))}
               </select>
@@ -106,13 +277,18 @@ const FrmCitizen = () => {
               <i className="bi bi-building"></i>
               <select
                 {...register("toilet", { required: "Toilet is required" })}
+                disabled={toiletOptions.length === 0}
+                className={errors.toilet ? "input-error" : ""}
               >
                 <option value="">Select Toilet</option>
                 {toiletOptions.map((toilet) => (
-                  <option key={toilet} value={toilet}>
-                    {toilet}
+                  <option
+                    key={toilet.VAR_CTPTTYPE_TOILETLOCATION}
+                    value={toilet.NUM_CTPTTYPE_ID}
+                  >
+                    {toilet.VAR_CTPTTYPE_TOILETLOCATION}
                   </option>
-                ))}
+                ))} 
               </select>
             </div>
             {errors.toilet && (
@@ -121,18 +297,22 @@ const FrmCitizen = () => {
               </p>
             )}
 
-            {/* Select Complaint Type - NEW */}
+            {/* Select Complaint Type */}
             <div className="field-box">
               <i className="bi bi-ui-checks-grid"></i>
               <select
                 {...register("complaintType", {
                   required: "Complaint type is required",
                 })}
+                className={errors.complaintType ? "input-error" : ""}
               >
                 <option value="">Select Complaint Type</option>
                 {complaintTypeOptions.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                  <option
+                    key={type.NUM_CTPTCOMPLTYPE_ID}
+                    value={type.NUM_CTPTCOMPLTYPE_ID}
+                  >
+                    {type.VAR_CTPTCOMPLTYPE_NAME}
                   </option>
                 ))}
               </select>
@@ -149,7 +329,18 @@ const FrmCitizen = () => {
               <input
                 type="text"
                 placeholder="Citizen Name"
-                {...register("citizenName", { required: "Name is required" })}
+                {...register("citizenName", {
+                  required: "Citizen name is required",
+                  minLength: {
+                    value: 3,
+                    message: "Name must be at least 3 characters",
+                  },
+                  pattern: {
+                    value: /^[a-zA-Z\s]*$/,
+                    message: "Name should only contain letters and spaces",
+                  },
+                })}
+                className={errors.citizenName ? "input-error" : ""}
               />
             </div>
             {errors.citizenName && (
@@ -166,11 +357,25 @@ const FrmCitizen = () => {
                 placeholder="Mobile Number"
                 {...register("mobileNumber", {
                   required: "Mobile number is required",
-                  pattern: {
-                    value: /^[0-9]{10}$/,
-                    message: "Enter a valid 10-digit mobile number",
+                  validate: (value) => {
+                    // Remove any non-numeric characters
+                    const cleanValue = value.replace(/\D/g, "");
+                    
+                    // Check if it's exactly 10 digits
+                    if (cleanValue.length !== 10) {
+                      return "Mobile number must be exactly 10 digits";
+                    }
+                    
+                    // Check if it's a valid Indian mobile number (starts with 6-9)
+                    if (!/^[6-9][0-9]{9}$/.test(cleanValue)) {
+                      return "Mobile number must start with 6, 7, 8, or 9";
+                    }
+                    
+                    return true;
                   },
                 })}
+                className={errors.mobileNumber ? "input-error" : ""}
+                maxLength="10"
               />
             </div>
             {errors.mobileNumber && (
@@ -185,7 +390,18 @@ const FrmCitizen = () => {
               <textarea
                 placeholder="Remark (additional details)"
                 rows="3"
-                {...register("remark", { required: "Remark is required" })}
+                {...register("remark", {
+                  required: "Remark is required",
+                  minLength: {
+                    value: 10,
+                    message: "Description must be at least 10 characters",
+                  },
+                  maxLength: {
+                    value: 500,
+                    message: "Description cannot exceed 500 characters",
+                  },
+                })}
+                className={errors.remark ? "input-error" : ""}
               ></textarea>
             </div>
             {errors.remark && (
@@ -197,7 +413,10 @@ const FrmCitizen = () => {
             {/* Unit Dropdown */}
             <div className="field-box">
               <i className="bi bi-grid-3x3-gap-fill"></i>
-              <select {...register("unit", { required: "Unit is required" })}>
+              <select
+                {...register("unit", { required: "Unit is required" })}
+                className={errors.unit ? "input-error" : ""}
+              >
                 <option value="">Select Unit</option>
                 {unitOptions.map((unit) => (
                   <option key={unit} value={unit}>
@@ -252,6 +471,15 @@ const FrmCitizen = () => {
           </form>
         </div>
       </div>
+
+      {/* Response Modal */}
+      <ResponseModal
+        isOpen={isModalOpen}
+        type={modalType}
+        title={modalTitle}
+        message={modalMessage}
+        onClose={closeModal}
+      />
     </div>
   );
 };
