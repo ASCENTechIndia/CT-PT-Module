@@ -67,20 +67,6 @@ export default function Login() {
       } else {
         setError('Login failed. Please try again.');
       }
-      // return;
-      // In a real app, you would call your backend API here
-      // const userData = {
-      //   id: Math.random().toString(36).substring(7),
-      //   email,
-      //   name: email.split('@')[0],
-      //   rememberMe,
-      //   loginTime: new Date().toISOString(),
-      // };
-
-      // // Call login to update auth context and store in localStorage
-      // login(userData);
-
-      // Redirect to dashboard
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
