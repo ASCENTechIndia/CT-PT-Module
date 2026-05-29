@@ -142,17 +142,33 @@ async function lobToBase64(lob) {
   });
 }
 
-async function compListRepo(ulbid) {
-  let sql = `
-    select *
-    from aorts_ctptcitizencomplaint_mas
-    where num_complaint_ulbid = :ulbid
-  `;
-  const binds = {
-    ulbid: Number(ulbid),
-  };
+async function compListRepo(ulbid, fromDate, toDate, status, page = 1, limit = 10) {
+  console.log("Repo Params:", { ulbid, fromDate, toDate, status, page, limit });
+  const offset = (Number(page) - 1) * Number(limit);
+  let sql = ` SELECT a.num_complaint_id, a.num_complaint_wardid, a.num_complaint_toilet, 
+ a.num_complaint_compainttype, a.var_complaint_citizname, a.num_complaint_mobileno, 
+ a.num_complaint_unitno, a.var_complaint_status, a.var_complaint_remark, a.blob_complaint_unitimg1, 
+ a.blob_complaint_unitimg2, a.blob_complaint_unitimg3, a.blob_complaint_unitimg4, 
+ a.blob_complaint_unitimg5, a.dat_complaint_insdt, a.var_complaint_insby, a.dat_complaint_upddt, 
+ a.var_complaint_updby, a.num_complaint_ulbid FROM aorts_ctptcitizencomplaint_mas a 
+ WHERE a.num_complaint_ulbid = :ulbid `;
+  const binds = { ulbid: Number(ulbid) };
+  if (fromDate && toDate) {
+    sql += ` AND TRUNC(a.dat_complaint_insdt) BETWEEN 
+    TO_DATE(:fromDate, 'YYYY-MM-DD') AND TO_DATE(:toDate, 'YYYY-MM-DD') `;
+    binds.fromDate = fromDate;
+    binds.toDate = toDate;
+  }
+  if (status && status !== "ALL") {
+    sql += ` AND a.var_complaint_status = :status `;
+    binds.status = status;
+  }
+  sql += ` ORDER BY a.num_complaint_id DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY `;
+  binds.offset = Number(offset);
+  binds.limit = Number(limit);
   const result = await executeQuery(sql, binds);
   const rows = result.rows || [];
+
   for (const row of rows) {
     row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(
       row.BLOB_COMPLAINT_UNITIMG1,
@@ -171,7 +187,30 @@ async function compListRepo(ulbid) {
     );
   }
 
-  return rows;
+  let countSql = ` SELECT COUNT(*) AS total FROM aorts_ctptcitizencomplaint_mas a
+   WHERE a.num_complaint_ulbid = :ulbid `;
+  const countBinds = { ulbid: Number(ulbid) };
+  if (fromDate && toDate) {
+    countSql += ` AND TRUNC(a.dat_complaint_insdt) BETWEEN 
+    TO_DATE(:fromDate, 'YYYY-MM-DD') AND TO_DATE(:toDate, 'YYYY-MM-DD') `;
+    countBinds.fromDate = fromDate;
+    countBinds.toDate = toDate;
+  } // status filter in count query
+  if (status && status !== "ALL") {
+    countSql += ` AND a.var_complaint_status = :status `;
+    countBinds.status = status;
+  }
+  const countResult = await executeQuery(countSql, countBinds);
+  const total = countResult.rows?.[0]?.TOTAL || 0;
+  return {
+    data: rows,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total ,
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
 }
 
 module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo };
