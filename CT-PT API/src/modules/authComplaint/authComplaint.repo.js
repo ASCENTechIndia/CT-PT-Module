@@ -128,7 +128,7 @@ async function compListforSIRepo(ulbid, page = 1, limit = 10) {
           INNER JOIN admins.aoma_user_def u ON u.num_user_userid = e.var_empctptentry_userid
            LEFT JOIN aorts_ctptlist_mas ctpt ON ctpt.num_ctpttype_id = e.num_empctptentry_toiletid 
            LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = e.num_empctptentry_stageid 
-           WHERE e.num_empctptentry_stageid = 3 ) WHERE rn = 1 AND num_empctptentry_ulbid = :ulbid 
+           WHERE e.num_empctptentry_stageid = 3 and e.var_empctptentry_supflag = 'A' ) WHERE rn = 1 AND num_empctptentry_ulbid = :ulbid 
            ORDER BY num_empctptentry_id DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY `;
   const binds = {
     ulbid: Number(ulbid),
