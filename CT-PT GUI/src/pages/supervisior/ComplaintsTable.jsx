@@ -4,6 +4,11 @@ import { useForm } from "react-hook-form";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 
+const getToday = () => {
+  const d = new Date();
+  return d.toISOString().split("T")[0]; // YYYY-MM-DD
+};
+
 const ComplaintsTable = () => {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +26,18 @@ const ComplaintsTable = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+
+  const [filters, setFilters] = useState({
+    fromDate: getToday(),
+    toDate: getToday(),
+    status: ""
+  })
+
   // React Hook Form setup
   const {
     register,
@@ -30,20 +47,31 @@ const ComplaintsTable = () => {
   } = useForm();
 
   // Fetch complaints from API on component mount
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
 
-  const fetchComplaints = async () => {
+  useEffect(() => {
+    fetchComplaints(1);
+  }, [filters])
+
+  const fetchComplaints = async (dataPage = 1) => {
     try {
       setLoading(true);
+
+      const params = {
+        ulbid: 4,
+        page: dataPage,
+        limit: pageSize,
+        ...(filters.fromDate && { fromDate: filters.fromDate }),
+        ...(filters.toDate && { toDate: filters.toDate }),
+        ...(filters.status && { status: filters.status }),
+      };
+
       const response = await apiClient.get(
-        "/registerComplaint/getCitizenComplaintList?ulbid=4"
+        "/registerComplaint/getCitizenComplaintList",
+        { params }
       );
 
-      if (response.success && response.data) {
-        // Transform API response to component format
-        const transformedComplaints = response.data.map((complaint) => ({
+      if (response.success && response.data.data) {
+        const transformedComplaints = response.data.data.map((complaint) => ({
           NUM_COMPLAINT_ID: complaint.NUM_COMPLAINT_ID,
           VAR_COMPLAINT_CITIZNAME: complaint.VAR_COMPLAINT_CITIZNAME,
           NUM_COMPLAINT_WARDID: complaint.NUM_COMPLAINT_WARDID,
@@ -58,20 +86,17 @@ const ComplaintsTable = () => {
             complaint.BLOB_COMPLAINT_UNITIMG3,
             complaint.BLOB_COMPLAINT_UNITIMG4,
             complaint.BLOB_COMPLAINT_UNITIMG5,
-          ].filter((img) => img !== null),
+          ].filter(Boolean),
         }));
 
         setComplaints(transformedComplaints);
+
+        setCurrentPage(response?.data?.pagination?.page || dataPage);
+        setTotalPages(response?.data?.pagination?.totalPages || 1);
+        setTotalRecords(response?.data?.pagination?.total || 0);
       }
-      setError(null);
     } catch (err) {
-      console.error("Error fetching complaints:", err);
-      setModalType("error");
-      setModalTitle("Error");
-      setModalMessage(
-        "Failed to load complaints. Please try again later."
-      );
-      setIsModalOpen(true);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -102,12 +127,12 @@ const ComplaintsTable = () => {
       //   status: "Y",
       //   supervisorRemark: supervisorRemark
       // });
-      
+
       setModalType("success");
       setModalTitle("Success");
       setModalMessage("Complaint has been approved successfully.");
       setIsModalOpen(true);
-      
+
       setShowModal(false);
       setSupervisorRemark("");
       // Refresh the complaints list
@@ -138,12 +163,12 @@ const ComplaintsTable = () => {
       //   status: "R",
       //   supervisorRemark: supervisorRemark
       // });
-      
+
       setModalType("success");
       setModalTitle("Success");
       setModalMessage("Complaint has been rejected successfully.");
       setIsModalOpen(true);
-      
+
       setShowModal(false);
       setSupervisorRemark("");
       // Refresh the complaints list
@@ -161,6 +186,32 @@ const ComplaintsTable = () => {
   const handleImageClick = (index) => {
     setSelectedImageIndex(index);
     setShowImageModal(true);
+  };
+
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      fetchComplaints(page);
+    }
+  };
+
+  // Generate pagination page numbers
+  const getPaginationPages = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   };
 
   // Navigate to next image
@@ -233,14 +284,55 @@ const ComplaintsTable = () => {
       ) : (
         <div className="panel">
           <div className="panel-header">
-            <div>
-              <h2 className="h5 mb-1 section-title">
-                <i className="bi bi-table" aria-hidden="true"></i>
-                <span>All Complaints ({complaints.length})</span>
-              </h2>
-              <p className="text-muted mb-0">
-                View and manage complaints submitted by citizens.
-              </p>
+            <div className="complaints-header">
+              <div>
+                <h2 className="h5 mb-1 section-title">
+                  <i className="bi bi-table" aria-hidden="true"></i>
+                  <span>All Complaints ({complaints?.length})</span>
+                </h2>
+
+                <p className="text-muted mb-0">
+                  View and manage complaints submitted by citizens.
+                </p>
+              </div>
+
+              <form className="complaints-filter-form">
+                <div>
+                  <label htmlFor="fromDate" className="form-label mb-1 small">
+                    From Date
+                  </label>
+                  <input type="date" id="fromDate" className="form-control form-control-sm"
+                    value={filters.fromDate}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, fromDate: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="toDate" className="form-label mb-1 small">
+                    To Date
+                  </label>
+                  <input type="date" id="toDate" className="form-control form-control-sm"
+                    value={filters.toDate}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, toDate: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="status" className="form-label mb-1 small">
+                    Status
+                  </label>
+
+                  <select id="status" className="form-select form-select-sm"
+                    value={filters.status}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+                  >
+                    <option value="">All</option>
+                    <option value="A">Approved</option>
+                    <option value="R">Rejected</option>
+                    <option value="P">Pending</option>
+                  </select>
+                </div>
+              </form>
             </div>
           </div>
           <div className="table-responsive">
@@ -267,19 +359,18 @@ const ComplaintsTable = () => {
                     <td>{complaint.NUM_COMPLAINT_MOBILENO}</td>
                     <td>
                       <span
-                        className={`badge ${
-                          complaint.VAR_COMPLAINT_STATUS === "P"
-                            ? "bg-warning"
-                            : complaint.VAR_COMPLAINT_STATUS === "Y"
+                        className={`badge ${complaint.VAR_COMPLAINT_STATUS === "P"
+                          ? "bg-warning"
+                          : complaint.VAR_COMPLAINT_STATUS === "Y"
                             ? "bg-success"
                             : "bg-secondary"
-                        }`}
+                          }`}
                       >
                         {complaint.VAR_COMPLAINT_STATUS === "P"
                           ? "Pending"
                           : complaint.VAR_COMPLAINT_STATUS === "Y"
-                          ? "Resolved"
-                          : "Unknown"}
+                            ? "Resolved"
+                            : "Unknown"}
                       </span>
                     </td>
                     <td>{formatDate(complaint.DAT_COMPLAINT_INSDT)}</td>
@@ -295,6 +386,76 @@ const ComplaintsTable = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="d-flex align-items-center justify-content-between mt-4">
+            <div className="text-muted small">
+              Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
+              <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong> of{" "}
+              <strong>{totalRecords}</strong> applications
+            </div>
+            <nav aria-label="Page navigation">
+              <ul className="pagination mb-0">
+                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="bi bi-chevron-double-left"></i>
+                  </button>
+                </li>
+                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="bi bi-chevron-left"></i>
+                  </button>
+                </li>
+
+                {getPaginationPages().map((page) => (
+                  <li
+                    key={page}
+                    className={`page-item ${currentPage === page ? "active" : ""}`}
+                  >
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  </li>
+                ))}
+
+                <li
+                  className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                    }`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <i className="bi bi-chevron-right"></i>
+                  </button>
+                </li>
+                <li
+                  className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                    }`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <i className="bi bi-chevron-double-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       )}
