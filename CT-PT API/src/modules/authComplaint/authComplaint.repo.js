@@ -121,10 +121,6 @@ async function compListforSupRepo(ulbid) {
          e.num_empctptentry_stageid
 
       WHERE num_empctptentry_stageid = 3
-<<<<<<< HEAD
-      AND var_empctptentry_supflag IS NULL
-=======
->>>>>>> d51583755a8561e1c277399c1ea7b90cc4b6fe45
   )
 
   WHERE rn = 1
