@@ -123,7 +123,8 @@ async function compListforSIRepo(ulbid, page = 1, limit = 10) {
         ctpt.var_ctpttype_toiletlocation, ctpt.var_ctpttype_femaleseats, ctpt.var_ctpttype_maleseats,
          ctpt.var_ctpttype_totalseats, ctpt.var_ctpttype_status, ctpt.var_ctpttype_username, 
          st.var_ctptstage_status, st.var_ctptstage_name, var_empctptentry_supflag, 
-         var_empctptentry_siflag, ROW_NUMBER() OVER ( PARTITION BY e.var_empctptentry_userid, 
+         var_empctptentry_siflag,var_empctptentry_siremark, 
+         ROW_NUMBER() OVER ( PARTITION BY e.var_empctptentry_userid, 
          e.num_empctptentry_toiletid, TRUNC(e.dat_empctptentry_date)
           ORDER BY e.dat_empctptentry_date DESC ) AS rn FROM aorts_empctptentry_mst e 
           INNER JOIN admins.aoma_user_def u ON u.num_user_userid = e.var_empctptentry_userid
