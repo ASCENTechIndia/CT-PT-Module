@@ -141,7 +141,7 @@ async function compListforSIRepo(ulbid, page = 1, limit = 10) {
   const countSql = ` SELECT COUNT(*) AS total FROM ( SELECT ROW_NUMBER() OVER
                   ( PARTITION BY e.var_empctptentry_userid, e.num_empctptentry_toiletid, 
                  TRUNC(e.dat_empctptentry_date) ORDER BY e.dat_empctptentry_date DESC ) AS rn,
-                  e.num_empctptentry_ulbid FROM aorts_empctptentry_mst e WHERE e.num_empctptentry_stageid = 3 ) 
+                  e.num_empctptentry_ulbid FROM aorts_empctptentry_mst e WHERE e.num_empctptentry_stageid = 3 and e.var_empctptentry_supflag = 'A'  ) 
                   WHERE rn = 1 AND num_empctptentry_ulbid = :ulbid `;
   const countResult = await executeQuery(countSql, { ulbid: Number(ulbid) });
   const total = countResult.rows?.[0]?.TOTAL || 0;
