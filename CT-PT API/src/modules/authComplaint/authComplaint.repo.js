@@ -121,8 +121,6 @@ async function compListforSupRepo(ulbid) {
          e.num_empctptentry_stageid
 
       WHERE num_empctptentry_stageid = 3
-      AND var_empctptentry_supflag IS NULL
-      AND num_empctptentry_toiletid IN (1,2)
   )
 
   WHERE rn = 1
@@ -156,7 +154,7 @@ async function compListforSupRepo(ulbid) {
 
 async function compListforSIRepo(ulbid) {
   let sql = `
- SELECT *
+SELECT *
  FROM (
     SELECT
       e.num_empctptentry_id,
@@ -186,7 +184,7 @@ async function compListforSIRepo(ulbid) {
 
       st.var_ctptstage_status,
       st.var_ctptstage_name,
-     e.var_empctptentry_supremark AS Supervisor_remark,
+
       var_empctptentry_supflag,
       var_empctptentry_siflag,
 
@@ -215,8 +213,6 @@ async function compListforSIRepo(ulbid) {
        e.num_empctptentry_stageid
 
     WHERE num_empctptentry_stageid = 3
-    AND var_empctptentry_supflag IS NOT NULL
-    AND var_empctptentry_siflag IS NULL
  )
 
  WHERE rn = 1
