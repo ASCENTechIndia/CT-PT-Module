@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useSidebar } from '../context/SidebarContext';
 import { useAuth } from '../context/AuthContext';
+import profileImage from "../../public/assets/images/profile-img.jpg"
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -33,14 +34,14 @@ export default function Navbar() {
           <span></span>
         </button>
 
-        <form className="d-none d-md-flex ms-3 flex-grow-1" role="search">
+        {/* <form className="d-none d-md-flex ms-3 flex-grow-1" role="search">
           <input 
             className="form-control search-input" 
             type="search" 
             placeholder="Search users, orders, reports" 
             aria-label="Search"
           />
-        </form>
+        </form> */}
 
         <div className="navbar-actions ms-auto">
           {/* <button 
@@ -53,7 +54,7 @@ export default function Navbar() {
             <i className={`bi ${isDarkMode ? 'bi-brightness-high' : 'bi-moon-stars'}`} aria-hidden="true"></i>
           </button> */}
 
-          <div className="dropdown">
+          {/* <div className="dropdown">
             <button 
               className="icon-button" 
               type="button" 
@@ -81,7 +82,7 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-          </div>
+          </div> */}
 
           <div className="dropdown">
             <button 
@@ -90,8 +91,8 @@ export default function Navbar() {
               onClick={() => setShowProfile(!showProfile)}
               aria-expanded={showProfile}
             >
-              <img className="avatar-img avatar-sm" src="/assets/images/avatar/avatar.jpg" alt="Admin Hasan" />
-              <span className="profile-name d-none d-sm-inline">Admin Hasan</span>
+              <img className="avatar-img avatar-sm" src={profileImage} alt="Admin Hasan" />
+              <span className="profile-name d-none d-sm-inline">{user?.userFullName}</span>
             </button>
             {showProfile && (
               <ul className="dropdown-menu dropdown-menu-end show">

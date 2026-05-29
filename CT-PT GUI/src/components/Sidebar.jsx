@@ -1,24 +1,33 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useSidebar } from '../context/SidebarContext';
+import logo from "../../public/assets/images/dhule-logo.png"
+import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar() {
+   const { user } = useAuth();
   const location = useLocation();
   const { isSidebarOpen } = useSidebar();
 
-  const navLinks = [
-    { path: '/', icon: 'bi-speedometer2', label: 'Dashboard' },
-    { path: '/users', icon: 'bi-people', label: 'Users' },
-    { path: '/add-user', icon: 'bi-person-plus', label: 'Add User' },
-    { path: '/profile', icon: 'bi-person-badge', label: 'Profile' },
-    { path: '/charts', icon: 'bi-bar-chart-line', label: 'Charts' },
-    { path: '/tables', icon: 'bi-table', label: 'Tables' },
-    { path: '/forms', icon: 'bi-ui-checks-grid', label: 'Forms' },
-    { path: '/components', icon: 'bi-grid-3x3-gap', label: 'Components' },
-    { path: '/alerts', icon: 'bi-exclamation-triangle', label: 'Alerts' },
-    { path: '/modals', icon: 'bi-window-stack', label: 'Modals' },
-    { path: '/settings', icon: 'bi-gear', label: 'Settings' },
-    { path: '/blank', icon: 'bi-file-earmark', label: 'Blank Page' },
-  ];
+  const getNavLinks = () => {
+    const allLinks = {
+      supervisor: [
+        { path: "/complaint-list", icon: 'bi-envelope-paper', label: 'Complaints' },
+        { path: "/application-list", icon: "bi-file-earmark-text", label: 'Applications'}
+      ],
+      sanitary: [
+        { path: "/application-list-sanitary", icon: "bi-file-earmark-text", label: 'Applications'}
+      ]
+    };
+
+    if (user?.designation === "Supervisor") {
+      return allLinks.supervisor;
+    } else if (user?.designation === "Sanitary Inspector") {
+      return allLinks.sanitary;
+    }
+    return [];
+  };
+
+  const navLinks = getNavLinks();
 
   return (
     <aside 
@@ -31,13 +40,15 @@ export default function Sidebar() {
       }}
     >
       <div className="sidebar-header">
-        <Link to="/" className="brand-mark" aria-label="adminHMD dashboard">
+        {/* <Link to="/" className="brand-mark" aria-label="adminHMD dashboard">
           <span className="brand-icon"><i className="bi bi-grid-1x2-fill" aria-hidden="true"></i></span>
           <span className="brand-copy">
             <span className="brand-title">adminHMD</span>
             <span className="brand-subtitle">Admin Template</span>
           </span>
-        </Link>
+        </Link> */}
+        <img src={logo} alt="Dhule Municipal Corporation Logo" className='m-auto' />
+
       </div>
 
       <nav className="sidebar-nav">
@@ -54,16 +65,16 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="sidebar-user">
+      {/* <div className="sidebar-user">
         <img className="avatar-img avatar-md sidebar-user-avatar" src="/assets/images/avatar/avatar.jpg" alt="Admin Hasan" />
         <strong>Admin Hasan</strong>
         <small>Active Workspace</small>
-      </div>
+      </div> */}
 
-      <div className="sidebar-footer">
+      {/* <div className="sidebar-footer">
         <span className="status-dot"></span>
         <span className="sidebar-footer-text">System running smoothly</span>
-      </div>
+      </div> */}
     </aside>
   );
 }
