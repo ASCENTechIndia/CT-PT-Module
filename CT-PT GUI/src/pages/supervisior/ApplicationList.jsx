@@ -22,16 +22,25 @@ const ApplicationList = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+
   // Fetch applications from API
-  const fetchApplications = async () => {
+  const fetchApplications = async (page = 1) => {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        "/authComplaint/getCompListForSup?ulbid=4"
+        `/authComplaint/getCompListForSup?ulbid=4&page=${page}&limit=${pageSize}`
       );
 
       if (response.success && response.data) {
-        setApplications(response.data);
+        setApplications(response.data.data);
+        setCurrentPage(response.data.pagination.page);
+        setTotalPages(response.data.pagination.totalPages);
+        setTotalRecords(response.data.pagination.total);
       }
     } catch (err) {
       console.error("Error fetching applications:", err);
@@ -46,7 +55,7 @@ const ApplicationList = () => {
 
   // Fetch applications on component mount
   useEffect(() => {
-    fetchApplications();
+    fetchApplications(1);
   }, []);
 
   // Fetch stage-wise images for selected application
@@ -152,7 +161,7 @@ const ApplicationList = () => {
 
         setShowModal(false);
         setSupervisorRemark("");
-        fetchApplications(); // Refresh the list
+        fetchApplications(currentPage); // Refresh the list with current page
       }
     } catch (err) {
       console.error("Error approving application:", err);
@@ -198,7 +207,7 @@ const ApplicationList = () => {
 
         setShowModal(false);
         setSupervisorRemark("");
-        fetchApplications(); // Refresh the list
+        fetchApplications(currentPage); // Refresh the list with current page
       }
     } catch (err) {
       console.error("Error rejecting application:", err);
@@ -207,6 +216,32 @@ const ApplicationList = () => {
       setModalMessage("Failed to reject application. Please try again.");
       setIsModalOpen(true);
     }
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchApplications(newPage);
+    }
+  };
+
+  // Generate pagination page numbers
+  const getPaginationPages = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   };
 
   // Render image thumbnails with click handler
@@ -311,8 +346,14 @@ const ApplicationList = () => {
                     <td>{formatDate(app.DAT_EMPCTPTENTRY_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className="btn btn-sm btn-outline-primary"
+                        className={`btn btn-sm ${
+                          app.VAR_EMPCTPTENTRY_SUPFLAG === 'A'
+                            ? 'btn-outline-secondary'
+                            : 'btn-outline-primary'
+                        }`}
                         onClick={() => handleReviewClick(app)}
+                        disabled={app.VAR_EMPCTPTENTRY_SUPFLAG === 'A'}
+                        title={app.VAR_EMPCTPTENTRY_SUPFLAG === 'A' ? 'Already approved' : ''}
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -321,6 +362,78 @@ const ApplicationList = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="d-flex align-items-center justify-content-between mt-4">
+            <div className="text-muted small">
+              Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
+              <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong> of{" "}
+              <strong>{totalRecords}</strong> applications
+            </div>
+            <nav aria-label="Page navigation">
+              <ul className="pagination mb-0">
+                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="bi bi-chevron-double-left"></i>
+                  </button>
+                </li>
+                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="bi bi-chevron-left"></i>
+                  </button>
+                </li>
+
+                {getPaginationPages().map((page) => (
+                  <li
+                    key={page}
+                    className={`page-item ${currentPage === page ? "active" : ""}`}
+                  >
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  </li>
+                ))}
+
+                <li
+                  className={`page-item ${
+                    currentPage === totalPages ? "disabled" : ""
+                  }`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <i className="bi bi-chevron-right"></i>
+                  </button>
+                </li>
+                <li
+                  className={`page-item ${
+                    currentPage === totalPages ? "disabled" : ""
+                  }`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <i className="bi bi-chevron-double-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       )}
