@@ -44,8 +44,8 @@ async function authComplaint(req, res, next) {
 }
 
 async function getCompListForSup(req, res, next) {
-   try { const { ulbid, cursor = 0, limit = 10 } = req.query;
-    const result = await getCompListForSupService( ulbid, cursor, limit ); 
+   try { const { ulbid, page = 0, limit = 10 } = req.query;
+    const result = await getCompListForSupService( ulbid, page, limit ); 
     logApiSuccess( req, 200, { count: result.data?.length || 0 }, 'Complaint List for Supervisor completed' ); 
     return res.ok(result); } 
     catch (error) { logApiError( req, 500, error.message, 'Complaint List for Supervisor search error' );
@@ -54,8 +54,8 @@ async function getCompListForSup(req, res, next) {
 
 async function getCompListForSI(req, res, next) {
   try {
-    const { ulbid, cursor = 0, limit = 10 } = req.query;
-    const result = await getCompListSIService(ulbid, cursor, limit);
+    const { ulbid, page = 0, limit = 10 } = req.query;
+    const result = await getCompListSIService(ulbid, page, limit);
     logApiSuccess( req, 200, { count: result.data?.length || 0 }, 'Complaint List for SI completed' );
     return res.ok(result);
   } catch (error) {
