@@ -73,8 +73,7 @@ async function compListforSupRepo(ulbid, page = 1, limit = 10) {
    e.var_empctptentry_latitude, e.num_empctptentry_id AS uniqueid,
     u.var_user_username AS username, e.var_empctptentry_userid AS userid, e.var_empctptentry_longitude,
      e.num_empctptentry_toiletid, e.num_empctptentry_stageid, e.var_empctptentry_remark,
-      e.dat_empctptentry_insdate, e.num_empctptentry_ulbid, e.bolb_empctptentry_image,
-       e.bolb_empctptentry_image2, e.bolb_empctptentry_image3, ctpt.num_ctpttype_wardid, 
+      e.dat_empctptentry_insdate, e.num_empctptentry_ulbid, ctpt.num_ctpttype_wardid, 
        ctpt.var_ctpttype_toiletlocation, ctpt.var_ctpttype_femaleseats, ctpt.var_ctpttype_maleseats, 
        ctpt.var_ctpttype_totalseats, ctpt.var_ctpttype_status, ctpt.var_ctpttype_username,
         st.var_ctptstage_status, st.var_ctptstage_name, ROW_NUMBER() 
@@ -94,17 +93,7 @@ async function compListforSupRepo(ulbid, page = 1, limit = 10) {
   };
   const result = await executeQuery(sql, binds);
   const rows = result.rows || []; // Convert LOB images to base64
-  for (const row of rows) {
-    row.BOLB_EMPCTPTENTRY_IMAGE = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE,
-    );
-    row.BOLB_EMPCTPTENTRY_IMAGE2 = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE2,
-    );
-    row.BOLB_EMPCTPTENTRY_IMAGE3 = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE3,
-    );
-  } // Total count query
+  // Total count query
   const countSql = ` SELECT COUNT(*) AS total FROM ( SELECT ROW_NUMBER() OVER 
                 ( PARTITION BY e.var_empctptentry_userid, e.num_empctptentry_toiletid, TRUNC(e.dat_empctptentry_date)
                   ORDER BY e.dat_empctptentry_date DESC ) AS rn,
@@ -129,8 +118,7 @@ async function compListforSIRepo(ulbid, page = 1, limit = 10) {
      e.num_empctptentry_id AS uniqueid, u.var_user_username AS username, 
      e.var_empctptentry_userid AS userid, e.var_empctptentry_longitude, 
      e.num_empctptentry_toiletid, e.num_empctptentry_stageid, e.var_empctptentry_remark,
-      e.dat_empctptentry_insdate, e.num_empctptentry_ulbid, e.bolb_empctptentry_image,
-       e.bolb_empctptentry_image2, e.bolb_empctptentry_image3, ctpt.num_ctpttype_wardid,
+      e.dat_empctptentry_insdate, e.num_empctptentry_ulbid,  ctpt.num_ctpttype_wardid,
         ctpt.var_ctpttype_toiletlocation, ctpt.var_ctpttype_femaleseats, ctpt.var_ctpttype_maleseats,
          ctpt.var_ctpttype_totalseats, ctpt.var_ctpttype_status, ctpt.var_ctpttype_username, 
          st.var_ctptstage_status, st.var_ctptstage_name, var_empctptentry_supflag, 
@@ -149,17 +137,7 @@ async function compListforSIRepo(ulbid, page = 1, limit = 10) {
   };
   const result = await executeQuery(sql, binds);
   const rows = result.rows || []; // Convert LOB images to base64
-  for (const row of rows) {
-    row.BOLB_EMPCTPTENTRY_IMAGE = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE,
-    );
-    row.BOLB_EMPCTPTENTRY_IMAGE2 = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE2,
-    );
-    row.BOLB_EMPCTPTENTRY_IMAGE3 = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE3,
-    );
-  } // Total count query
+  // Total count query
   const countSql = ` SELECT COUNT(*) AS total FROM ( SELECT ROW_NUMBER() OVER
                   ( PARTITION BY e.var_empctptentry_userid, e.num_empctptentry_toiletid, 
                  TRUNC(e.dat_empctptentry_date) ORDER BY e.dat_empctptentry_date DESC ) AS rn,
