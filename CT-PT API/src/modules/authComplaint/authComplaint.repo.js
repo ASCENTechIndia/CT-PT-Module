@@ -70,7 +70,8 @@ async function lobToBase64(lob) {
 async function compListforSupRepo(ulbid, page = 1, limit = 10) {
   const offset = (Number(page) - 1) * Number(limit);
   let sql = ` SELECT * FROM ( SELECT e.num_empctptentry_id, e.dat_empctptentry_date, 
-   e.var_empctptentry_latitude, e.num_empctptentry_id AS uniqueid,
+   e.var_empctptentry_latitude, e.num_empctptentry_id AS uniqueid,e.var_empctptentry_supremark,
+             e.var_empctptentry_supflag,
     u.var_user_username AS username, e.var_empctptentry_userid AS userid, e.var_empctptentry_longitude,
      e.num_empctptentry_toiletid, e.num_empctptentry_stageid, e.var_empctptentry_remark,
       e.dat_empctptentry_insdate, e.num_empctptentry_ulbid, ctpt.num_ctpttype_wardid, 
