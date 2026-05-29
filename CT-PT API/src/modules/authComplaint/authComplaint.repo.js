@@ -122,7 +122,6 @@ async function compListforSupRepo(ulbid) {
 
       WHERE num_empctptentry_stageid = 3
       AND var_empctptentry_supflag IS NULL
-      AND num_empctptentry_toiletid IN (1,2)
   )
 
   WHERE rn = 1
