@@ -195,3 +195,83 @@ body {
     width: 90%;
   }
 }
+
+.filter-bar {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+  flex-wrap: wrap;  
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5b6e8c;
+  margin-bottom: 0.35rem;
+}
+
+.filter-input,
+.filter-select {
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  border-color: #2f88c5;
+  box-shadow: 0 0 0 3px rgba(47, 136, 197, 0.1);
+}
+
+.filter-input:hover,
+.filter-select:hover {
+  border-color: #b9d7ea;
+}
+
+/* Optional: style the status select arrow */
+.filter-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235b6e8c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  appearance: none;
+  padding-right: 2.5rem;
+}
+
+.btn-clear-filters {
+  background-color: transparent;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #5b6e8c;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.btn-clear-filters:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.btn-clear-filters i {
+  font-size: 0.85rem;
+}
