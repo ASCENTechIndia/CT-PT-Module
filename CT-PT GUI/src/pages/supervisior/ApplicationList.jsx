@@ -314,7 +314,7 @@ const ApplicationList = () => {
     if (flag === "A") {
       return (
         <span className="badge bg-success rounded-pill px-3 py-2">
-          <i className="bi bi-check-circle me-1"></i> Active
+          <i className="bi bi-check-circle me-1"></i> Approve
         </span>
       );
     } else if (flag === "R") {
@@ -425,6 +425,7 @@ const ApplicationList = () => {
                     type="date"
                     name="from"
                     className="filter-input"
+                    style={{ width: "150px" }}
                     value={dateFilter.from}
                     onChange={handleDateChangeFilter}
                   />
@@ -434,6 +435,7 @@ const ApplicationList = () => {
                   <input
                     type="date"
                     name="to"
+                    style={{ width: "150px" }}
                     className="filter-input"
                     value={dateFilter.to}
                     onChange={handleDateChangeFilter}
@@ -444,11 +446,12 @@ const ApplicationList = () => {
                   <select
                     name="status"
                     className="filter-select"
+                    style={{ width: "107px" }}
                     value={statusFilter}
                     onChange={handleStatusChange}
                   >
                     <option value="all">All</option>
-                    <option value="A">Active</option>
+                    <option value="A">Approve</option>
                     <option value="R">Reject</option>
                     <option value="P">Pending</option>
                   </select>
