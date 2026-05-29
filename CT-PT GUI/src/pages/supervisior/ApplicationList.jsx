@@ -26,14 +26,14 @@ const ApplicationList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   // Fetch applications from API
   const fetchApplications = async (page = 1) => {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        `/authComplaint/getCompListForSI?ulbid=4&page=${page}&limit=${pageSize}`
+        `/authComplaint/getCompListForSup?ulbid=4&page=${page}&limit=${pageSize}`
       );
 
       if (response.success && response.data) {
@@ -346,8 +346,14 @@ const ApplicationList = () => {
                     <td>{formatDate(app.DAT_EMPCTPTENTRY_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className="btn btn-sm btn-outline-primary"
+                        className={`btn btn-sm ${
+                          app.VAR_EMPCTPTENTRY_SUPFLAG === 'A'
+                            ? 'btn-outline-secondary'
+                            : 'btn-outline-primary'
+                        }`}
                         onClick={() => handleReviewClick(app)}
+                        disabled={app.VAR_EMPCTPTENTRY_SUPFLAG === 'A'}
+                        title={app.VAR_EMPCTPTENTRY_SUPFLAG === 'A' ? 'Already approved' : ''}
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>

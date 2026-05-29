@@ -346,8 +346,14 @@ const ApplicationListSI = () => {
                     <td>{formatDate(app.DAT_EMPCTPTENTRY_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className="btn btn-sm btn-outline-primary"
+                        className={`btn btn-sm ${
+                          app.VAR_EMPCTPTENTRY_SIFLAG === 'A'
+                            ? 'btn-outline-secondary'
+                            : 'btn-outline-primary'
+                        }`}
                         onClick={() => handleReviewClick(app)}
+                        disabled={app.VAR_EMPCTPTENTRY_SIFLAG === 'A'}
+                        title={app.VAR_EMPCTPTENTRY_SIFLAG === 'A' ? 'Already approved' : ''}
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
