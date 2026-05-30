@@ -11,7 +11,7 @@ export default function Sidebar() {
   const getNavLinks = () => {
     const allLinks = {
       supervisor: [
-        { path: "/complaint-list", icon: 'bi-envelope-paper', label: 'Complaints' },
+        { path: "/resolved-complaint-supervisor-list", icon: 'bi-envelope-paper', label: 'Resolved Complaints' },
         { path: "/application-list", icon: "bi-file-earmark-text", label: 'Applications'}
       ],
       sanitary: [

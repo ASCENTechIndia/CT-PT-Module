@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 
 const ApplicationList = () => {
   const { user } = useAuth();
+  const ulbid = user?.orgId;
   const [applications, setApplications] = useState([]);
   const [originalApplicationData, setOriginalApplicationData] = useState([]);
   const [stageWiseImages, setStageWiseImages] = useState([]);
@@ -39,7 +40,7 @@ const ApplicationList = () => {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        `/authComplaint/getCompListForSup?ulbid=4&page=${page}&limit=${pageSize}`,
+        `/authComplaint/getCompListForSup?ulbid=${ulbid}&page=${page}&limit=${pageSize}`,
       );
 
       if (response.success && response.data) {
@@ -77,7 +78,7 @@ const ApplicationList = () => {
   const fetchStageWiseImages = async (application) => {
     try {
       const response = await apiClient.get(
-        `/authComplaint/getImages?ulbid=4&toiletId=${application.NUM_EMPCTPTENTRY_TOILETID}&applid=${application.NUM_EMPCTPTENTRY_ID}`,
+        `/authComplaint/getImages?ulbid=${ulbid}&toiletId=${application.NUM_EMPCTPTENTRY_TOILETID}&applid=${application.NUM_EMPCTPTENTRY_ID}`,
       );
 
       if (response.success && response.data) {
@@ -155,7 +156,7 @@ const ApplicationList = () => {
       const payload = {
         userId: user.userId, // TODO: Get from user context/login
         applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
-        ulbId: 4,
+        ulbId: ulbid,
         mode: 1, // 1 for supervisor
         status: "A", // A for approve
         remark: supervisorRemark,
@@ -199,7 +200,7 @@ const ApplicationList = () => {
       const payload = {
         userId: user.userId, // TODO: Get from user context/login
         applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
-        ulbId: 4,
+        ulbId: ulbid,
         mode: 1, // 1 for supervisor
         status: "R", // R for reject
         remark: supervisorRemark,
