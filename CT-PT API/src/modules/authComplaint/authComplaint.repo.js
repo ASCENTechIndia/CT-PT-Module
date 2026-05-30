@@ -148,12 +148,18 @@ async function compListforSupRepo(
   }
 
   // ================= STATUS FILTER =================
-  if (status && status !== 'ALL') {
+if (status && status !== 'ALL') {
+  if (status === 'P') {
     sql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_supflag IS NULL
+    `;
+  } else {
+    sql += `
+      AND e.var_empctptentry_supflag = :status
     `;
     binds.status = status;
   }
+}
 
   sql += `
     )
@@ -201,12 +207,18 @@ async function compListforSupRepo(
     countBinds.toDate = toDate;
   }
 
-  if (status && status !== 'ALL') {
+ if (status && status !== 'ALL') {
+  if (status === 'P') {
     countSql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_supflag IS NULL
+    `;
+  } else {
+    countSql += `
+      AND e.var_empctptentry_supflag = :status
     `;
     countBinds.status = status;
   }
+}
 
   countSql += `
     )
@@ -313,12 +325,18 @@ async function compListforSIRepo(
   }
 
   // ================= STATUS FILTER =================
-  if (status && status !== "ALL") {
+ if (status && status !== 'ALL') {
+  if (status === 'P') {
     sql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_siflag IS NULL
+    `;
+  } else {
+    sql += `
+      AND e.var_empctptentry_siflag = :status
     `;
     binds.status = status;
   }
+}
 
   sql += `
     )
@@ -369,12 +387,18 @@ async function compListforSIRepo(
     countBinds.toDate = toDate;
   }
 
-  if (status && status !== "ALL") {
+  if (status && status !== 'ALL') {
+  if (status === 'P') {
     countSql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_siflag IS NULL
+    `;
+  } else {
+    countSql += `
+      AND e.var_empctptentry_siflag = :status
     `;
     countBinds.status = status;
   }
+}
 
   countSql += `
     )
