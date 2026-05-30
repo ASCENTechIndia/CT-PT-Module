@@ -77,10 +77,10 @@ async function getImagesCon(req, res, next) {
 }
 
 async function resolvedListbyVendor(req, res, next) {
-   try { const { ulbid,fromDate,toDate,status, page = 0, limit = 10 } = req.query;
-    const result = await getrslvdListbyVendorService( ulbid,fromDate,toDate,status, page, limit); 
-    logApiSuccess( req, 200, { count: result.data?.length || 0 }, 'Resolved Complaint List for Supervisor completed' ); 
-    return res.ok(result); } 
+   try { const { ulbid, supervisorId, fromDate, toDate, status, page = 1, limit = 10 } = req.query;
+    const result = await getrslvdListbyVendorService( ulbid, supervisorId, fromDate, toDate, status, page, limit);
+    logApiSuccess( req, 200, { count: result.data?.length || 0 }, 'Resolved Complaint List for Supervisor completed' );
+    return res.ok(result); }
     catch (error) { logApiError( req, 500, error.message, 'Resolved Complaint List for Supervisor search error' );
        return next(error); }
        }

@@ -18,8 +18,14 @@ async function getImagesService(ulbid, toiletId, applid) {
   return getImages(ulbid, toiletId, applid);
 }
 
-async function getrslvdListbyVendorService( ulbid, fromDate,toDate,status, page, limit ) {
-   return rslvdListbyVendorRepo( ulbid, fromDate,toDate,status, page, limit ); 
+async function getrslvdListbyVendorService( ulbid,supervisorId, fromDate,toDate,status, page, limit ) {
+   return rslvdListbyVendorRepo(ulbid,
+  supervisorId,
+  fromDate,
+  toDate,
+  status,
+  page ,
+  limit ); 
   }
 
 async function getrslvdListbySupService( ulbid, fromDate,toDate,status, page, limit ) {

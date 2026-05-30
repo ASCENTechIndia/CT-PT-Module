@@ -467,152 +467,124 @@ ORDER BY num_empctptentry_stageid ASC
 
 async function rslvdListbyVendorRepo(
   ulbid,
+  supervisorId,
   fromDate,
   toDate,
   status,
   page = 1,
   limit = 10
 ) {
-  // console.log("Repo Params:", { ulbid, fromDate, toDate, status, page, limit });
+  // console.log("Repo Params:", { ulbid, supervisorId, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
 
   let sql = `
-    SELECT * FROM (
-      SELECT
-        e.num_empctptentry_id,
-        e.dat_empctptentry_date,
-        e.var_empctptentry_latitude,
-        e.num_empctptentry_id AS uniqueid,
-        e.var_empctptentry_supremark,
-        e.var_empctptentry_supflag,
-        u.var_user_username AS username,
-        e.var_empctptentry_userid AS userid,
-        e.var_empctptentry_longitude,
-        e.num_empctptentry_toiletid,
-        e.num_empctptentry_stageid,
-        e.var_empctptentry_remark,
-        e.dat_empctptentry_insdate,
-        e.num_empctptentry_ulbid,
-
-        ctpt.num_ctpttype_wardid,
-        ctpt.var_ctpttype_toiletlocation,
-        ctpt.var_ctpttype_femaleseats,
-        ctpt.var_ctpttype_maleseats,
-        ctpt.var_ctpttype_totalseats,
-        ctpt.var_ctpttype_status,
-        ctpt.var_ctpttype_username,
-
-        st.var_ctptstage_status,
-        st.var_ctptstage_name,
-
-        ROW_NUMBER() OVER (
-          PARTITION BY
-            e.var_empctptentry_userid,
-            e.num_empctptentry_toiletid,
-            TRUNC(e.dat_empctptentry_date)
-          ORDER BY e.dat_empctptentry_date DESC
-        ) AS rn
-
-      FROM aorts_empctptentry_mst e
-
-      INNER JOIN admins.aoma_user_def u
-        ON u.num_user_userid = e.var_empctptentry_userid
-
-      LEFT JOIN aorts_ctptlist_mas ctpt
-        ON ctpt.num_ctpttype_id = e.num_empctptentry_toiletid
-
-      LEFT JOIN aorts_ctptstage_mas st
-        ON st.num_ctptstage_id = e.num_empctptentry_stageid
-
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-
-      WHERE e.num_empctptentry_stageid = 3
+    SELECT
+      a.prbhag,
+      a.prbhagid,
+      a.superwiser_id,
+      a.superwiser,
+      a.location,
+      a.var_complaint_status,
+      a.var_complaint_citizname,
+      a.num_complaint_toilet,
+      a.mobileno,
+      a.complaint_date,
+      a.var_complaint_remark,
+      a.var_ctptsanitinspctor_name,
+      a.blob_complaint_unitimg1,
+      a.blob_complaint_unitimg2,
+      a.blob_complaint_unitimg3,
+      a.blob_complaint_unitimg4,
+      a.blob_complaint_unitimg5,
+      a.ulbid,
+      a.si_id
+    FROM vw_ctptpendingcomplaint_assinlist a
+    WHERE a.ulbid = :ulbid
+      AND a.superwiser_id = :supervisorId
   `;
 
   const binds = {
     ulbid: Number(ulbid),
+    supervisorId: supervisorId,
   };
 
-  // ================= DATE FILTER =================
+  // Date Filter
   if (fromDate && toDate) {
     sql += `
-      AND TRUNC(e.dat_empctptentry_date)
-      BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
-      AND TO_DATE(:toDate, 'YYYY-MM-DD')
+      AND TRUNC(a.complaint_date)
+      BETWEEN TO_DATE(:fromDate,'YYYY-MM-DD')
+      AND TO_DATE(:toDate,'YYYY-MM-DD')
     `;
+
     binds.fromDate = fromDate;
     binds.toDate = toDate;
   }
 
-  // ================= STATUS FILTER =================
-  if (status && status !== 'ALL') {
+  // Status Filter
+  if (status && status !== "ALL") {
     sql += `
-      AND c.var_complaint_status = :status
+      AND a.var_complaint_status = :status
     `;
+
     binds.status = status;
   }
 
   sql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
-
-    ORDER BY num_empctptentry_id DESC
-    OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
+    ORDER BY a.complaint_date DESC
+    OFFSET :offset ROWS
+    FETCH NEXT :limit ROWS ONLY
   `;
 
-  binds.offset = Number(offset);
+  binds.offset = offset;
   binds.limit = Number(limit);
 
   const result = await executeQuery(sql, binds);
+
   const rows = result.rows || [];
 
-  // ================= COUNT QUERY =================
+  // Convert images
+  for (const row of rows) {
+    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG1);
+    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG2);
+    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
+    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
+    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
+  }
+
+  // Count Query
   let countSql = `
-    SELECT COUNT(*) AS total FROM (
-      SELECT ROW_NUMBER() OVER (
-        PARTITION BY
-          e.var_empctptentry_userid,
-          e.num_empctptentry_toiletid,
-          TRUNC(e.dat_empctptentry_date)
-        ORDER BY e.dat_empctptentry_date DESC
-      ) AS rn,
-      e.num_empctptentry_ulbid
-      FROM aorts_empctptentry_mst e
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-      WHERE e.num_empctptentry_stageid = 3
+    SELECT COUNT(*) AS TOTAL
+    FROM vw_ctptpendingcomplaint_assinlist a
+    WHERE a.ulbid = :ulbid
+      AND a.superwiser_id = :supervisorId
   `;
 
   const countBinds = {
     ulbid: Number(ulbid),
+    supervisorId: Number(supervisorId),
   };
 
   if (fromDate && toDate) {
     countSql += `
-      AND TRUNC(e.dat_empctptentry_date)
-      BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
-      AND TO_DATE(:toDate, 'YYYY-MM-DD')
+      AND TRUNC(a.complaint_date)
+      BETWEEN TO_DATE(:fromDate,'YYYY-MM-DD')
+      AND TO_DATE(:toDate,'YYYY-MM-DD')
     `;
+
     countBinds.fromDate = fromDate;
     countBinds.toDate = toDate;
   }
 
-  if (status && status !== 'ALL') {
+  if (status && status !== "ALL") {
     countSql += `
-      AND c.var_complaint_status = :status
+      AND a.var_complaint_status = :status
     `;
+
     countBinds.status = status;
   }
 
-  countSql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
-  `;
-
   const countResult = await executeQuery(countSql, countBinds);
+
   const total = countResult.rows?.[0]?.TOTAL || 0;
 
   return {
