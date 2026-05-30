@@ -1,6 +1,4 @@
-const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, assignComplaintService, compListService,
-  serviceSupervisorList
-} = require('./registerComplaint.service');
+const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, assignComplaintService, compListService} = require('./registerComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 function requestMeta(req) {
@@ -77,52 +75,36 @@ async function registerComplaint(req, res, next) {
   }
 }
 
-async function assignComplaintRepo(payload) {
-  const statement = `
-    BEGIN
-      aorts.aorts_ctptcomplaintassignsuperwer_ins(
-        :in_userid,
-        :in_compaintid,
-        :in_superwiserid,
-        :in_wardno,
-        :in_ulbid,
-        :out_errcode,
-        :out_ErrMsg
-      );
-    END;
-  `;
+async function assignComplaint(req, res, next) {
+  try {
+    const payload = req.body;
 
-  const binds = {
-    in_userid: payload.userId,
-    in_compaintid: payload.complaintId,
-    in_superwiserid: payload.supervisorId,
-    in_wardno: payload.wardNo,
-    in_ulbid: payload.ulbId,
+    const out = await assignComplaintService(payload);
 
-    out_errcode: {
-      dir: oracledb.BIND_OUT,
-      type: oracledb.NUMBER,
-    },
+    const isSuccess = String(out.errorCode) === "9999";
 
-    out_ErrMsg: {
-      dir: oracledb.BIND_OUT,
-      type: oracledb.STRING,
-      maxSize: 1000,
-    },
-  };
+    if (isSuccess) {
+      logApiSuccess(req, 200, "Complaint Assigned Successfully");
+    } else {
+      logApiError(req, 400, out.message, "Complaint Assignment failed");
+    }
 
-  const result = await executeProcedure({
-    statement,
-    binds,
-    useTx: false,
-  });
-
-  const out = result.outBinds;
-
-  return {
-    errorCode: out.out_errcode,
-    message: out.out_ErrMsg,
-  };
+    auditLog({
+      action: "COMPLAINT_ASSIGNMENT",
+      actor: req.user?.userId || "system",
+      module: "registerComplaint",
+      status: isSuccess ? "SUCCESS" : "FAILED",
+      details: {
+        outErrorCode: out.errorCode,
+        outErrorMsg: out.message,
+      },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(out);
+  } catch (error) {
+    logApiError(req, 500, error.message, "Complaint Assignment error");
+    return next(error);
+  }
 }
 
 async function getComplaintList(req, res, next) {
@@ -137,17 +119,4 @@ async function getComplaintList(req, res, next) {
   }
 }
 
-async function getSupervisorList(req, res, next) {
-  try {
-    const rows = await serviceSupervisorList(req.query.ulbid);
-    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Supervisor List Report completed' );
-    return res.ok(rows);
-  } catch (error) {
-    logApiError(req, 500, error.message, 'Supervisor List Report search error');
-    return next(error);
-  }
-}
-
-module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList ,
-  getSupervisorList
-};
+module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList };
