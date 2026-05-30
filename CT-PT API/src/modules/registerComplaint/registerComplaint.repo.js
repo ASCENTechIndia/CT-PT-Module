@@ -128,12 +128,11 @@ async function regComplaintRepo(payload) {
 async function assignComplaintRepo(payload) {
   const statement = `
     BEGIN
-      aorts.aorts_ctptcomplaintassign_ins(
+      aorts.aorts_ctptcomplaintassignsuperwer_ins(
         :in_userid,
         :in_compaintid,
-        :in_sanitoryinspid,
+        :in_superwiserid,
         :in_wardno,
-        :in_vendorid,
         :in_ulbid,
         :out_errcode,
         :out_ErrMsg
@@ -144,14 +143,15 @@ async function assignComplaintRepo(payload) {
   const binds = {
     in_userid: payload.userId,
     in_compaintid: payload.complaintId,
-    in_sanitoryinspid: payload.sanitoryInspId,
+    in_superwiserid: payload.supervisorId,
     in_wardno: payload.wardNo,
-    in_vendorid: payload.vendorId ?? 1,
     in_ulbid: payload.ulbId,
+
     out_errcode: {
       dir: oracledb.BIND_OUT,
       type: oracledb.NUMBER,
     },
+
     out_ErrMsg: {
       dir: oracledb.BIND_OUT,
       type: oracledb.STRING,
