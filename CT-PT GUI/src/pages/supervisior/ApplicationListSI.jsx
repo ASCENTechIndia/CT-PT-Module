@@ -414,7 +414,7 @@ const ApplicationListSI = () => {
                 <span>All Applications ({applications.length})</span>
               </h2>
               <p className="text-muted mb-0">
-                Click on an application to view details, images, and location.
+                View application details, images, and location.
               </p>
             </div>
             <div>

@@ -36,7 +36,29 @@ const ComplaintsTable = () => {
     fromDate: getToday(),
     toDate: getToday(),
     status: ""
-  })
+  });
+
+  const handleDateChangeFilter = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleStatusChange = (e) => {
+    setFilters((prev) => ({ ...prev, status: e.target.value }));
+  };
+
+  const handleClearFilters = () => {
+    const clearedFilters = {
+      fromDate: "",
+      toDate: "",
+      status: ""
+    };
+    setFilters(clearedFilters);
+    // Call API with cleared filters
+    setTimeout(() => {
+      fetchComplaints(1);
+    }, 0);
+  };
 
   // React Hook Form setup
   const {
@@ -46,8 +68,7 @@ const ComplaintsTable = () => {
     formState: { errors },
   } = useForm();
 
-  // Fetch complaints from API on component mount
-
+  // Fetch complaints on filter change
   useEffect(() => {
     fetchComplaints(1);
   }, [filters])
@@ -283,56 +304,70 @@ const ComplaintsTable = () => {
         </div>
       ) : (
         <div className="panel">
-          <div className="panel-header">
-            <div className="complaints-header">
-              <div>
-                <h2 className="h5 mb-1 section-title">
-                  <i className="bi bi-table" aria-hidden="true"></i>
-                  <span>All Complaints ({complaints?.length})</span>
-                </h2>
-
-                <p className="text-muted mb-0">
-                  View and manage complaints submitted by citizens.
-                </p>
-              </div>
-
-              <form className="complaints-filter-form">
-                <div>
-                  <label htmlFor="fromDate" className="form-label mb-1 small">
-                    From Date
-                  </label>
-                  <input type="date" id="fromDate" className="form-control form-control-sm"
+          <div className="panel-header d-flex justify-content-between">
+            <div>
+              <h2 className="h5 mb-1 section-title">
+                <i className="bi bi-table" aria-hidden="true"></i>
+                <span>All Complaints ({complaints?.length})</span>
+              </h2>
+              <p className="text-muted mb-0">
+                View and manage complaints submitted by citizens.
+              </p>
+            </div>
+            <div>
+              <div className="filter-bar">
+                <div className="filter-group">
+                  <label htmlFor="fromDate">From Date</label>
+                  <input 
+                    type="date" 
+                    id="fromDate" 
+                    name="fromDate"
+                    className="filter-input"
+                    style={{ width: "150px" }}
                     value={filters.fromDate}
-                    onChange={(e) => setFilters((prev) => ({ ...prev, fromDate: e.target.value }))}
+                    onChange={handleDateChangeFilter}
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="toDate" className="form-label mb-1 small">
-                    To Date
-                  </label>
-                  <input type="date" id="toDate" className="form-control form-control-sm"
+                <div className="filter-group">
+                  <label htmlFor="toDate">To Date</label>
+                  <input 
+                    type="date" 
+                    id="toDate" 
+                    name="toDate"
+                    className="filter-input"
+                    style={{ width: "150px" }}
                     value={filters.toDate}
-                    onChange={(e) => setFilters((prev) => ({ ...prev, toDate: e.target.value }))}
+                    onChange={handleDateChangeFilter}
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="status" className="form-label mb-1 small">
-                    Status
-                  </label>
-
-                  <select id="status" className="form-select form-select-sm"
+                <div className="filter-group">
+                  <label htmlFor="status">Status</label>
+                  <select 
+                    id="status" 
+                    className="filter-select"
+                    style={{ width: "120px" }}
                     value={filters.status}
-                    onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+                    onChange={handleStatusChange}
                   >
                     <option value="">All</option>
-                    <option value="A">Approved</option>
-                    <option value="R">Rejected</option>
                     <option value="P">Pending</option>
+                    <option value="Y">Resolved</option>
+                    <option value="R">Rejected</option>
                   </select>
                 </div>
-              </form>
+
+                <div className="filter-group" style={{ justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    className="btn-clear-filters"
+                    onClick={handleClearFilters}
+                  >
+                    <i className="bi bi-x-lg me-1"></i> Clear
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div className="table-responsive">
