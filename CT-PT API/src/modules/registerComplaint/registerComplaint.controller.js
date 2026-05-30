@@ -1,4 +1,4 @@
-const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, compListService} = require('./registerComplaint.service');
+const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, assignComplaintService, compListService} = require('./registerComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 function requestMeta(req) {
@@ -75,6 +75,38 @@ async function registerComplaint(req, res, next) {
   }
 }
 
+async function assignComplaint(req, res, next) {
+  try {
+    const payload = req.body;
+
+    const out = await assignComplaintService(payload);
+
+    const isSuccess = String(out.errorCode) === "9999";
+
+    if (isSuccess) {
+      logApiSuccess(req, 200, "Complaint Assigned Successfully");
+    } else {
+      logApiError(req, 400, out.message, "Complaint Assignment failed");
+    }
+
+    auditLog({
+      action: "COMPLAINT_ASSIGNMENT",
+      actor: req.user?.userId || "system",
+      module: "registerComplaint",
+      status: isSuccess ? "SUCCESS" : "FAILED",
+      details: {
+        outErrorCode: out.errorCode,
+        outErrorMsg: out.message,
+      },
+      requestMeta: requestMeta(req),
+    });
+    return res.ok(out);
+  } catch (error) {
+    logApiError(req, 500, error.message, "Complaint Assignment error");
+    return next(error);
+  }
+}
+
 async function getComplaintList(req, res, next) {
   try {
     const {si_id, ulbid, fromDate=null, toDate=null, status=null, page = 1, limit = 10 } = req.query;
@@ -87,4 +119,4 @@ async function getComplaintList(req, res, next) {
   }
 }
 
-module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, getComplaintList };
+module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList };

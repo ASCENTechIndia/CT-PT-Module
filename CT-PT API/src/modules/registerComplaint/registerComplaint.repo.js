@@ -125,6 +125,54 @@ async function regComplaintRepo(payload) {
   };
 }
 
+async function assignComplaintRepo(payload) {
+  const statement = `
+    BEGIN
+      aorts.aorts_ctptcomplaintassign_ins(
+        :in_userid,
+        :in_compaintid,
+        :in_sanitoryinspid,
+        :in_wardno,
+        :in_vendorid,
+        :in_ulbid,
+        :out_errcode,
+        :out_ErrMsg
+      );
+    END;
+  `;
+
+  const binds = {
+    in_userid: payload.userId,
+    in_compaintid: payload.complaintId,
+    in_sanitoryinspid: payload.sanitoryInspId,
+    in_wardno: payload.wardNo,
+    in_vendorid: payload.vendorId ?? 1,
+    in_ulbid: payload.ulbId,
+    out_errcode: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.NUMBER,
+    },
+    out_ErrMsg: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
+  };
+
+  const result = await executeProcedure({
+    statement,
+    binds,
+    useTx: false,
+  });
+
+  const out = result.outBinds;
+
+  return {
+    errorCode: out.out_errcode,
+    message: out.out_ErrMsg,
+  };
+}
+
 async function lobToBase64(lob) {
   if (!lob) return null;
   return new Promise((resolve, reject) => {
@@ -208,4 +256,4 @@ async function compListRepo(si_id,ulbid, fromDate, toDate, status, page = 1, lim
   };
 }
 
-module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo };
+module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo,assignComplaintRepo };
