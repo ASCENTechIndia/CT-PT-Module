@@ -85,11 +85,12 @@ const ComplaintsTable = () => {
         ...(filters.toDate && { toDate: filters.toDate }),
         ...(filters.status && { status: filters.status }),
       };
-
+      console.log(params);
       const response = await apiClient.get(
         "/registerComplaint/getCitizenComplaintList",
         { params }
       );
+      console.log(response);
 
       if (response.success && response.data.data) {
         const transformedComplaints = response.data.data.map((complaint) => ({
