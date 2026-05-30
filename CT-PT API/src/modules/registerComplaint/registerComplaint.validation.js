@@ -19,10 +19,11 @@ const complaintRegistrationSchema = z.object({
 });
 
 const assignComplaintSchema = z.object({
-  userId: z.union([z.string().trim().min(1), z.number()])
+  userId: z.union([z.string(), z.number()])
     .transform(String),
   complaintId: z.coerce.number().int().positive(),
-  supervisorId: z.coerce.number().int().positive(),
+  supervisorId: z.union([z.string(), z.number()])
+    .transform(String),
   wardNo: z.coerce.number().int().positive(),
   ulbId: z.coerce.number().int().positive(),
 });
