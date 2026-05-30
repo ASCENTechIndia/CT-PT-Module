@@ -1,4 +1,6 @@
-const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, compListService} = require('./registerComplaint.service');
+const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, assignComplaintService, compListService,
+  serviceSupervisorList
+} = require('./registerComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 function requestMeta(req) {
@@ -75,6 +77,54 @@ async function registerComplaint(req, res, next) {
   }
 }
 
+async function assignComplaintRepo(payload) {
+  const statement = `
+    BEGIN
+      aorts.aorts_ctptcomplaintassignsuperwer_ins(
+        :in_userid,
+        :in_compaintid,
+        :in_superwiserid,
+        :in_wardno,
+        :in_ulbid,
+        :out_errcode,
+        :out_ErrMsg
+      );
+    END;
+  `;
+
+  const binds = {
+    in_userid: payload.userId,
+    in_compaintid: payload.complaintId,
+    in_superwiserid: payload.supervisorId,
+    in_wardno: payload.wardNo,
+    in_ulbid: payload.ulbId,
+
+    out_errcode: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.NUMBER,
+    },
+
+    out_ErrMsg: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
+  };
+
+  const result = await executeProcedure({
+    statement,
+    binds,
+    useTx: false,
+  });
+
+  const out = result.outBinds;
+
+  return {
+    errorCode: out.out_errcode,
+    message: out.out_ErrMsg,
+  };
+}
+
 async function getComplaintList(req, res, next) {
   try {
     const {si_id, ulbid, fromDate=null, toDate=null, status=null, page = 1, limit = 10 } = req.query;
@@ -87,4 +137,17 @@ async function getComplaintList(req, res, next) {
   }
 }
 
-module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, getComplaintList };
+async function getSupervisorList(req, res, next) {
+  try {
+    const rows = await serviceSupervisorList(req.query.ulbid);
+    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Supervisor List Report completed' );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Supervisor List Report search error');
+    return next(error);
+  }
+}
+
+module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList ,
+  getSupervisorList
+};

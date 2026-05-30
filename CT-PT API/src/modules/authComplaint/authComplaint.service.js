@@ -1,4 +1,6 @@
-const { authComplaintRepo, compListforSupRepo, compListforSIRepo, getImages } = require('./authComplaint.repo');
+const { authComplaintRepo, compListforSupRepo, compListforSIRepo, getImages,
+  rslvdListbyVendorRepo, rslvdListbySupRepo
+ } = require('./authComplaint.repo');
 
 async function authComplaintService(payload) {
   return authComplaintRepo(payload);
@@ -16,6 +18,15 @@ async function getImagesService(ulbid, toiletId, applid) {
   return getImages(ulbid, toiletId, applid);
 }
 
+async function getrslvdListbyVendorService( ulbid, fromDate,toDate,status, page, limit ) {
+   return rslvdListbyVendorRepo( ulbid, fromDate,toDate,status, page, limit ); 
+  }
+
+async function getrslvdListbySupService( ulbid, fromDate,toDate,status, page, limit ) {
+   return rslvdListbySupRepo( ulbid, fromDate,toDate,status, page, limit ); 
+  }
+
+
 module.exports = {
-  authComplaintService, getCompListForSupService, getCompListSIService, getImagesService
+  authComplaintService, getCompListForSupService, getCompListSIService, getImagesService, getrslvdListbyVendorService, getrslvdListbySupService
 };

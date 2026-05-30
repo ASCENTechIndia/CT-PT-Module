@@ -1,5 +1,5 @@
 const { authComplaintService, getCompListForSupService, getCompListSIService,
-    getImagesService
+    getImagesService,getrslvdListbyVendorService, getrslvdListbySupService
  } = require('./authComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -76,4 +76,22 @@ async function getImagesCon(req, res, next) {
   }
 }
 
-module.exports = { authComplaint, getCompListForSup, getCompListForSI, getImagesCon };
+async function resolvedListbyVendor(req, res, next) {
+   try { const { ulbid,fromDate,toDate,status, page = 0, limit = 10 } = req.query;
+    const result = await getrslvdListbyVendorService( ulbid,fromDate,toDate,status, page, limit); 
+    logApiSuccess( req, 200, { count: result.data?.length || 0 }, 'Resolved Complaint List for Supervisor completed' ); 
+    return res.ok(result); } 
+    catch (error) { logApiError( req, 500, error.message, 'Resolved Complaint List for Supervisor search error' );
+       return next(error); }
+       }
+
+async function resolvedListbySup(req, res, next) {
+   try { const { ulbid,fromDate,toDate,status, page = 0, limit = 10 } = req.query;
+    const result = await getrslvdListbySupService( ulbid,fromDate,toDate,status, page, limit); 
+    logApiSuccess( req, 200, { count: result.data?.length || 0 }, 'Resolved Complaint List for Supervisor completed' ); 
+    return res.ok(result); } 
+    catch (error) { logApiError( req, 500, error.message, 'Resolved Complaint List for Supervisor search error' );
+       return next(error); }
+       }
+       
+module.exports = { authComplaint, getCompListForSup, getCompListForSI, getImagesCon, resolvedListbyVendor, resolvedListbySup };
