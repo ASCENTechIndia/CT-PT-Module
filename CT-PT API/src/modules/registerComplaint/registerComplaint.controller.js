@@ -107,6 +107,7 @@ async function assignComplaint(req, res, next) {
   }
 }
 
+
 async function getComplaintList(req, res, next) {
   try {
     const {si_id, ulbid, fromDate=null, toDate=null, status=null, page = 1, limit = 10 } = req.query;
