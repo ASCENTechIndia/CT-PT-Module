@@ -150,7 +150,7 @@ async function compListforSupRepo(
   // ================= STATUS FILTER =================
   if (status && status !== 'ALL') {
     sql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_supflag = :status
     `;
     binds.status = status;
   }
@@ -203,7 +203,7 @@ async function compListforSupRepo(
 
   if (status && status !== 'ALL') {
     countSql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_supflag = :status
     `;
     countBinds.status = status;
   }
@@ -315,7 +315,7 @@ async function compListforSIRepo(
   // ================= STATUS FILTER =================
   if (status && status !== "ALL") {
     sql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_siflag = :status
     `;
     binds.status = status;
   }
@@ -371,7 +371,7 @@ async function compListforSIRepo(
 
   if (status && status !== "ALL") {
     countSql += `
-      AND c.var_complaint_status = :status
+      AND e.var_empctptentry_siflag = :status
     `;
     countBinds.status = status;
   }
