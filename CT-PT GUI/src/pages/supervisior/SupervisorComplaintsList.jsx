@@ -13,6 +13,7 @@ const getToday = () => {
 const SupervisorComplaintsList = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
+  console.log(user);
 //   console.log("user Id", user);
   const userId = user?.userId;
   const [complaints, setComplaints] = useState([]);
