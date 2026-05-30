@@ -37,6 +37,7 @@ import ServerError from './pages/ServerError';
 import ResolvedComplaintList from './pages/supervisior/ResolvedComplaintList';
 import SupervisorComplaintsList from './pages/supervisior/SupervisorComplaintsList';
 import AssignComplaint from './pages/SI/AssignComplaint';
+import ResolvedComplaint from './pages/SI/ResolvedComplaint';
 
 function App() {
   return (
@@ -70,7 +71,8 @@ function App() {
               {/* <Route path="/resolved-complaint-supervisor-list" element={<ResolvedComplaintList />} /> */}
               <Route path="/application-list" element={<ApplicationList />} />
               <Route path="/application-list-sanitary" element={<ApplicationListSI />} />
-              <Route path="/AssignComplaint" element={<AssignComplaint />} />
+              <Route path="/all-complaint" element={<AssignComplaint />} />
+              <Route path="/resolved-complaint" element={<ResolvedComplaint />} />
               <Route path='/supervisor-complaint-list' element={<SupervisorComplaintsList />} />
 
               {/* Error Routes */}

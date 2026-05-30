@@ -7,10 +7,10 @@ import { useAuth } from "../../context/AuthContext";
 
 const getToday = () => {
   const d = new Date();
-  return d.toISOString().split("T")[0]; 
+  return d.toISOString().split("T")[0];
 };
 
-const AssignComplaint = () => {
+const ResolvedComplaint = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
   const userId = user?.userId;
@@ -21,9 +21,7 @@ const AssignComplaint = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [superVisiorList, setSupervisiorList] = useState([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [supervisiorId, setSupervisiorId] = useState("");
   const [supervisorRemark, setSupervisorRemark] = useState("");
 
   // Response Modal states
@@ -102,38 +100,6 @@ const AssignComplaint = () => {
       setLoading(false);
     }
   };
-
-  const fetchSupervisiorList = async () => {
-    if (!ulbid) {
-      return;
-    }
-    try {
-      setLoading(true);
-      const res = await apiClient.get(
-        `/registerComplaint/supervisorList?ulbid=${ulbid}`,
-      );
-      if (res?.success && res?.data?.length > 0) {
-        const list = res.data.map((item) => ({
-          label: item.VAR_CTPTTYPE_USERNAME,
-          value: item.VAR_CTPTTYPE_SUPPID,
-        }));
-        setSupervisiorList(list);
-      } else {
-        setSupervisiorList([]);
-      }
-    } catch (error) {
-      setSupervisiorList([]);
-      alert(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (ulbid) {
-      fetchSupervisiorList();
-    }
-  }, [ulbid]);
 
   // Open modal and display selected complaint details (read-only)
   const handleReviewClick = (complaint) => {
@@ -293,7 +259,7 @@ const AssignComplaint = () => {
                 <img
                   key={idx}
                   src={`data:image/png;base64,${img}`}
-                  //   alt={`complaint-${idx}`}
+                  alt={`complaint-${idx}`}
                   style={{
                     width: "80px",
                     height: "80px",
@@ -341,21 +307,6 @@ const AssignComplaint = () => {
     }
   };
 
-  const handleAssign = async () => {
-    if (!supervisiorId) {
-      alert("Please Select Supervisior");
-      return;
-    }
-    try {
-      setLoading(true);
-      const res = await apiClient.post(``)
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <Layout>
       {loading ? (
@@ -371,7 +322,7 @@ const AssignComplaint = () => {
             <div>
               <h2 className="h5 mb-1 section-title">
                 <i className="bi bi-table" aria-hidden="true"></i>
-                <span>All Complaints ({complaints?.length})</span>
+                <span>Resolved Complaint ({complaints?.length})</span>
               </h2>
               <p className="text-muted mb-0">
                 View and manage complaints submitted by citizens.
@@ -627,24 +578,30 @@ const AssignComplaint = () => {
                 </div>
 
                 {/* Supervisor Actions */}
-                <div className="mt-4 pt-3 border-top d-flex flex-column">
+                <div className="mt-4 pt-3 border-top">
+                  <label className="form-label fw-semibold">SI Remark*</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Add your remarks about this complaint before approving or rejecting..."
+                    value={supervisorRemark}
+                    onChange={(e) => setSupervisorRemark(e.target.value)}
+                  ></textarea>
+                </div>
+                <div className="mt-1 pt-3 d-flex flex-column">
                   <label className="form-label fw-semibold">
-                    Select Supervisior *
+                    Select Status*
                   </label>
                   <select
                     id="status"
                     className="filter-select"
-                    style={{ width: "230px" }}
-                    onChange={(e) => setSupervisiorId(e.target.value)}
+                    style={{ width: "200px" }}
+                    // onChange={handleStatusChange}
                   >
-                    <option value="">-- Select Supervisior --</option>
-                    {superVisiorList.map((item) => {
-                      return (
-                        <option key={item.value} value={item.value}>
-                          {item.label}
-                        </option>
-                      );
-                    })}
+                    <option value="">-- Select Status --</option>
+                    <option value="A">Approve</option>
+                    <option value="R">Reject</option>
+                    <option value="">Pending</option>
                   </select>
                 </div>
               </div>
@@ -659,7 +616,7 @@ const AssignComplaint = () => {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={handleAssign}
+                    // onClick={handleAssign}
                 >
                   <i className="bi bi-person-check me-1"></i> Assign Supervisior
                 </button>
@@ -759,4 +716,4 @@ const AssignComplaint = () => {
   );
 };
 
-export default AssignComplaint;
+export default ResolvedComplaint;
