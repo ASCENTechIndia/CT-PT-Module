@@ -91,7 +91,7 @@ export default function Navbar() {
               onClick={() => setShowProfile(!showProfile)}
               aria-expanded={showProfile}
             >
-              <img className="avatar-img avatar-sm" src={profileImage} alt="Admin Hasan" />
+              <img className="avatar-img avatar-sm" src={profileImage} alt="User Profile Image" />
               <span className="profile-name d-none d-sm-inline">{user?.userFullName}</span>
             </button>
             {showProfile && (
