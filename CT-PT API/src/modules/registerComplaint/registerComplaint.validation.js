@@ -18,6 +18,16 @@ const complaintRegistrationSchema = z.object({
   unitImg5: z.string().nullable().optional(),
 });
 
+const assignComplaintSchema = z.object({
+  userId: z.union([z.string().trim().min(1), z.number()])
+    .transform(String),
+  complaintId: z.coerce.number().int().positive(),
+  supervisorId: z.coerce.number().int().positive(),
+  wardNo: z.coerce.number().int().positive(),
+  ulbId: z.coerce.number().int().positive(),
+});
+
 module.exports = {
   complaintRegistrationSchema,
+  assignComplaintSchema,
 };

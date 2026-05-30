@@ -125,6 +125,54 @@ async function regComplaintRepo(payload) {
   };
 }
 
+async function assignComplaintRepo(payload) {
+  const statement = `
+    BEGIN
+      aorts.aorts_ctptcomplaintassignsuperwer_ins(
+        :in_userid,
+        :in_compaintid,
+        :in_superwiserid,
+        :in_wardno,
+        :in_ulbid,
+        :out_errcode,
+        :out_ErrMsg
+      );
+    END;
+  `;
+
+  const binds = {
+    in_userid: payload.userId,
+    in_compaintid: payload.complaintId,
+    in_superwiserid: payload.supervisorId,
+    in_wardno: payload.wardNo,
+    in_ulbid: payload.ulbId,
+
+    out_errcode: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.NUMBER,
+    },
+
+    out_ErrMsg: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
+  };
+
+  const result = await executeProcedure({
+    statement,
+    binds,
+    useTx: false,
+  });
+
+  const out = result.outBinds;
+
+  return {
+    errorCode: out.out_errcode,
+    message: out.out_ErrMsg,
+  };
+}
+
 async function lobToBase64(lob) {
   if (!lob) return null;
   return new Promise((resolve, reject) => {
@@ -142,12 +190,12 @@ async function lobToBase64(lob) {
   });
 }
 
-async function compListRepo(prbhagid,ulbid, fromDate, toDate, status, page = 1, limit = 10) {
-  console.log("Repo Params:", { prbhagid, ulbid, fromDate, toDate, status, page, limit });
+async function compListRepo(si_id,ulbid, fromDate, toDate, status, page = 1, limit = 10) {
+  // console.log("Repo Params:", { si_id, ulbid, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
   let sql = `SELECT * FROM vw_ctptpendingcomplaint_list a 
- WHERE a.prbhagid = :prbhagid and a.ulbid=:ulbid `;
-  const binds = { prbhagid: Number(prbhagid),ulbid:Number(ulbid) };
+ WHERE a.si_id = :si_id and a.ulbid=:ulbid `;
+  const binds = { si_id: si_id,ulbid:Number(ulbid) };
   if (fromDate && toDate) {
     sql += ` AND TRUNC(a.complaint_date) BETWEEN 
     TO_DATE(:fromDate, 'YYYY-MM-DD') AND TO_DATE(:toDate, 'YYYY-MM-DD') `;
@@ -183,8 +231,8 @@ async function compListRepo(prbhagid,ulbid, fromDate, toDate, status, page = 1, 
   }
 
   let countSql = ` SELECT COUNT(*) AS total FROM vw_ctptpendingcomplaint_list a
-   WHERE a.prbhagid = :prbhagid  and a.ulbid=:ulbid `;
-  const countBinds = { prbhagid: Number(prbhagid),ulbid:Number(ulbid) };
+   WHERE a.si_id = :si_id  and a.ulbid=:ulbid `;
+  const countBinds = { si_id: si_id,ulbid:Number(ulbid) };
   if (fromDate && toDate) {
     countSql += ` AND TRUNC(a.complaint_date) BETWEEN 
     TO_DATE(:fromDate, 'YYYY-MM-DD') AND TO_DATE(:toDate, 'YYYY-MM-DD') `;
@@ -208,4 +256,17 @@ async function compListRepo(prbhagid,ulbid, fromDate, toDate, status, page = 1, 
   };
 }
 
-module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo };
+async function repoSupervisorList(ulbid) {
+  let sql = `
+  select distinct var_ctpttype_username,var_ctpttype_suppid From 
+  aorts_ctptlist_mas where var_ctpttype_suppid is not null 
+   and num_ctpttype_ulbid = :ulbid
+`;
+  const binds = { ulbid: Number(ulbid) };
+  const result = await executeQuery(sql, binds);
+  return result.rows || [];
+}
+
+module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo,assignComplaintRepo,
+  repoSupervisorList
+ };
