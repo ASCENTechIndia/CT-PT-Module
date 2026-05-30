@@ -77,8 +77,8 @@ async function registerComplaint(req, res, next) {
 
 async function getComplaintList(req, res, next) {
   try {
-    const { ulbid, fromDate=null, toDate=null, status=null, page = 1, limit = 10 } = req.query;
-    const rows = await compListService(ulbid, fromDate, toDate, status, page, limit);
+    const {prbhagid, ulbid, fromDate=null, toDate=null, status=null, page = 1, limit = 10 } = req.query;
+    const rows = await compListService(prbhagid,ulbid, fromDate, toDate, status, page, limit);
     logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Complaint List completed' );
     return res.ok(rows);
   } catch (error) {
