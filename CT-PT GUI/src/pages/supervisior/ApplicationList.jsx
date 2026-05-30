@@ -39,10 +39,23 @@ const ApplicationList = () => {
   const fetchApplications = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await apiClient.get(
-        `/authComplaint/getCompListForSup?ulbid=${ulbid}&page=${page}&limit=${pageSize}`,
-      );
 
+      const params = {
+        ulbid,
+        page,
+        limit: pageSize,
+        ...(dateFilter.from && { fromDate: dateFilter.from }),
+        ...(dateFilter.to && { toDate: dateFilter.to }),
+        ...(statusFilter !== "all" && { status: statusFilter }),
+      };
+
+      console.log(params);
+
+      const response = await apiClient.get(
+        "/authComplaint/getCompListForSup",
+        { params }
+      );
+      console.log(response);
       if (response.success && response.data) {
         setApplications(response.data.data);
         setOriginalApplicationData(response.data.data);
@@ -71,8 +84,8 @@ const ApplicationList = () => {
 
   // Fetch applications on component mount
   useEffect(() => {
-    fetchApplications(1);
-  }, []);
+    if (ulbid) fetchApplications(1);
+  }, [statusFilter, dateFilter, ulbid]);
 
   // Fetch stage-wise images for selected application
   const fetchStageWiseImages = async (application) => {
@@ -348,39 +361,39 @@ const ApplicationList = () => {
   };
 
   // date and status filter both
-  useEffect(() => {
-    let filtered = [...originalApplicationData];
+  // useEffect(() => {
+  //   let filtered = [...originalApplicationData];
 
-    // 1. Apply date filter
-    if (dateFilter.from || dateFilter.to) {
-      filtered = filtered.filter((item) =>
-        isDateInRange(
-          item.DAT_EMPCTPTENTRY_DATE,
-          dateFilter.from,
-          dateFilter.to,
-        ),
-      );
-    }
+  //   // 1. Apply date filter
+  //   if (dateFilter.from || dateFilter.to) {
+  //     filtered = filtered.filter((item) =>
+  //       isDateInRange(
+  //         item.DAT_EMPCTPTENTRY_DATE,
+  //         dateFilter.from,
+  //         dateFilter.to,
+  //       ),
+  //     );
+  //   }
 
-    // 2. Apply status filter
-    if (statusFilter === "A") {
-      filtered = filtered.filter(
-        (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "A",
-      );
-    } else if (statusFilter === "R") {
-      filtered = filtered.filter(
-        (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "R",
-      );
-    } else if (statusFilter === "P") {
-      filtered = filtered.filter(
-        (item) =>
-          item.VAR_EMPCTPTENTRY_SUPFLAG !== "A" &&
-          item.VAR_EMPCTPTENTRY_SUPFLAG !== "R",
-      );
-    }
+  //   // 2. Apply status filter
+  //   if (statusFilter === "A") {
+  //     filtered = filtered.filter(
+  //       (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "A",
+  //     );
+  //   } else if (statusFilter === "R") {
+  //     filtered = filtered.filter(
+  //       (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "R",
+  //     );
+  //   } else if (statusFilter === "P") {
+  //     filtered = filtered.filter(
+  //       (item) =>
+  //         item.VAR_EMPCTPTENTRY_SUPFLAG !== "A" &&
+  //         item.VAR_EMPCTPTENTRY_SUPFLAG !== "R",
+  //     );
+  //   }
 
-    setApplications(filtered);
-  }, [dateFilter, statusFilter, originalApplicationData]);
+  //   setApplications(filtered);
+  // }, [dateFilter, statusFilter, originalApplicationData]);
 
   const handleDateChangeFilter = (e) => {
     const { name, value } = e.target;
@@ -390,11 +403,19 @@ const ApplicationList = () => {
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
   };
+  // const handleClearFilters = () => {
+  //   // Reset date filter state
+  //   setDateFilter({ from: "", to: "" });
+  //   // Reset status filter state
+  //   setStatusFilter("all");
+  // };
   const handleClearFilters = () => {
-    // Reset date filter state
-    setDateFilter({ from: "", to: "" });
-    // Reset status filter state
+    setDateFilter({
+      from: "",
+      to: "",
+    });
     setStatusFilter("all");
+    setCurrentPage(1);
   };
 
   return (
@@ -504,11 +525,10 @@ const ApplicationList = () => {
                     <td>{formatDate(app.DAT_EMPCTPTENTRY_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className={`btn btn-sm ${
-                          app.VAR_EMPCTPTENTRY_SUPFLAG === "A"
+                        className={`btn btn-sm ${app.VAR_EMPCTPTENTRY_SUPFLAG === "A"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
-                        }`}
+                          }`}
                         onClick={() => handleReviewClick(app)}
                         disabled={app.VAR_EMPCTPTENTRY_SUPFLAG === "A"}
                         title={
@@ -573,9 +593,8 @@ const ApplicationList = () => {
                 ))}
 
                 <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
+                  className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                    }`}
                 >
                   <button
                     className="page-link"
@@ -586,9 +605,8 @@ const ApplicationList = () => {
                   </button>
                 </li>
                 <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
+                  className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                    }`}
                 >
                   <button
                     className="page-link"
