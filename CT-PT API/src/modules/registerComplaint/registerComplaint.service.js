@@ -14,8 +14,8 @@ async function regComplaintService(payload) {
   return regComplaintRepo(payload);
 }
 
-async function compListService(ulbid,fromDate, toDate, status, page,limit) {
-  return compListRepo(ulbid,fromDate, toDate, status, page,limit);
+async function compListService(si_id,ulbid,fromDate, toDate, status, page,limit) {
+  return compListRepo(si_id,ulbid,fromDate, toDate, status, page,limit);
 }
 
 module.exports = { serviceWardList, serviceToiletList, serviceComplaintTypeList, regComplaintService, compListService };

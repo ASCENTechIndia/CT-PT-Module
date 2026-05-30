@@ -142,19 +142,14 @@ async function lobToBase64(lob) {
   });
 }
 
-async function compListRepo(ulbid, fromDate, toDate, status, page = 1, limit = 10) {
-  console.log("Repo Params:", { ulbid, fromDate, toDate, status, page, limit });
+async function compListRepo(si_id,ulbid, fromDate, toDate, status, page = 1, limit = 10) {
+  // console.log("Repo Params:", { si_id, ulbid, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
-  let sql = ` SELECT a.num_complaint_id, a.num_complaint_wardid, a.num_complaint_toilet, 
- a.num_complaint_compainttype, a.var_complaint_citizname, a.num_complaint_mobileno, 
- a.num_complaint_unitno, a.var_complaint_status, a.var_complaint_remark, a.blob_complaint_unitimg1, 
- a.blob_complaint_unitimg2, a.blob_complaint_unitimg3, a.blob_complaint_unitimg4, 
- a.blob_complaint_unitimg5, a.dat_complaint_insdt, a.var_complaint_insby, a.dat_complaint_upddt, 
- a.var_complaint_updby, a.num_complaint_ulbid FROM aorts_ctptcitizencomplaint_mas a 
- WHERE a.num_complaint_ulbid = :ulbid `;
-  const binds = { ulbid: Number(ulbid) };
+  let sql = `SELECT * FROM vw_ctptpendingcomplaint_list a 
+ WHERE a.si_id = :si_id and a.ulbid=:ulbid `;
+  const binds = { si_id: si_id,ulbid:Number(ulbid) };
   if (fromDate && toDate) {
-    sql += ` AND TRUNC(a.dat_complaint_insdt) BETWEEN 
+    sql += ` AND TRUNC(a.complaint_date) BETWEEN 
     TO_DATE(:fromDate, 'YYYY-MM-DD') AND TO_DATE(:toDate, 'YYYY-MM-DD') `;
     binds.fromDate = fromDate;
     binds.toDate = toDate;
@@ -163,7 +158,7 @@ async function compListRepo(ulbid, fromDate, toDate, status, page = 1, limit = 1
     sql += ` AND a.var_complaint_status = :status `;
     binds.status = status;
   }
-  sql += ` ORDER BY a.num_complaint_id DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY `;
+  sql += ` ORDER BY a.complaint_date DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY `;
   binds.offset = Number(offset);
   binds.limit = Number(limit);
   const result = await executeQuery(sql, binds);
@@ -187,11 +182,11 @@ async function compListRepo(ulbid, fromDate, toDate, status, page = 1, limit = 1
     );
   }
 
-  let countSql = ` SELECT COUNT(*) AS total FROM aorts_ctptcitizencomplaint_mas a
-   WHERE a.num_complaint_ulbid = :ulbid `;
-  const countBinds = { ulbid: Number(ulbid) };
+  let countSql = ` SELECT COUNT(*) AS total FROM vw_ctptpendingcomplaint_list a
+   WHERE a.si_id = :si_id  and a.ulbid=:ulbid `;
+  const countBinds = { si_id: si_id,ulbid:Number(ulbid) };
   if (fromDate && toDate) {
-    countSql += ` AND TRUNC(a.dat_complaint_insdt) BETWEEN 
+    countSql += ` AND TRUNC(a.complaint_date) BETWEEN 
     TO_DATE(:fromDate, 'YYYY-MM-DD') AND TO_DATE(:toDate, 'YYYY-MM-DD') `;
     countBinds.fromDate = fromDate;
     countBinds.toDate = toDate;
