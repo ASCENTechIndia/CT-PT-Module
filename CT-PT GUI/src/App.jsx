@@ -34,7 +34,11 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 // Error Pages
 import NotFound from './pages/NotFound';
 import ServerError from './pages/ServerError';
+<<<<<<< HEAD
 import ResolvedComplaintList from './pages/supervisior/ResolvedComplaintList';
+=======
+import AssignComplaint from './pages/SI/AssignComplaint';
+>>>>>>> dee2c38c69fe974ddc576e7ba287ef82dfc98709
 
 function App() {
   return (
@@ -68,6 +72,7 @@ function App() {
               <Route path="/resolved-complaint-supervisor-list" element={<ResolvedComplaintList />} />
               <Route path="/application-list" element={<ApplicationList />} />
               <Route path="/application-list-sanitary" element={<ApplicationListSI />} />
+              <Route path="/AssignComplaint" element={<AssignComplaint />} />
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />
