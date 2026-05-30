@@ -256,4 +256,17 @@ async function compListRepo(si_id,ulbid, fromDate, toDate, status, page = 1, lim
   };
 }
 
-module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo,assignComplaintRepo };
+async function repoSupervisorList(ulbid) {
+  let sql = `
+  select distinct var_ctpttype_username,var_ctpttype_suppid From 
+  aorts_ctptlist_mas where var_ctpttype_suppid is not null 
+   and num_ctpttype_ulbid = :ulbid
+`;
+  const binds = { ulbid: Number(ulbid) };
+  const result = await executeQuery(sql, binds);
+  return result.rows || [];
+}
+
+module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo,assignComplaintRepo,
+  repoSupervisorList
+ };
