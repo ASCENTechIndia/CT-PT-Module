@@ -635,71 +635,40 @@ async function rslvdListbySupRepo(
   page = 1,
   limit = 10
 ) {
-  // console.log("Repo Params:", { ulbid, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
 
   let sql = `
-    SELECT * FROM (
-      SELECT
-        e.num_empctptentry_id,
-        e.dat_empctptentry_date,
-        e.var_empctptentry_latitude,
-        e.num_empctptentry_id AS uniqueid,
-        e.var_empctptentry_supremark,
-        e.var_empctptentry_supflag,
-        u.var_user_username AS username,
-        e.var_empctptentry_userid AS userid,
-        e.var_empctptentry_longitude,
-        e.num_empctptentry_toiletid,
-        e.num_empctptentry_stageid,
-        e.var_empctptentry_remark,
-        e.dat_empctptentry_insdate,
-        e.num_empctptentry_ulbid,
-
-        ctpt.num_ctpttype_wardid,
-        ctpt.var_ctpttype_toiletlocation,
-        ctpt.var_ctpttype_femaleseats,
-        ctpt.var_ctpttype_maleseats,
-        ctpt.var_ctpttype_totalseats,
-        ctpt.var_ctpttype_status,
-        ctpt.var_ctpttype_username,
-
-        st.var_ctptstage_status,
-        st.var_ctptstage_name,
-
-        ROW_NUMBER() OVER (
-          PARTITION BY
-            e.var_empctptentry_userid,
-            e.num_empctptentry_toiletid,
-            TRUNC(e.dat_empctptentry_date)
-          ORDER BY e.dat_empctptentry_date DESC
-        ) AS rn
-
-      FROM aorts_empctptentry_mst e
-
-      INNER JOIN admins.aoma_user_def u
-        ON u.num_user_userid = e.var_empctptentry_userid
-
-      LEFT JOIN aorts_ctptlist_mas ctpt
-        ON ctpt.num_ctpttype_id = e.num_empctptentry_toiletid
-
-      LEFT JOIN aorts_ctptstage_mas st
-        ON st.num_ctptstage_id = e.num_empctptentry_stageid
-
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-
-      WHERE e.num_empctptentry_stageid = 3
+    SELECT
+      prbhag,
+      prbhagid,
+      superwiser_id,
+      superwiser,
+      location,
+      var_complaint_status,
+      var_complaint_citizname,
+      num_complaint_toilet,
+      mobileno,
+      complaint_date,
+      var_complaint_remark,
+      var_ctptsanitinspctor_name,
+      blob_complaint_unitimg1,
+      blob_complaint_unitimg2,
+      blob_complaint_unitimg3,
+      blob_complaint_unitimg4,
+      blob_complaint_unitimg5,
+      ulbid,
+      si_id
+    FROM vw_ctptpendingcomplaint_Resolved
+    WHERE ulbid = :ulbid
   `;
 
   const binds = {
     ulbid: Number(ulbid),
   };
 
-  // ================= DATE FILTER =================
   if (fromDate && toDate) {
     sql += `
-      AND TRUNC(e.dat_empctptentry_date)
+      AND TRUNC(complaint_date)
       BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
       AND TO_DATE(:toDate, 'YYYY-MM-DD')
     `;
@@ -707,20 +676,15 @@ async function rslvdListbySupRepo(
     binds.toDate = toDate;
   }
 
-  // ================= STATUS FILTER =================
-  if (status && status !== 'ALL') {
+  if (status && status !== "ALL") {
     sql += `
-      AND c.var_complaint_status = :status
+      AND var_complaint_status = :status
     `;
     binds.status = status;
   }
 
   sql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
-
-    ORDER BY num_empctptentry_id DESC
+    ORDER BY complaint_date DESC
     OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
   `;
 
@@ -730,21 +694,10 @@ async function rslvdListbySupRepo(
   const result = await executeQuery(sql, binds);
   const rows = result.rows || [];
 
-  // ================= COUNT QUERY =================
   let countSql = `
-    SELECT COUNT(*) AS total FROM (
-      SELECT ROW_NUMBER() OVER (
-        PARTITION BY
-          e.var_empctptentry_userid,
-          e.num_empctptentry_toiletid,
-          TRUNC(e.dat_empctptentry_date)
-        ORDER BY e.dat_empctptentry_date DESC
-      ) AS rn,
-      e.num_empctptentry_ulbid
-      FROM aorts_empctptentry_mst e
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-      WHERE e.num_empctptentry_stageid = 3
+    SELECT COUNT(*) AS total
+    FROM vw_ctptpendingcomplaint_Resolved
+    WHERE ulbid = :ulbid
   `;
 
   const countBinds = {
@@ -753,7 +706,7 @@ async function rslvdListbySupRepo(
 
   if (fromDate && toDate) {
     countSql += `
-      AND TRUNC(e.dat_empctptentry_date)
+      AND TRUNC(complaint_date)
       BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
       AND TO_DATE(:toDate, 'YYYY-MM-DD')
     `;
@@ -761,21 +714,19 @@ async function rslvdListbySupRepo(
     countBinds.toDate = toDate;
   }
 
-  if (status && status !== 'ALL') {
+  if (status && status !== "ALL") {
     countSql += `
-      AND c.var_complaint_status = :status
+      AND var_complaint_status = :status
     `;
     countBinds.status = status;
   }
 
-  countSql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
-  `;
-
   const countResult = await executeQuery(countSql, countBinds);
-  const total = countResult.rows?.[0]?.TOTAL || 0;
+
+  const total =
+    countResult.rows?.[0]?.TOTAL ||
+    countResult.rows?.[0]?.total ||
+    0;
 
   return {
     data: rows,
