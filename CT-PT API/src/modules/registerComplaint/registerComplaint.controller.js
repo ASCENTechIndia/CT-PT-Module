@@ -1,4 +1,6 @@
-const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, assignComplaintService, compListService} = require('./registerComplaint.service');
+const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, assignComplaintService, compListService,
+  serviceSupervisorList
+} = require('./registerComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 function requestMeta(req) {
@@ -120,4 +122,17 @@ async function getComplaintList(req, res, next) {
   }
 }
 
-module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList };
+async function getSupervisorList(req, res, next) {
+  try {
+    const rows = await serviceSupervisorList(req.query.ulbid);
+    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Supervisor List Report completed' );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Supervisor List Report search error');
+    return next(error);
+  }
+}
+
+module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList ,
+  getSupervisorList
+};
