@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 const ApplicationList = () => {
   const { user } = useAuth();
   const [applications, setApplications] = useState([]);
+  const [originalApplicationData, setOriginalApplicationData] = useState([]);
   const [stageWiseImages, setStageWiseImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,17 +28,23 @@ const ApplicationList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [pageSize, setPageSize] = useState(5);
+  const [dateFilter, setDateFilter] = useState({
+    from: getTodayDate(),
+    to: getTodayDate(),
+  });
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Fetch applications from API
   const fetchApplications = async (page = 1) => {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        `/authComplaint/getCompListForSup?ulbid=4&page=${page}&limit=${pageSize}`
+        `/authComplaint/getCompListForSup?ulbid=4&page=${page}&limit=${pageSize}`,
       );
 
       if (response.success && response.data) {
         setApplications(response.data.data);
+        setOriginalApplicationData(response.data.data);
         setCurrentPage(response.data.pagination.page);
         setTotalPages(response.data.pagination.totalPages);
         setTotalRecords(response.data.pagination.total);
@@ -53,6 +60,14 @@ const ApplicationList = () => {
     }
   };
 
+  function getTodayDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
   // Fetch applications on component mount
   useEffect(() => {
     fetchApplications(1);
@@ -62,7 +77,7 @@ const ApplicationList = () => {
   const fetchStageWiseImages = async (application) => {
     try {
       const response = await apiClient.get(
-        `/authComplaint/getImages?ulbid=4&toiletId=${application.NUM_EMPCTPTENTRY_TOILETID}&applid=${application.NUM_EMPCTPTENTRY_ID}`
+        `/authComplaint/getImages?ulbid=4&toiletId=${application.NUM_EMPCTPTENTRY_TOILETID}&applid=${application.NUM_EMPCTPTENTRY_ID}`,
       );
 
       if (response.success && response.data) {
@@ -79,10 +94,10 @@ const ApplicationList = () => {
     setSelectedApplication(application);
     setSupervisorRemark("");
     setStageWiseImages([]); // Reset images
-    
+
     // Fetch stage-wise images
     await fetchStageWiseImages(application);
-    
+
     setShowModal(true);
   };
 
@@ -101,7 +116,7 @@ const ApplicationList = () => {
   // Group images by stage
   const getImagesByStage = () => {
     const stagesMap = new Map();
-    
+
     // If stageWiseImages is populated, use it
     if (stageWiseImages && stageWiseImages.length > 0) {
       stageWiseImages.forEach((entry) => {
@@ -112,13 +127,13 @@ const ApplicationList = () => {
             images: [],
           });
         }
-        
+
         const images = [
           entry.BOLB_EMPCTPTENTRY_IMAGE,
           entry.BOLB_EMPCTPTENTRY_IMAGE2,
           entry.BOLB_EMPCTPTENTRY_IMAGE3,
         ].filter((img) => img && img !== null && img.trim() !== "");
-        
+
         stagesMap.get(stageName).images.push(...images);
       });
     }
@@ -131,9 +146,7 @@ const ApplicationList = () => {
     if (!supervisorRemark.trim()) {
       setModalType("warning");
       setModalTitle("Warning");
-      setModalMessage(
-        "Please add a remark before approving this application."
-      );
+      setModalMessage("Please add a remark before approving this application.");
       setIsModalOpen(true);
       return;
     }
@@ -150,7 +163,7 @@ const ApplicationList = () => {
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
-        payload
+        payload,
       );
 
       if (response.success) {
@@ -177,9 +190,7 @@ const ApplicationList = () => {
     if (!supervisorRemark.trim()) {
       setModalType("warning");
       setModalTitle("Warning");
-      setModalMessage(
-        "Please add a remark before rejecting this application."
-      );
+      setModalMessage("Please add a remark before rejecting this application.");
       setIsModalOpen(true);
       return;
     }
@@ -196,7 +207,7 @@ const ApplicationList = () => {
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
-        payload
+        payload,
       );
 
       if (response.success) {
@@ -255,10 +266,10 @@ const ApplicationList = () => {
           bytes[i] = binaryString.charCodeAt(i);
         }
         const blob = new Blob([bytes], { type: "image/jpeg" });
-        
+
         // Create object URL from blob
         const blobUrl = URL.createObjectURL(blob);
-        
+
         // Open in new tab
         window.open(blobUrl, "_blank");
       } catch (err) {
@@ -285,7 +296,9 @@ const ApplicationList = () => {
                   transition: "all 0.3s ease",
                 }}
                 onClick={() => openImageInNewTab(img)}
-                onMouseEnter={(e) => (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")}
+                onMouseEnter={(e) =>
+                  (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
+                }
                 onMouseLeave={(e) => (e.target.style.boxShadow = "none")}
               />
             </div>
@@ -297,9 +310,94 @@ const ApplicationList = () => {
     );
   };
 
+  const getBadge = (flag) => {
+    if (flag === "A") {
+      return (
+        <span className="badge bg-success rounded-pill px-3 py-2">
+          <i className="bi bi-check-circle me-1"></i> Approve
+        </span>
+      );
+    } else if (flag === "R") {
+      return (
+        <span className="badge bg-danger rounded-pill px-3 py-2">
+          <i className="bi bi-x-circle me-1"></i> Rejected
+        </span>
+      );
+    } else {
+      return (
+        <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
+          <i className="bi bi-clock-history me-1"></i> Pending
+        </span>
+      );
+    }
+  };
+
+  // Helper function to compare only the date part (YYYY-MM-DD)
+  const isDateInRange = (dateISO, fromDate, toDate) => {
+    if (!dateISO) return false;
+    const dateOnly = dateISO.split("T")[0]; // "2026-05-29"
+    if (fromDate && toDate) {
+      return dateOnly >= fromDate && dateOnly <= toDate;
+    } else if (fromDate) {
+      return dateOnly >= fromDate;
+    } else if (toDate) {
+      return dateOnly <= toDate;
+    }
+    return true;
+  };
+
+  // date and status filter both
+  useEffect(() => {
+    let filtered = [...originalApplicationData];
+
+    // 1. Apply date filter
+    if (dateFilter.from || dateFilter.to) {
+      filtered = filtered.filter((item) =>
+        isDateInRange(
+          item.DAT_EMPCTPTENTRY_DATE,
+          dateFilter.from,
+          dateFilter.to,
+        ),
+      );
+    }
+
+    // 2. Apply status filter
+    if (statusFilter === "A") {
+      filtered = filtered.filter(
+        (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "A",
+      );
+    } else if (statusFilter === "R") {
+      filtered = filtered.filter(
+        (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "R",
+      );
+    } else if (statusFilter === "P") {
+      filtered = filtered.filter(
+        (item) =>
+          item.VAR_EMPCTPTENTRY_SUPFLAG !== "A" &&
+          item.VAR_EMPCTPTENTRY_SUPFLAG !== "R",
+      );
+    }
+
+    setApplications(filtered);
+  }, [dateFilter, statusFilter, originalApplicationData]);
+
+  const handleDateChangeFilter = (e) => {
+    const { name, value } = e.target;
+    setDateFilter((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+  };
+  const handleClearFilters = () => {
+    // Reset date filter state
+    setDateFilter({ from: "", to: "" });
+    // Reset status filter state
+    setStatusFilter("all");
+  };
+
   return (
     <Layout>
-
       {loading ? (
         <div className="panel text-center py-5">
           <div className="spinner-border text-primary" role="status">
@@ -309,15 +407,68 @@ const ApplicationList = () => {
         </div>
       ) : (
         <div className="panel">
-          <div className="panel-header">
+          <div className="panel-header d-flex justify-content-between">
             <div>
               <h2 className="h5 mb-1 section-title">
                 <i className="bi bi-file-earmark-text" aria-hidden="true"></i>
                 <span>All Applications ({applications.length})</span>
               </h2>
               <p className="text-muted mb-0">
-                Click on an application to view details, images, and location.
+                View application details, images, and location.
               </p>
+            </div>
+            <div>
+              <div className="filter-bar">
+                <div className="filter-group">
+                  <label htmlFor="fromDate">From</label>
+                  <input
+                    type="date"
+                    name="from"
+                    className="filter-input"
+                    style={{ width: "150px" }}
+                    value={dateFilter.from}
+                    onChange={handleDateChangeFilter}
+                  />
+                </div>
+                <div className="filter-group">
+                  <label htmlFor="toDate">To</label>
+                  <input
+                    type="date"
+                    name="to"
+                    style={{ width: "150px" }}
+                    className="filter-input"
+                    value={dateFilter.to}
+                    onChange={handleDateChangeFilter}
+                  />
+                </div>
+                <div className="filter-group">
+                  <label htmlFor="statusSelect">Status</label>
+                  <select
+                    name="status"
+                    className="filter-select"
+                    style={{ width: "107px" }}
+                    value={statusFilter}
+                    onChange={handleStatusChange}
+                  >
+                    <option value="all">All</option>
+                    <option value="A">Approve</option>
+                    <option value="R">Reject</option>
+                    <option value="P">Pending</option>
+                  </select>
+                </div>
+                <div
+                  className="filter-group"
+                  style={{ justifyContent: "flex-end" }}
+                >
+                  <button
+                    type="button"
+                    className="btn-clear-filters"
+                    onClick={handleClearFilters}
+                  >
+                    <i className="bi bi-x-lg me-1"></i> Clear
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div className="table-responsive">
@@ -328,18 +479,24 @@ const ApplicationList = () => {
                   <th scope="col">Toilet Location</th>
                   <th scope="col">Toilet Manager</th>
                   <th scope="col">Employee</th>
+                  <th scope="col">Status</th>
                   <th scope="col">Remark</th>
                   <th scope="col">Date</th>
-                  <th scope="col" className="text-end">Action</th>
+                  <th scope="col" className="text-end">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {applications.map((app, idx) => (
                   <tr key={app.NUM_EMPCTPTENTRY_ID || idx}>
-                    <td className="fw-semibold">Ward {app.NUM_CTPTTYPE_WARDID}</td>
+                    <td className="fw-semibold">
+                      Ward {app.NUM_CTPTTYPE_WARDID}
+                    </td>
                     <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
                     <td>{app.VAR_CTPTTYPE_USERNAME}</td>
                     <td>{app.USERNAME}</td>
+                    <td>{getBadge(app.VAR_EMPCTPTENTRY_SUPFLAG)}</td>
                     <td style={{ maxWidth: "250px" }}>
                       <small>{app.VAR_EMPCTPTENTRY_REMARK}</small>
                     </td>
@@ -347,13 +504,17 @@ const ApplicationList = () => {
                     <td className="text-end">
                       <button
                         className={`btn btn-sm ${
-                          app.VAR_EMPCTPTENTRY_SUPFLAG === 'A'
-                            ? 'btn-outline-secondary'
-                            : 'btn-outline-primary'
+                          app.VAR_EMPCTPTENTRY_SUPFLAG === "A"
+                            ? "btn-outline-secondary"
+                            : "btn-outline-primary"
                         }`}
                         onClick={() => handleReviewClick(app)}
-                        disabled={app.VAR_EMPCTPTENTRY_SUPFLAG === 'A'}
-                        title={app.VAR_EMPCTPTENTRY_SUPFLAG === 'A' ? 'Already approved' : ''}
+                        disabled={app.VAR_EMPCTPTENTRY_SUPFLAG === "A"}
+                        title={
+                          app.VAR_EMPCTPTENTRY_SUPFLAG === "A"
+                            ? "Already approved"
+                            : ""
+                        }
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -368,12 +529,14 @@ const ApplicationList = () => {
           <div className="d-flex align-items-center justify-content-between mt-4">
             <div className="text-muted small">
               Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
-              <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong> of{" "}
-              <strong>{totalRecords}</strong> applications
+              <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong>{" "}
+              of <strong>{totalRecords}</strong> applications
             </div>
             <nav aria-label="Page navigation">
               <ul className="pagination mb-0">
-                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                <li
+                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                >
                   <button
                     className="page-link"
                     onClick={() => handlePageChange(1)}
@@ -382,7 +545,9 @@ const ApplicationList = () => {
                     <i className="bi bi-chevron-double-left"></i>
                   </button>
                 </li>
-                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                <li
+                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                >
                   <button
                     className="page-link"
                     onClick={() => handlePageChange(currentPage - 1)}
@@ -515,7 +680,9 @@ const ApplicationList = () => {
                               Submission Date
                             </label>
                             <p className="h6 mb-0">
-                              {formatDate(selectedApplication.DAT_EMPCTPTENTRY_DATE)}
+                              {formatDate(
+                                selectedApplication.DAT_EMPCTPTENTRY_DATE,
+                              )}
                             </p>
                           </div>
                           <div className="col-md-12">
@@ -547,7 +714,8 @@ const ApplicationList = () => {
                           onChange={(e) => setSupervisorRemark(e.target.value)}
                         ></textarea>
                         <small className="text-muted mt-2 d-block">
-                          Remark is required to approve or reject this application.
+                          Remark is required to approve or reject this
+                          application.
                         </small>
                       </div>
                     </div>
@@ -593,11 +761,14 @@ const ApplicationList = () => {
                       </div>
                     </div>
 
-                  <div className="card">
+                    <div className="card">
                       <div className="card-header">
                         <h6 className="mb-0">Stage Wise Images</h6>
                       </div>
-                      <div className="card-body" style={{ maxHeight: "300px", overflowY: "auto" }}>
+                      <div
+                        className="card-body"
+                        style={{ maxHeight: "300px", overflowY: "auto" }}
+                      >
                         {getImagesByStage().length > 0 ? (
                           getImagesByStage().map((stage, idx) => (
                             <div key={idx} className="mb-4">
@@ -613,10 +784,7 @@ const ApplicationList = () => {
                         )}
                       </div>
                     </div>
-                   
                   </div>
-
-                 
                 </div>
               </div>
 

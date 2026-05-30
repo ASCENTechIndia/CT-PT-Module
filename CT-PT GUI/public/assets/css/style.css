@@ -408,12 +408,12 @@ html[data-theme="dark"] .profile-button .avatar-sm {
   min-height: calc(100vh - 132px);
 }
 
-.dashboard-content > .container-fluid {
+.dashboard-content>.container-fluid {
   padding-top: 1.75rem !important;
   padding-bottom: 1.75rem !important;
 }
 
-.page-heading{
+.page-heading {
   margin-top: 20px;
 }
 
@@ -1050,6 +1050,7 @@ html[data-theme="dark"] .profile-button .avatar-sm {
 }
 
 @media (max-width: 575.98px) {
+
   .page-heading,
   .panel-header {
     align-items: flex-start;
@@ -1087,6 +1088,7 @@ html[data-theme="dark"] .profile-button .avatar-sm {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .sidebar-nav .nav-link,
   .sidebar-toggle,
   .icon-button,
@@ -1410,6 +1412,54 @@ body,
   border-radius: 8px;
 }
 
+.complaints-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+/* Mobile layout */
+@media (max-width: 575.98px) {
+  .complaints-header {
+    flex-direction: column;
+  }
+}
+
+.complaints-filter-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+.complaints-filter-form .form-control,
+.complaints-filter-form .form-select {
+  min-width: 140px;
+}
+
+@media (max-width: 767.98px) {
+  .complaints-filter-form {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .complaints-filter-form {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .complaints-filter-form>div {
+    width: 100%;
+  }
+
+  .complaints-filter-form .form-control,
+  .complaints-filter-form .form-select {
+    width: 100%;
+  }
+}
+
 html[data-theme="dark"] .alert-primary {
   border-color: #1d4ed8;
   background: rgba(37, 99, 235, 0.16);
@@ -1465,7 +1515,7 @@ html[data-theme="dark"] .text-bg-danger {
 }
 
 @media (max-width: 991.98px) {
-  .dashboard-content > .container-fluid {
+  .dashboard-content>.container-fluid {
     padding-top: 1.25rem !important;
     padding-bottom: 1.25rem !important;
   }
@@ -1480,7 +1530,7 @@ html[data-theme="dark"] .text-bg-danger {
     align-items: flex-start;
   }
 
-  .panel-header > .d-flex {
+  .panel-header>.d-flex {
     width: 100%;
   }
 
