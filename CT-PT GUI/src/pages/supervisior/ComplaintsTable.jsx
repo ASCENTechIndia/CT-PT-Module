@@ -318,9 +318,9 @@ const ComplaintsTable = () => {
               <div className="filter-bar">
                 <div className="filter-group">
                   <label htmlFor="fromDate">From Date</label>
-                  <input 
-                    type="date" 
-                    id="fromDate" 
+                  <input
+                    type="date"
+                    id="fromDate"
                     name="fromDate"
                     className="filter-input"
                     style={{ width: "150px" }}
@@ -331,9 +331,9 @@ const ComplaintsTable = () => {
 
                 <div className="filter-group">
                   <label htmlFor="toDate">To Date</label>
-                  <input 
-                    type="date" 
-                    id="toDate" 
+                  <input
+                    type="date"
+                    id="toDate"
                     name="toDate"
                     className="filter-input"
                     style={{ width: "150px" }}
@@ -344,8 +344,8 @@ const ComplaintsTable = () => {
 
                 <div className="filter-group">
                   <label htmlFor="status">Status</label>
-                  <select 
-                    id="status" 
+                  <select
+                    id="status"
                     className="filter-select"
                     style={{ width: "120px" }}
                     value={filters.status}
@@ -401,6 +401,8 @@ const ComplaintsTable = () => {
                             : "bg-secondary"
                           }`}
                       >
+                        {complaint.VAR_COMPLAINT_STATUS === "P" ?
+                          <i className="bi bi-clock-history me-1"></i> : complaint.VAR_COMPLAINT_STATUS === "Y" ? <i className="bi bi-check-circle me-1"></i> : null}
                         {complaint.VAR_COMPLAINT_STATUS === "P"
                           ? "Pending"
                           : complaint.VAR_COMPLAINT_STATUS === "Y"
