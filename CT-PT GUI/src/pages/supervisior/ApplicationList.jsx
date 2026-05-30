@@ -33,7 +33,7 @@ const ApplicationList = () => {
     from: getTodayDate(),
     to: getTodayDate(),
   });
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("A");
 
   // Fetch applications from API
   const fetchApplications = async (page = 1) => {
@@ -46,7 +46,7 @@ const ApplicationList = () => {
         limit: pageSize,
         ...(dateFilter.from && { fromDate: dateFilter.from }),
         ...(dateFilter.to && { toDate: dateFilter.to }),
-        ...(statusFilter !== "all" && { status: statusFilter }),
+        ...(statusFilter !== "" && { status: statusFilter }),
       };
 
       console.log(params);
@@ -414,7 +414,7 @@ const ApplicationList = () => {
       from: "",
       to: "",
     });
-    setStatusFilter("all");
+    setStatusFilter("");
     setCurrentPage(1);
   };
 
@@ -472,7 +472,7 @@ const ApplicationList = () => {
                     value={statusFilter}
                     onChange={handleStatusChange}
                   >
-                    <option value="all">All</option>
+                    <option value="">All</option>
                     <option value="A">Approve</option>
                     <option value="R">Reject</option>
                     <option value="P">Pending</option>
