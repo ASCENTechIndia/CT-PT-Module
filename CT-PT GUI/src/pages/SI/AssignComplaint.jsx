@@ -179,42 +179,6 @@ const AssignComplaint = () => {
     }
   };
 
-  // Handle Reject action
-  const handleReject = async () => {
-    if (!supervisorRemark.trim()) {
-      setModalType("warning");
-      setModalTitle("Warning");
-      setModalMessage("Please add a remark before rejecting this complaint.");
-      setIsModalOpen(true);
-      return;
-    }
-
-    try {
-      // TODO: Call API to update complaint status to rejected
-      // const response = await apiClient.post("/registerComplaint/updateComplaint", {
-      //   complaintId: selectedComplaint.NUM_COMPLAINT_ID,
-      //   status: "R",
-      //   supervisorRemark: supervisorRemark
-      // });
-
-      setModalType("success");
-      setModalTitle("Success");
-      setModalMessage("Complaint has been rejected successfully.");
-      setIsModalOpen(true);
-
-      setShowModal(false);
-      setSupervisorRemark("");
-      // Refresh the complaints list
-      fetchComplaints();
-    } catch (err) {
-      console.error("Error rejecting complaint:", err);
-      setModalType("error");
-      setModalTitle("Error");
-      setModalMessage("Failed to reject complaint. Please try again.");
-      setIsModalOpen(true);
-    }
-  };
-
   // Open image in full view
   const handleImageClick = (index) => {
     setSelectedImageIndex(index);
@@ -348,9 +312,40 @@ const AssignComplaint = () => {
     }
     try {
       setLoading(true);
-      const res = await apiClient.post(``)
+      const res = await apiClient.post(`/registerComplaint/assignComplaint`, {
+        userId: userId,
+        complaintId: selectedComplaint.NUM_COMPLAINT_ID,
+        supervisorId: supervisiorId,
+        wardNo: selectedComplaint.PRBHAGID,
+        ulbId: ulbid,
+      });
+
+      if (res.success) {
+        setModalType("success");
+        setModalTitle("Success");
+        setModalMessage("Complaint has been assigned successfully.");
+        setIsModalOpen(true);
+
+        setShowModal(false);
+        setSupervisiorId("");
+        // Refresh the complaints list
+        fetchComplaints();
+      } else {
+        setModalType("error");
+        setModalTitle("Error");
+        setModalMessage(
+          res.message || "Failed to assign complaint. Please try again."
+        );
+        setIsModalOpen(true);
+      }
     } catch (error) {
-      alert(error.message);
+      console.error("Error assigning complaint:", error);
+      setModalType("error");
+      setModalTitle("Error");
+      setModalMessage(
+        error.message || "Failed to assign complaint. Please try again."
+      );
+      setIsModalOpen(true);
     } finally {
       setLoading(false);
     }
