@@ -34,6 +34,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 // Error Pages
 import NotFound from './pages/NotFound';
 import ServerError from './pages/ServerError';
+import AssignComplaint from './pages/SI/AssignComplaint';
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
               <Route path="/complaint-list" element={<ComplaintsTable />} />
               <Route path="/application-list" element={<ApplicationList />} />
               <Route path="/application-list-sanitary" element={<ApplicationListSI />} />
+              <Route path="/AssignComplaint" element={<AssignComplaint />} />
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />
