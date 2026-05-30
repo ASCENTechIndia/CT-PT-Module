@@ -143,7 +143,7 @@ async function lobToBase64(lob) {
 }
 
 async function compListRepo(prbhagid,ulbid, fromDate, toDate, status, page = 1, limit = 10) {
-  console.log("Repo Params:", { prbhagid, ulbid, fromDate, toDate, status, page, limit });
+  // console.log("Repo Params:", { prbhagid, ulbid, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
   let sql = `SELECT * FROM vw_ctptpendingcomplaint_list a 
  WHERE a.prbhagid = :prbhagid and a.ulbid=:ulbid `;
