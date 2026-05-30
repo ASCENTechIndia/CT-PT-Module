@@ -4,7 +4,7 @@ import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
 
-const ApplicationList = () => {
+const ResolvedComplaintList = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
   const [applications, setApplications] = useState([]);
@@ -433,10 +433,10 @@ const ApplicationList = () => {
             <div>
               <h2 className="h5 mb-1 section-title">
                 <i className="bi bi-file-earmark-text" aria-hidden="true"></i>
-                <span>All Applications ({applications.length})</span>
+                <span>All Resolved Complaints ({applications.length})</span>
               </h2>
               <p className="text-muted mb-0">
-                View application details, images, and location.
+                View resolved complaint details, images, and location.
               </p>
             </div>
             <div>
@@ -849,4 +849,4 @@ const ApplicationList = () => {
   );
 };
 
-export default ApplicationList;
+export default ResolvedComplaintList;

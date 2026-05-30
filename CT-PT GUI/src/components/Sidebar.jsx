@@ -11,11 +11,12 @@ export default function Sidebar() {
   const getNavLinks = () => {
     const allLinks = {
       supervisor: [
-        { path: "/complaint-list", icon: 'bi-envelope-paper', label: 'Complaints' },
+        { path: "/supervisor-complaint-list", icon: 'bi-envelope-paper', label: 'Complaints' },
         { path: "/application-list", icon: "bi-file-earmark-text", label: 'Applications'}
       ],
       sanitary: [
-        { path: "/application-list-sanitary", icon: "bi-file-earmark-text", label: 'Applications'}
+        { path: "/AssignComplaint", icon: "bi-file-earmark-text", label: 'Complaint List'},
+        { path: "/application-list-sanitary", icon: "bi-file-earmark-text", label: 'Applications'},
       ]
     };
 
