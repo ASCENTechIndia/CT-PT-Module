@@ -35,6 +35,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import NotFound from './pages/NotFound';
 import ServerError from './pages/ServerError';
 import AssignComplaint from './pages/SI/AssignComplaint';
+import ResolvedComplaint from './pages/SI/ResolvedComplaint';
 
 function App() {
   return (
@@ -67,7 +68,8 @@ function App() {
               <Route path="/complaint-list" element={<ComplaintsTable />} />
               <Route path="/application-list" element={<ApplicationList />} />
               <Route path="/application-list-sanitary" element={<ApplicationListSI />} />
-              <Route path="/AssignComplaint" element={<AssignComplaint />} />
+              <Route path="/all-complaint" element={<AssignComplaint />} />
+              <Route path="/resolved-complaint" element={<ResolvedComplaint />} />
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />
