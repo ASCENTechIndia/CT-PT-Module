@@ -505,7 +505,7 @@ async function rslvdListbyVendorRepo(
 
   const binds = {
     ulbid: Number(ulbid),
-    supervisorId: supervisorId,
+    supervisorId: String(supervisorId),
   };
 
   // Date Filter
@@ -561,7 +561,7 @@ async function rslvdListbyVendorRepo(
 
   const countBinds = {
     ulbid: Number(ulbid),
-    supervisorId: Number(supervisorId),
+    supervisorId: String(supervisorId),
   };
 
   if (fromDate && toDate) {
