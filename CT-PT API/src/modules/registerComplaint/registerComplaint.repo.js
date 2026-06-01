@@ -15,9 +15,11 @@ async function repoWardList(ulbid) {
 }
 
 async function repoToiletList(ulbid, wardid) {
-  let sql = ` select var_ctpttype_toiletlocation,num_ctpttype_id from aorts_ctptlist_mas where
-                 num_ctpttype_wardid=:wardid and num_ctpttype_ulbid=:ulbid and
-                var_ctpttype_status='Y' `;
+  let sql = ` select distinct var_ctpttype_toiletlocation,num_ctpttype_id 
+from aorts_ctptlist_mas inner join aorts_empctptentry_mst
+on num_ctpttype_id = num_empctptentry_toiletid
+ where num_ctpttype_ulbid=:ulbid and num_ctpttype_wardid=:wardid and var_ctpttype_status='Y'
+ `;
   const binds = { ulbid: Number(ulbid), wardid: Number(wardid) };
   const result = await executeQuery(sql, binds);
   return result.rows || [];

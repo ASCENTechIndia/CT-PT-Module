@@ -284,10 +284,10 @@ const AssignComplaint = () => {
   };
 
   const getBadge = (flag) => {
-    if (flag === "A") {
+    if (flag === "ASSIGN") {
       return (
         <span className="badge bg-success rounded-pill px-3 py-2">
-          <i className="bi bi-check-circle me-1"></i> Approve
+          <i className="bi bi-check-circle me-1"></i> ASSIGN
         </span>
       );
     } else if (flag === "R") {
@@ -314,7 +314,7 @@ const AssignComplaint = () => {
       setLoading(true);
       const res = await apiClient.post(`/registerComplaint/assignComplaint`, {
         userId: userId,
-        complaintId: selectedComplaint.NUM_COMPLAINT_ID,
+        complaintId: selectedComplaint.COMPLAINTID,
         supervisorId: supervisiorId,
         wardNo: selectedComplaint.PRBHAGID,
         ulbId: ulbid,

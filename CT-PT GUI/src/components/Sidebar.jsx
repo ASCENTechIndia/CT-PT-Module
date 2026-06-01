@@ -17,7 +17,7 @@ export default function Sidebar() {
       sanitary: [
         { path: "/all-complaint", icon: "bi-file-earmark-text", label: 'Complaint List'},
         { path: "/resolved-complaint", icon: "bi-file-earmark-text", label: 'Resolved Complaint'},
-        // { path: "/application-list-sanitary", icon: "bi-file-earmark-text", label: 'Applications'},
+        { path: "/application-list-sanitary", icon: "bi-file-earmark-text", label: 'Applications'},
       ]
     };
 
