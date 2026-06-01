@@ -1,6 +1,5 @@
 import Layout from "../../components/Layout";
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect, useCallback } from "react";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
@@ -13,16 +12,16 @@ const getToday = () => {
 const ResolvedComplaint = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
-  const userId = user?.userId;
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [supervisorRemark, setSupervisorRemark] = useState("");
+  const [siRemark, setSiRemark] = useState("");
+  const [sanitaryinspectorstatus, setSanitaryinspectorstatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Response Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,12 +33,12 @@ const ResolvedComplaint = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
+  const pageSize = 5;
 
   const [filters, setFilters] = useState({
     fromDate: getToday(),
     toDate: getToday(),
-    status: "",
+    status:""
   });
 
   const handleDateChangeFilter = (e) => {
@@ -47,7 +46,38 @@ const ResolvedComplaint = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleStatusChange = (e) => {
+  // Fetch complaints on filter change
+  const fetchComplaints = useCallback(
+    async (dataPage = 1) => {
+      if (!ulbid) {
+        return;
+      }
+      try {
+        setLoading(true);
+
+        const response = await apiClient.get(
+          `/authComplaint/rslvdListApprovedbySup?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&status=${filters.status}`,
+        );
+        if (response.success && response.data.data) {
+          setComplaints(response.data.data);
+          setCurrentPage(response?.data?.pagination?.page || dataPage);
+          setTotalPages(response?.data?.pagination?.totalPages || 1);
+          setTotalRecords(response?.data?.pagination?.total || 0);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [ulbid, pageSize, filters],
+  );
+
+  useEffect(() => {
+    fetchComplaints(1);
+  }, [fetchComplaints]);
+
+   const handleStatusChange = (e) => {
     setFilters((prev) => ({ ...prev, status: e.target.value }));
   };
 
@@ -55,50 +85,9 @@ const ResolvedComplaint = () => {
     const clearedFilters = {
       fromDate: "",
       toDate: "",
-      status: "",
+      status:""
     };
     setFilters(clearedFilters);
-    // Call API with cleared filters
-    setTimeout(() => {
-      fetchComplaints(1);
-    }, 0);
-  };
-
-  // React Hook Form setup
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm();
-
-  // Fetch complaints on filter change
-  useEffect(() => {
-    fetchComplaints(1);
-  }, [filters, ulbid]);
-
-  const fetchComplaints = async (dataPage = 1) => {
-    if (!ulbid) {
-      return;
-    }
-    try {
-      setLoading(true);
-
-      const response = await apiClient.get(
-        `/registerComplaint/getCitizenComplaintList?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&si_id=${userId}`,
-      );
-
-      if (response.success && response.data.data) {
-        setComplaints(response.data.data);
-        setCurrentPage(response?.data?.pagination?.page || dataPage);
-        setTotalPages(response?.data?.pagination?.totalPages || 1);
-        setTotalRecords(response?.data?.pagination?.total || 0);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Open modal and display selected complaint details (read-only)
@@ -106,79 +95,8 @@ const ResolvedComplaint = () => {
     setSelectedComplaint(complaint);
     setShowModal(true);
     setSelectedImageIndex(0);
-    setSupervisorRemark("");
-  };
-
-  // Handle Approve action
-  const handleApprove = async () => {
-    if (!supervisorRemark.trim()) {
-      setModalType("warning");
-      setModalTitle("Warning");
-      setModalMessage("Please add a remark before approving this complaint.");
-      setIsModalOpen(true);
-      return;
-    }
-
-    try {
-      // TODO: Call API to update complaint status to approved
-      // const response = await apiClient.post("/registerComplaint/updateComplaint", {
-      //   complaintId: selectedComplaint.NUM_COMPLAINT_ID,
-      //   status: "Y",
-      //   supervisorRemark: supervisorRemark
-      // });
-
-      setModalType("success");
-      setModalTitle("Success");
-      setModalMessage("Complaint has been approved successfully.");
-      setIsModalOpen(true);
-
-      setShowModal(false);
-      setSupervisorRemark("");
-      // Refresh the complaints list
-      fetchComplaints();
-    } catch (err) {
-      console.error("Error approving complaint:", err);
-      setModalType("error");
-      setModalTitle("Error");
-      setModalMessage("Failed to approve complaint. Please try again.");
-      setIsModalOpen(true);
-    }
-  };
-
-  // Handle Reject action
-  const handleReject = async () => {
-    if (!supervisorRemark.trim()) {
-      setModalType("warning");
-      setModalTitle("Warning");
-      setModalMessage("Please add a remark before rejecting this complaint.");
-      setIsModalOpen(true);
-      return;
-    }
-
-    try {
-      // TODO: Call API to update complaint status to rejected
-      // const response = await apiClient.post("/registerComplaint/updateComplaint", {
-      //   complaintId: selectedComplaint.NUM_COMPLAINT_ID,
-      //   status: "R",
-      //   supervisorRemark: supervisorRemark
-      // });
-
-      setModalType("success");
-      setModalTitle("Success");
-      setModalMessage("Complaint has been rejected successfully.");
-      setIsModalOpen(true);
-
-      setShowModal(false);
-      setSupervisorRemark("");
-      // Refresh the complaints list
-      fetchComplaints();
-    } catch (err) {
-      console.error("Error rejecting complaint:", err);
-      setModalType("error");
-      setModalTitle("Error");
-      setModalMessage("Failed to reject complaint. Please try again.");
-      setIsModalOpen(true);
-    }
+    setSiRemark("");
+    setSanitaryinspectorstatus("");
   };
 
   // Open image in full view
@@ -212,13 +130,24 @@ const ResolvedComplaint = () => {
     return pages;
   };
 
+  // Helper function to extract images from complaint
+  const getComplaintImages = (complaint) => {
+    return [
+      complaint?.BLOB_COMPLAINT_UNITIMG1,
+      complaint?.BLOB_COMPLAINT_UNITIMG2,
+      complaint?.BLOB_COMPLAINT_UNITIMG3,
+      complaint?.BLOB_COMPLAINT_UNITIMG4,
+      complaint?.BLOB_COMPLAINT_UNITIMG5,
+    ].filter((img) => img && img.trim() !== "");
+  };
+
   // Navigate to next image
   const nextImage = () => {
-    if (
-      selectedComplaint &&
-      selectedImageIndex < selectedComplaint.images.length - 1
-    ) {
-      setSelectedImageIndex(selectedImageIndex + 1);
+    if (selectedComplaint) {
+      const images = getComplaintImages(selectedComplaint);
+      if (selectedImageIndex < images.length - 1) {
+        setSelectedImageIndex(selectedImageIndex + 1);
+      }
     }
   };
 
@@ -226,6 +155,65 @@ const ResolvedComplaint = () => {
   const prevImage = () => {
     if (selectedImageIndex > 0) {
       setSelectedImageIndex(selectedImageIndex - 1);
+    }
+  };
+
+  // Handle SI remark and status submission
+  const handleSubmitSIRemark = async () => {
+    if (!siRemark.trim() || !sanitaryinspectorstatus) {
+      setModalType("warning");
+      setModalTitle("Validation Error");
+      setModalMessage("Please fill in both Sanitary Inspector Remark and Status");
+      setIsModalOpen(true);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await apiClient.post(
+        "/authComplaint/complaintStatusUpdate",
+        {
+          userId: user?.userId,
+          mode: 2,
+          complaintId: selectedComplaint?.COMPLAINTID,
+          SIID: user?.userId,
+          si_status: sanitaryinspectorstatus,
+          si_remrk: siRemark,
+          wardno: selectedComplaint?.PRBHAGID,
+           superwiserId:selectedComplaint?.SUPERWISER_ID,
+    superstatus:selectedComplaint?.VAR_COMPLAINT_STATUS,
+    superremark:selectedComplaint?.VAR_COMPAINT_SUPERREMARK,
+          ulbid: ulbid,
+        },
+      );
+
+      if (response.success) {
+        setModalType("success");
+        setModalTitle("Success");
+        setModalMessage(response.data.message);
+        setIsModalOpen(true);
+
+        // Close modal and reset form after a delay
+        setTimeout(() => {
+          setShowModal(false);
+          setSiRemark("");
+          setSanitaryinspectorstatus("");
+          fetchComplaints(currentPage);
+        }, 1500);
+      } else {
+        setModalType("error");
+        setModalTitle("Error");
+        setModalMessage(response.message || "Failed to update complaint status");
+        setIsModalOpen(true);
+      }
+    } catch (err) {
+      console.error("Error updating complaint status:", err);
+      setModalType("error");
+      setModalTitle("Error");
+      setModalMessage(err.message || "Failed to update complaint status. Please try again.");
+      setIsModalOpen(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -286,13 +274,13 @@ const ResolvedComplaint = () => {
   };
 
   const getBadge = (flag) => {
-    if (flag === "A") {
+    if (flag === "APPROVE") {
       return (
         <span className="badge bg-success rounded-pill px-3 py-2">
           <i className="bi bi-check-circle me-1"></i> Approve
         </span>
       );
-    } else if (flag === "R") {
+    } else if (flag === "REJECT") {
       return (
         <span className="badge bg-danger rounded-pill px-3 py-2">
           <i className="bi bi-x-circle me-1"></i> Rejected
@@ -366,9 +354,9 @@ const ResolvedComplaint = () => {
                     onChange={handleStatusChange}
                   >
                     <option value="">All</option>
-                    <option value="P">Pending</option>
-                    <option value="Y">Resolved</option>
-                    <option value="R">Rejected</option>
+                    <option value="CLOSED">Pending</option>
+                    <option value="APPROVE">Approved</option>
+                    <option value="REJECT">Rejected</option>
                   </select>
                 </div>
 
@@ -414,8 +402,13 @@ const ResolvedComplaint = () => {
                     <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className="btn btn-sm btn-outline-primary"
                         onClick={() => handleReviewClick(complaint)}
+                        className={`btn btn-sm ${
+                          complaint.VAR_COMPLAINT_STATUS === "APPROVE" || complaint.VAR_COMPLAINT_STATUS === "REJECT"
+                            ? "btn-outline-secondary"
+                            : "btn-outline-primary"
+                        }`}
+                        disabled={complaint.VAR_COMPLAINT_STATUS === "APPROVE" || complaint.VAR_COMPLAINT_STATUS === "REJECT"}
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -567,6 +560,15 @@ const ResolvedComplaint = () => {
                       {selectedComplaint.VAR_COMPLAINT_REMARK}
                     </p>
                   </div>
+
+                   <div className="col-md-12">
+                    <label className="form-label fw-semibold text-muted">
+                      Supervisor's Remark
+                    </label>
+                    <p className="h6 mb-0">
+                      {selectedComplaint.VAR_COMPAINT_SUPERREMARK}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Complaint Images Section */}
@@ -577,34 +579,38 @@ const ResolvedComplaint = () => {
                   {renderThumbnails(selectedComplaint)}
                 </div>
 
-                {/* Supervisor Actions */}
-                <div className="mt-4 pt-3 border-top">
-                  <label className="form-label fw-semibold">SI Remark*</label>
+                  <div className="mt-4 pt-3 border-top">
+                  <label className="form-label fw-semibold">Sanitary Inspector Remark <span className="text-danger">*</span></label>
                   <textarea
                     className="form-control"
                     rows="3"
-                    placeholder="Add your remarks about this complaint before approving or rejecting..."
-                    value={supervisorRemark}
-                    onChange={(e) => setSupervisorRemark(e.target.value)}
+                    placeholder="Add your remarks about this complaint..."
+                    value={siRemark}
+                    onChange={(e) => setSiRemark(e.target.value)}
                   ></textarea>
+                  <small className="text-muted mt-2 d-block">
+                    Remark is required to submit this complaint.
+                  </small>
                 </div>
-                <div className="mt-1 pt-3 d-flex flex-column">
-                  <label className="form-label fw-semibold">
-                    Select Status*
-                  </label>
+
+                <div className="mt-4 pt-3 border-top">
+                  <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
                   <select
-                    id="status"
-                    className="filter-select"
-                    style={{ width: "200px" }}
-                    // onChange={handleStatusChange}
+                    className="form-select"
+                    value={sanitaryinspectorstatus}
+                    onChange={(e) => { setSanitaryinspectorstatus(e.target.value) }}
                   >
-                    <option value="">-- Select Status --</option>
-                    <option value="A">Approve</option>
-                    <option value="R">Reject</option>
-                    <option value="">Pending</option>
+                    <option value="">--Select Status--</option>
+                    <option value="APPROVE">Approved</option>
+                    <option value="REJECT">Rejected</option>
                   </select>
+                  <small className="text-muted mt-2 d-block">
+                    Status is required to submit this complaint.
+                  </small>
                 </div>
               </div>
+
+            
               <div className="modal-footer">
                 <button
                   type="button"
@@ -616,9 +622,23 @@ const ResolvedComplaint = () => {
                 <button
                   type="button"
                   className="btn btn-primary"
-                    // onClick={handleAssign}
+                  onClick={handleSubmitSIRemark}
+                  disabled={!siRemark.trim() || !sanitaryinspectorstatus || isSubmitting}
                 >
-                  <i className="bi bi-person-check me-1"></i> Assign Supervisior
+                  {isSubmitting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle me-1"></i> Submit
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -627,9 +647,9 @@ const ResolvedComplaint = () => {
       )}
 
       {/* Full-View Image Modal */}
-      {showImageModal &&
-        selectedComplaint &&
-        selectedComplaint.images.length > 0 && (
+      {showImageModal && selectedComplaint && (() => {
+        const images = getComplaintImages(selectedComplaint);
+        return images.length > 0 ? (
           <div
             className="modal show d-block"
             tabIndex="-1"
@@ -651,8 +671,7 @@ const ResolvedComplaint = () => {
               <div className="modal-content bg-dark" style={{ border: "none" }}>
                 <div className="modal-header bg-dark border-secondary">
                   <h5 className="modal-title text-white">
-                    Image {selectedImageIndex + 1} of{" "}
-                    {selectedComplaint.images.length}
+                    Image {selectedImageIndex + 1} of {images.length}
                   </h5>
                   <button
                     type="button"
@@ -669,7 +688,7 @@ const ResolvedComplaint = () => {
                     }}
                   >
                     <img
-                      src={`data:image/png;base64,${selectedComplaint.images[selectedImageIndex]}`}
+                      src={`data:image/png;base64,${images[selectedImageIndex]}`}
                       alt={`complaint-full-${selectedImageIndex}`}
                       style={{
                         maxWidth: "100%",
@@ -692,9 +711,7 @@ const ResolvedComplaint = () => {
                     type="button"
                     className="btn btn-outline-light"
                     onClick={nextImage}
-                    disabled={
-                      selectedImageIndex === selectedComplaint.images.length - 1
-                    }
+                    disabled={selectedImageIndex === images.length - 1}
                   >
                     Next <i className="bi bi-chevron-right ms-1"></i>
                   </button>
@@ -702,7 +719,8 @@ const ResolvedComplaint = () => {
               </div>
             </div>
           </div>
-        )}
+        ) : null;
+      })()}
 
       {/* Response Modal */}
       <ResponseModal

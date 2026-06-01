@@ -80,29 +80,94 @@ const SupervisorComplaintsList = () => {
     fetchComplaints(1);
   }, [filters, ulbid]);
 
-  const onSubmit = async () => {
+  // Handle submit complaint status update
+  const handleSubmitComplaintStatus = async () => {
+    // Validation
+    if (!supervisorRemark.trim()) {
+      setModalType("warning");
+      setModalTitle("Validation Error");
+      setModalMessage("Please add a remark before submitting.");
+      setIsModalOpen(true);
+      return;
+    }
+
+    if (!supervisorStatus.trim()) {
+      setModalType("warning");
+      setModalTitle("Validation Error");
+      setModalMessage("Please select a status before submitting.");
+      setIsModalOpen(true);
+      return;
+    }
+
     try {
-        setLoading(true);
+      setLoading(true);
+
+      const payload = {
+        userId: userId,
+        mode: 1,
+        complaintId: selectedComplaint.COMPLAINTID,
+        superwiserId: selectedComplaint.SUPERWISER_ID,
+        superstatus: supervisorStatus,
+        superremark: supervisorRemark,
+        wardno: selectedComplaint.PRBHAGID,
+        ulbid: ulbid,
+      };
+
+      console.log("Submitting complaint status:", payload);
+
+      const response = await apiClient.post(
+        `/authComplaint/complaintStatusUpdate`,
+        payload
+      );
+
+      if (response.success) {
+        setModalType("success");
+        setModalTitle("Success");
+        setModalMessage("Complaint status has been updated successfully.");
+        setIsModalOpen(true);
+
+        // Close modal and reset form
+        setShowModal(false);
+        setSupervisorRemark("");
+        setSupervisorStatus("");
+        
+        // Refresh the complaints list
+        setTimeout(() => {
+          fetchComplaints(currentPage);
+        }, 1500);
+      } else {
+        setModalType("error");
+        setModalTitle("Error");
+        setModalMessage(
+          response.message || "Failed to update complaint status. Please try again."
+        );
+        setIsModalOpen(true);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Error updating complaint status:", err);
+      setModalType("error");
+      setModalTitle("Error");
+      setModalMessage(
+        err.message || "Failed to update complaint status. Please try again."
+      );
+      setIsModalOpen(true);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const fetchComplaints = async (dataPage = 1) => {
-    if (!ulbid) {
+    if (!ulbid || !userId) {
       return;
     }
     try {
       setLoading(true);
-      return;
 
       const response = await apiClient.get(
-        `/registerComplaint/getCitizenComplaintList?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&si_id=${userId}`,
+        `/authComplaint/rslvdListbyVendor?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&status=${filters.status}&supervisorId=${userId}`,
       );
 
-    //   console.log("resp :", response);
+      console.log("resp :", response);
 
       if (response.success && response.data.data) {
         setComplaints(response.data.data);
@@ -112,6 +177,7 @@ const SupervisorComplaintsList = () => {
       }
     } catch (err) {
       console.error(err);
+      setError(err.message || "Failed to fetch complaints");
     } finally {
       setLoading(false);
     }
@@ -124,78 +190,7 @@ const SupervisorComplaintsList = () => {
     setShowModal(true);
     setSelectedImageIndex(0);
     setSupervisorRemark("");
-  };
-
-  // Handle Approve action
-  const handleApprove = async () => {
-    if (!supervisorRemark.trim()) {
-      setModalType("warning");
-      setModalTitle("Warning");
-      setModalMessage("Please add a remark before approving this complaint.");
-      setIsModalOpen(true);
-      return;
-    }
-
-    try {
-      // TODO: Call API to update complaint status to approved
-      // const response = await apiClient.post("/registerComplaint/updateComplaint", {
-      //   complaintId: selectedComplaint.NUM_COMPLAINT_ID,
-      //   status: "Y",
-      //   supervisorRemark: supervisorRemark
-      // });
-
-      setModalType("success");
-      setModalTitle("Success");
-      setModalMessage("Complaint has been approved successfully.");
-      setIsModalOpen(true);
-
-      setShowModal(false);
-      setSupervisorRemark("");
-      // Refresh the complaints list
-      fetchComplaints();
-    } catch (err) {
-      console.error("Error approving complaint:", err);
-      setModalType("error");
-      setModalTitle("Error");
-      setModalMessage("Failed to approve complaint. Please try again.");
-      setIsModalOpen(true);
-    }
-  };
-
-  // Handle Reject action
-  const handleReject = async () => {
-    if (!supervisorRemark.trim()) {
-      setModalType("warning");
-      setModalTitle("Warning");
-      setModalMessage("Please add a remark before rejecting this complaint.");
-      setIsModalOpen(true);
-      return;
-    }
-
-    try {
-      // TODO: Call API to update complaint status to rejected
-      // const response = await apiClient.post("/registerComplaint/updateComplaint", {
-      //   complaintId: selectedComplaint.NUM_COMPLAINT_ID,
-      //   status: "R",
-      //   supervisorRemark: supervisorRemark
-      // });
-
-      setModalType("success");
-      setModalTitle("Success");
-      setModalMessage("Complaint has been rejected successfully.");
-      setIsModalOpen(true);
-
-      setShowModal(false);
-      setSupervisorRemark("");
-      // Refresh the complaints list
-      fetchComplaints();
-    } catch (err) {
-      console.error("Error rejecting complaint:", err);
-      setModalType("error");
-      setModalTitle("Error");
-      setModalMessage("Failed to reject complaint. Please try again.");
-      setIsModalOpen(true);
-    }
+    setSupervisorStatus("");
   };
 
   // Open image in full view
@@ -231,11 +226,11 @@ const SupervisorComplaintsList = () => {
 
   // Navigate to next image
   const nextImage = () => {
-    if (
-      selectedComplaint &&
-      selectedImageIndex < selectedComplaint.images.length - 1
-    ) {
-      setSelectedImageIndex(selectedImageIndex + 1);
+    if (selectedComplaint) {
+      const images = getComplaintImages(selectedComplaint);
+      if (selectedImageIndex < images.length - 1) {
+        setSelectedImageIndex(selectedImageIndex + 1);
+      }
     }
   };
 
@@ -258,57 +253,65 @@ const SupervisorComplaintsList = () => {
     });
   };
 
-  // Helper to render image thumbnails with click handler
-  const renderThumbnails = (complaint) => {
-    const images = [
-      complaint?.BLOB_COMPLAINT_UNITIMG1 || "",
-      complaint?.BLOB_COMPLAINT_UNITIMG2 || "",
-      complaint?.BLOB_COMPLAINT_UNITIMG3 || "",
-      complaint?.BLOB_COMPLAINT_UNITIMG4 || "",
-      complaint?.BLOB_COMPLAINT_UNITIMG5 || "",
-    ];
-    return (
-      <div className="d-flex gap-2 flex-wrap mt-2">
-        {images.length > 0 ? (
-          images.map((img, idx) => (
-            <img
-              key={idx}
-              src={`data:image/png;base64,${img}`}
-              alt={`complaint-${idx}`}
-              style={{
-                width: "80px",
-                height: "80px",
-                objectFit: "cover",
-                borderRadius: "8px",
-                border: "2px solid #dee2e6",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              onClick={() => handleImageClick(idx)}
-              onMouseEnter={(e) =>
-                (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
-              }
-              onMouseLeave={(e) => (e.target.style.boxShadow = "none")}
-            />
-          ))
-        ) : (
-          <p className="text-muted mb-0">No images available</p>
-        )}
-      </div>
-    );
+  // Helper function to extract images from complaint
+  const getComplaintImages = (complaint) => {
+    return [
+      complaint?.BLOB_COMPLAINT_UNITIMG1,
+      complaint?.BLOB_COMPLAINT_UNITIMG2,
+      complaint?.BLOB_COMPLAINT_UNITIMG3,
+      complaint?.BLOB_COMPLAINT_UNITIMG4,
+      complaint?.BLOB_COMPLAINT_UNITIMG5,
+    ].filter((img) => img && img.trim() !== "");
   };
 
+  // Helper to render image thumbnails with click handler
+  const renderThumbnails = (complaint) => {
+  const images = getComplaintImages(complaint);
+
+  return (
+    <div className="d-flex gap-2 flex-wrap mt-2">
+      {images.length > 0 ? (
+        images.map((img, idx) => (
+          <img
+            key={idx}
+            src={`data:image/png;base64,${img}`}
+            alt={`complaint-${idx}`}
+            style={{
+              width: "80px",
+              height: "80px",
+              objectFit: "cover",
+              borderRadius: "8px",
+              border: "2px solid #dee2e6",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+            onClick={() => handleImageClick(idx)}
+            onMouseEnter={(e) =>
+              (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.boxShadow = "none")
+            }
+          />
+        ))
+      ) : (
+        <p className="text-muted mb-0">No images available</p>
+      )}
+    </div>
+  );
+};
+
   const getBadge = (flag) => {
-    if (flag === "A") {
+    if (flag === "CLOSED") {
       return (
         <span className="badge bg-success rounded-pill px-3 py-2">
-          <i className="bi bi-check-circle me-1"></i> Approve
+          <i className="bi bi-check-circle me-1"></i> CLOSED
         </span>
       );
-    } else if (flag === "R") {
+    } else if (flag === "WIP") {
       return (
-        <span className="badge bg-danger rounded-pill px-3 py-2">
-          <i className="bi bi-x-circle me-1"></i> Rejected
+         <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
+          <i className="bi bi-clock-history me-1"></i> WIP
         </span>
       );
     } else {
@@ -379,9 +382,9 @@ const SupervisorComplaintsList = () => {
                     onChange={handleStatusChange}
                   >
                     <option value="">All</option>
-                    <option value="P">Pending</option>
-                    <option value="Y">Resolved</option>
-                    <option value="R">Rejected</option>
+                    <option value="ASSIGN">Pending</option>
+                    <option value="CLOSED">CLOSED</option>
+                    <option value="WIP">WIP</option>
                   </select>
                 </div>
 
@@ -430,6 +433,13 @@ const SupervisorComplaintsList = () => {
                       <button
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleReviewClick(complaint)}
+                        className={`btn btn-sm ${
+                          complaint.VAR_COMPLAINT_STATUS === "CLOSED"
+                            ? "btn-outline-secondary"
+                            : "btn-outline-primary"
+                        }`}
+                        disabled={complaint.VAR_COMPLAINT_STATUS === "CLOSED"}
+                      
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -531,7 +541,7 @@ const SupervisorComplaintsList = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="bi bi-chat-dots me-2"></i>
-                  Review Complaint #{selectedComplaint.NUM_COMPLAINT_ID}
+                  Review Complaint #{selectedComplaint.COMPLAINTID}
                 </h5>
                 <button
                   type="button"
@@ -613,13 +623,12 @@ const SupervisorComplaintsList = () => {
                   <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
                   <select
                     className="form-select"
-                    // placeholder="Add your remarks about this complaint before approving or rejecting..."
                     value={supervisorStatus}
                     onChange={(e) => { setSupervisorStatus(e.target.value) }}
                   >
                     <option value="">--Select Status--</option>
-                    <option value="W">WIP</option>
-                    <option value="C">Closed</option>
+                    <option value="WIP">WIP</option>
+                    <option value="CLOSED">Closed</option>
                   </select>
                   <small className="text-muted mt-2 d-block">
                     Status is required to submit this complaint.
@@ -638,9 +647,8 @@ const SupervisorComplaintsList = () => {
                   type="button"
                   className="btn btn-primary"
                   disabled={!(supervisorRemark.trim() && supervisorStatus.trim())}
-                    // onClick={onSubmit}
+                  onClick={handleSubmitComplaintStatus}
                 >
-                  {/* <i className="bi bi-person-check me-1"></i>  */}
                   Submit
                 </button>
               </div>
@@ -652,7 +660,7 @@ const SupervisorComplaintsList = () => {
       {/* Full-View Image Modal */}
       {showImageModal &&
         selectedComplaint &&
-        selectedComplaint.images.length > 0 && (
+        getComplaintImages(selectedComplaint).length > 0 && (
           <div
             className="modal show d-block"
             tabIndex="-1"
@@ -675,7 +683,7 @@ const SupervisorComplaintsList = () => {
                 <div className="modal-header bg-dark border-secondary">
                   <h5 className="modal-title text-white">
                     Image {selectedImageIndex + 1} of{" "}
-                    {selectedComplaint.images.length}
+                    {getComplaintImages(selectedComplaint).length}
                   </h5>
                   <button
                     type="button"
@@ -692,7 +700,7 @@ const SupervisorComplaintsList = () => {
                     }}
                   >
                     <img
-                      src={`data:image/png;base64,${selectedComplaint.images[selectedImageIndex]}`}
+                      src={`data:image/jpeg;base64,${getComplaintImages(selectedComplaint)[selectedImageIndex]}`}
                       alt={`complaint-full-${selectedImageIndex}`}
                       style={{
                         maxWidth: "100%",
@@ -716,7 +724,7 @@ const SupervisorComplaintsList = () => {
                     className="btn btn-outline-light"
                     onClick={nextImage}
                     disabled={
-                      selectedImageIndex === selectedComplaint.images.length - 1
+                      selectedImageIndex === getComplaintImages(selectedComplaint).length - 1
                     }
                   >
                     Next <i className="bi bi-chevron-right ms-1"></i>

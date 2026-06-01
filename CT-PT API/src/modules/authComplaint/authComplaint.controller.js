@@ -1,6 +1,7 @@
 const { authComplaintService, getCompListForSupService, getCompListSIService,
     getImagesService,getrslvdListbyVendorService, getrslvdListbySupService
  } = require('./authComplaint.service');
+const { complaintStatusUpdateService } = require('./authComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
 
@@ -95,3 +96,51 @@ async function resolvedListbySup(req, res, next) {
        }
        
 module.exports = { authComplaint, getCompListForSup, getCompListForSI, getImagesCon, resolvedListbyVendor, resolvedListbySup };
+
+async function complaintStatusUpdate(req, res, next) {
+  try {
+    const body = req.body || {};
+
+    const payload = {
+      userId: body.userId || req.user?.userId,
+      mode: body.mode,
+      compaintId: body.complaintId ?? body.compaintId ?? body.in_compaintid ?? body.compaintid,
+      superwiserId: body.superwiserId,
+      superstatus: body.superstatus,
+      superremark: body.superremark,
+      SIID: body.SIID || body.siId,
+      si_status: body.si_status,
+      si_remrk: body.si_remrk,
+      wardno: body.wardno,
+      ulbid: body.ulbid,
+    };
+
+    const out = await complaintStatusUpdateService(payload);
+    const isSuccess = String(out.errorCode) === '9999';
+
+    if (isSuccess) {
+      logApiSuccess(req, 200, {}, 'Complaint status update succeeded');
+    } else {
+      logApiError(req, 400, out.message, 'Complaint status update failed');
+    }
+
+    auditLog({
+      action: 'CTPT_COMPLAINT_STATUS_UPDATE',
+      actor: req.user?.userId || payload.userId || 'system',
+      module: 'authComplaint',
+      status: isSuccess ? 'SUCCESS' : 'FAILED',
+      details: {
+        outErrorCode: out.errorCode,
+        outErrorMsg: out.message,
+      },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(out);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Complaint status update error');
+    return next(error);
+  }
+}
+
+module.exports.complaintStatusUpdate = complaintStatusUpdate;

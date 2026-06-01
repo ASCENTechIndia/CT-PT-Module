@@ -497,7 +497,8 @@ async function rslvdListbyVendorRepo(
       a.blob_complaint_unitimg4,
       a.blob_complaint_unitimg5,
       a.ulbid,
-      a.si_id
+      a.si_id,
+      a.complaintid
     FROM vw_ctptpendingcomplaint_assinlist a
     WHERE a.ulbid = :ulbid
       AND a.superwiser_id = :supervisorId
@@ -505,7 +506,7 @@ async function rslvdListbyVendorRepo(
 
   const binds = {
     ulbid: Number(ulbid),
-    supervisorId: supervisorId,
+    supervisorId: String(supervisorId),
   };
 
   // Date Filter
@@ -561,7 +562,7 @@ async function rslvdListbyVendorRepo(
 
   const countBinds = {
     ulbid: Number(ulbid),
-    supervisorId: Number(supervisorId),
+    supervisorId: String(supervisorId),
   };
 
   if (fromDate && toDate) {
@@ -629,7 +630,10 @@ async function rslvdListbySupRepo(
       blob_complaint_unitimg4,
       blob_complaint_unitimg5,
       ulbid,
-      si_id
+      si_id,
+      var_compaint_superremark,
+      var_compaint_siremark,
+      complaintid
     FROM vw_ctptpendingcomplaint_Resolved
     WHERE ulbid = :ulbid
   `;
@@ -665,6 +669,15 @@ async function rslvdListbySupRepo(
 
   const result = await executeQuery(sql, binds);
   const rows = result.rows || [];
+
+    // Convert images
+  for (const row of rows) {
+    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG1);
+    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG2);
+    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
+    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
+    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
+  }
 
   let countSql = `
     SELECT COUNT(*) AS total
@@ -717,3 +730,59 @@ module.exports = {
   compListforSIRepo,
   getImages, rslvdListbyVendorRepo, rslvdListbySupRepo
 };
+
+async function complaintStatusUpdateRepo(payload) {
+  const statement = `
+    BEGIN
+      aorts.aorts_ctptcomplaintstatusupdt_ins(
+        :in_userid,
+        :in_mode,
+        :in_compaintid,
+        :in_superwiserid,
+        :in_superstatus,
+        :in_superremark,
+        :in_SIID,
+        :in_si_status,
+        :in_si_remrk,
+        :in_wardno,
+        :in_ulbid,
+        :out_errcode,
+        :out_ErrMsg
+      );
+    END;
+  `;
+
+  const binds = {
+    in_userid: payload.userId,
+    in_mode: Number(payload.mode),
+    in_compaintid: Number(payload.compaintId ?? payload.complaintId ?? payload.compaintid ?? payload.complaintid),
+    in_superwiserid: payload.superwiserId,
+    in_superstatus: payload.superstatus,
+    in_superremark: payload.superremark,
+    in_SIID: payload.SIID || payload.siId,
+    in_si_status: payload.si_status,
+    in_si_remrk: payload.si_remrk,
+    in_wardno: payload.wardno ? Number(payload.wardno) : null,
+    in_ulbid: Number(payload.ulbid),
+    out_errcode: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.NUMBER,
+    },
+    out_ErrMsg: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
+  };
+
+  const result = await executeProcedure({ statement, binds, useTx: false });
+  const out = result.outBinds || {};
+
+  return {
+    errorCode: out.out_errcode,
+    message: out.out_ErrMsg,
+  };
+}
+
+// expose new repo function
+module.exports.complaintStatusUpdateRepo = complaintStatusUpdateRepo;

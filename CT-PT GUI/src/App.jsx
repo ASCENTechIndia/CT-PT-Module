@@ -65,15 +65,75 @@ function App() {
               <Route path="/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
               <Route path="/modals" element={<ProtectedRoute><Modals /></ProtectedRoute>} />
               <Route path="/blank" element={<ProtectedRoute><Blank /></ProtectedRoute>} />
-              <Route path="/create-agent" element={<ProtectedRoute><CreateAgent /></ProtectedRoute>} />
-              <Route path="/register-complaint" element={<FrmCitizen />} />
-              <Route path="/complaint-list" element={<ComplaintsTable />} />
-              {/* <Route path="/resolved-complaint-supervisor-list" element={<ResolvedComplaintList />} /> */}
-              <Route path="/application-list" element={<ApplicationList />} />
-              <Route path="/application-list-sanitary" element={<ApplicationListSI />} />
-              <Route path="/all-complaint" element={<AssignComplaint />} />
-              <Route path="/resolved-complaint" element={<ResolvedComplaint />} />
-              <Route path='/supervisor-complaint-list' element={<SupervisorComplaintsList />} />
+              <Route
+  path="/create-agent"
+  element={
+    <ProtectedRoute>
+      <CreateAgent />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/register-complaint"
+  element={
+      <FrmCitizen />
+  }
+/>
+
+<Route
+  path="/complaint-list"
+  element={
+    <ProtectedRoute>
+      <ComplaintsTable />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/application-list"
+  element={
+    <ProtectedRoute>
+      <ApplicationList />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/application-list-sanitary"
+  element={
+    <ProtectedRoute>
+      <ApplicationListSI />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/all-complaint"
+  element={
+    <ProtectedRoute>
+      <AssignComplaint />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/resolved-complaint"
+  element={
+    <ProtectedRoute>
+      <ResolvedComplaint />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/supervisor-complaint-list"
+  element={
+    <ProtectedRoute>
+      <SupervisorComplaintsList />
+    </ProtectedRoute>
+  }
+/>
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />
