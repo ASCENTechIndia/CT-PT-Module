@@ -13,6 +13,8 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+
   const {
     register,
     handleSubmit,
@@ -74,12 +76,16 @@ export default function Login() {
   //   }
   // };
 
-
  //  without sso
   const loginUser = async (userid, password) => {
-    const res = await apiService.post("fire-login", {
-      in_UserId: userid,
-      in_password: password,
+       const ipAddress = await GetIPAddress();
+    const res = await apiClient.post("/auth/login", {
+        userId: userid,
+      password: password,
+      macaddr: config.macAddress,
+      ipaddr: ipAddress,
+      hostname: config.hostName,
+      source: config.source,
     });
   
     if (!res?.data || typeof res.data !== "object") {
@@ -104,8 +110,8 @@ export default function Login() {
       setError("User ID and password are required.");
       return;
     }
+   const ipAddress = await GetIPAddress();
 
-    const ipAddress = await GetIPAddress();
 
     const payload = {
       userId: values.userId,
@@ -191,7 +197,7 @@ export default function Login() {
   
   const validateTokenAndLogin = async () => {
     try {
-      const response = await apiClient.post(`/validate-token`, {}, { withCredentials: true });
+      const response = await apiClient.post(`/auth/validate-token`, {}, { withCredentials: true });
       const outBinds = response.data?.outBinds;
       // console.log("🔥 validate response", outBinds);
   
