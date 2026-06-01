@@ -667,6 +667,15 @@ async function rslvdListbySupRepo(
   const result = await executeQuery(sql, binds);
   const rows = result.rows || [];
 
+    // Convert images
+  for (const row of rows) {
+    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG1);
+    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG2);
+    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
+    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
+    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
+  }
+
   let countSql = `
     SELECT COUNT(*) AS total
     FROM vw_ctptpendingcomplaint_Resolved
