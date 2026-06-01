@@ -63,7 +63,7 @@ export default function Login() {
         const userData = response?.data?.user;
         login(userData);
         reset();
-        userData.designation === "Supervisor" ? navigate("/supervisor-complaint-list") : navigate("/application-list-sanitary"); 
+        userData.designation === "Supervisor" ? navigate("/supervisor-complaint-list") : navigate("/all-complaint"); 
       } else {
         setError('Login failed. Please try again.');
       }

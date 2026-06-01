@@ -164,7 +164,7 @@ const SupervisorComplaintsList = () => {
       setLoading(true);
 
       const response = await apiClient.get(
-        `/authComplaint/rslvdListbyVendor?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&status=${filters.status || "ASSIGN"}&supervisorId=${userId}`,
+        `/authComplaint/rslvdListbyVendor?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&status=${filters.status}&supervisorId=${userId}`,
       );
 
       console.log("resp :", response);
@@ -302,16 +302,16 @@ const SupervisorComplaintsList = () => {
 };
 
   const getBadge = (flag) => {
-    if (flag === "A") {
+    if (flag === "CLOSED") {
       return (
         <span className="badge bg-success rounded-pill px-3 py-2">
-          <i className="bi bi-check-circle me-1"></i> Approve
+          <i className="bi bi-check-circle me-1"></i> CLOSED
         </span>
       );
-    } else if (flag === "R") {
+    } else if (flag === "WIP") {
       return (
-        <span className="badge bg-danger rounded-pill px-3 py-2">
-          <i className="bi bi-x-circle me-1"></i> Rejected
+         <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
+          <i className="bi bi-clock-history me-1"></i> WIP
         </span>
       );
     } else {
@@ -382,9 +382,9 @@ const SupervisorComplaintsList = () => {
                     onChange={handleStatusChange}
                   >
                     <option value="">All</option>
-                    <option value="P">Pending</option>
-                    <option value="Y">Resolved</option>
-                    <option value="R">Rejected</option>
+                    <option value="ASSIGN">Pending</option>
+                    <option value="CLOSED">CLOSED</option>
+                    <option value="WIP">WIP</option>
                   </select>
                 </div>
 
@@ -433,6 +433,13 @@ const SupervisorComplaintsList = () => {
                       <button
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleReviewClick(complaint)}
+                        className={`btn btn-sm ${
+                          complaint.VAR_COMPLAINT_STATUS === "CLOSED"
+                            ? "btn-outline-secondary"
+                            : "btn-outline-primary"
+                        }`}
+                        disabled={complaint.VAR_COMPLAINT_STATUS === "CLOSED"}
+                      
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -534,7 +541,7 @@ const SupervisorComplaintsList = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="bi bi-chat-dots me-2"></i>
-                  Review Complaint #{selectedComplaint.NUM_COMPLAINT_ID}
+                  Review Complaint #{selectedComplaint.COMPLAINTID}
                 </h5>
                 <button
                   type="button"

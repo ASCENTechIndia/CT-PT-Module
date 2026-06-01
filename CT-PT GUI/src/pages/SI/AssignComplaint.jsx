@@ -87,7 +87,7 @@ const AssignComplaint = () => {
       setLoading(true);
 
       const response = await apiClient.get(
-        `/registerComplaint/getCitizenComplaintList?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&si_id=${userId}`,
+        `/registerComplaint/getCitizenComplaintList?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&si_id=${userId}&status=${filters.status}`,
       );
 
       if (response.success && response.data.data) {
@@ -411,8 +411,7 @@ const AssignComplaint = () => {
                   >
                     <option value="">All</option>
                     <option value="P">Pending</option>
-                    <option value="Y">Resolved</option>
-                    <option value="R">Rejected</option>
+                    <option value="ASSIGN">Assigned</option>
                   </select>
                 </div>
 
@@ -458,8 +457,14 @@ const AssignComplaint = () => {
                     <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className="btn btn-sm btn-outline-primary"
                         onClick={() => handleReviewClick(complaint)}
+                        className={`btn btn-sm ${
+                          complaint.VAR_COMPLAINT_STATUS === "ASSIGN"
+                            ? "btn-outline-secondary"
+                            : "btn-outline-primary"
+                        }`}
+                        disabled={complaint.VAR_COMPLAINT_STATUS === "ASSIGN"}
+                      
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
