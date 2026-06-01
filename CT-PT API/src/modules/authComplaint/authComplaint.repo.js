@@ -497,7 +497,8 @@ async function rslvdListbyVendorRepo(
       a.blob_complaint_unitimg4,
       a.blob_complaint_unitimg5,
       a.ulbid,
-      a.si_id
+      a.si_id,
+      a.complaintid
     FROM vw_ctptpendingcomplaint_assinlist a
     WHERE a.ulbid = :ulbid
       AND a.superwiser_id = :supervisorId

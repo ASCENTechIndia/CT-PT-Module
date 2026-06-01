@@ -19,7 +19,7 @@ const complaintStatusSchema = z.object({
   SIID: z.string().optional(),
   si_status: z.string().optional(),
   si_remrk: z.string().optional(),
-  wardno: z.coerce.number().int().optional(),
+  wardno: z.coerce.number().int().positive(),
   ulbid: z.coerce.number().int().positive(),
 });
 
