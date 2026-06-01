@@ -630,7 +630,9 @@ async function rslvdListbySupRepo(
       blob_complaint_unitimg4,
       blob_complaint_unitimg5,
       ulbid,
-      si_id
+      si_id,
+      var_compaint_superremark,
+var_compaint_siremark
     FROM vw_ctptpendingcomplaint_Resolved
     WHERE ulbid = :ulbid
   `;
