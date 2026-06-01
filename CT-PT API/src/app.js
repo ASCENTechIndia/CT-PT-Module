@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-
+const cookieParser = require("cookie-parser");
 const { config, validateConfig } = require('./config/env');
 const routes = require('./routes');
 const { notFoundHandler, errorHandler } = require('./middleware/error-handler');
@@ -15,12 +15,25 @@ function createApp() {
   const app = express();
 
   app.use(helmet());
-  app.use(
-    cors({
-      origin: config.corsOrigin === '*' ? true : config.corsOrigin.split(',').map((x) => x.trim()),
-      credentials: true,
-    })
-  );
+ const allowedOrigins = [
+  "https://ctpt.nagarkaryavalinewuat.com",
+  "https://nagarkaryavalinewuat.com",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin not allowed: ${origin}`));
+      }
+    },
+    credentials: true,
+  })
+);
+  app.use(cookieParser());
+
   app.use(compression());
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));

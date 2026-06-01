@@ -5,6 +5,10 @@ const { loginSchema } = require('./auth.validation');
 
 const router = express.Router();
 
+const  isValidToken  = require('./isValidToken');
+
+router.post('/validate-token', isValidToken);
+
 router.post('/login', validate(loginSchema), login);
 
 module.exports = router;
