@@ -248,6 +248,27 @@ const AssignComplaint = () => {
       complaint?.BLOB_COMPLAINT_UNITIMG4 || "",
       complaint?.BLOB_COMPLAINT_UNITIMG5 || "",
     ];
+
+    const openImageInNewTab = (img) => {
+      try {
+        // Convert base64 to blob
+        const binaryString = atob(img);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: "image/jpeg" });
+
+        // Create object URL from blob
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Open in new tab
+        window.open(blobUrl, "_blank");
+      } catch (err) {
+        console.error("Error opening image:", err);
+        alert("Unable to open image. Please try again.");
+      }
+    };
     return (
       <div className="d-flex gap-2 flex-wrap mt-2">
         {images.length > 0 ? (
@@ -267,7 +288,7 @@ const AssignComplaint = () => {
                     cursor: "pointer",
                     transition: "all 0.3s ease",
                   }}
-                  onClick={() => handleImageClick(idx)}
+                  onClick={() => openImageInNewTab(img)}
                   onMouseEnter={(e) =>
                     (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
                   }
