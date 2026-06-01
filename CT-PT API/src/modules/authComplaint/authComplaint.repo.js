@@ -717,3 +717,59 @@ module.exports = {
   compListforSIRepo,
   getImages, rslvdListbyVendorRepo, rslvdListbySupRepo
 };
+
+async function complaintStatusUpdateRepo(payload) {
+  const statement = `
+    BEGIN
+      aorts.aorts_ctptcomplaintstatusupdt_ins(
+        :in_userid,
+        :in_mode,
+        :in_compaintid,
+        :in_superwiserid,
+        :in_superstatus,
+        :in_superremark,
+        :in_SIID,
+        :in_si_status,
+        :in_si_remrk,
+        :in_wardno,
+        :in_ulbid,
+        :out_errcode,
+        :out_ErrMsg
+      );
+    END;
+  `;
+
+  const binds = {
+    in_userid: payload.userId,
+    in_mode: Number(payload.mode),
+    in_compaintid: Number(payload.compaintId ?? payload.complaintId ?? payload.compaintid ?? payload.complaintid),
+    in_superwiserid: payload.superwiserId,
+    in_superstatus: payload.superstatus,
+    in_superremark: payload.superremark,
+    in_SIID: payload.SIID || payload.siId,
+    in_si_status: payload.si_status,
+    in_si_remrk: payload.si_remrk,
+    in_wardno: payload.wardno ? Number(payload.wardno) : null,
+    in_ulbid: Number(payload.ulbid),
+    out_errcode: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.NUMBER,
+    },
+    out_ErrMsg: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
+  };
+
+  const result = await executeProcedure({ statement, binds, useTx: false });
+  const out = result.outBinds || {};
+
+  return {
+    errorCode: out.out_errcode,
+    message: out.out_ErrMsg,
+  };
+}
+
+// expose new repo function
+module.exports.complaintStatusUpdateRepo = complaintStatusUpdateRepo;

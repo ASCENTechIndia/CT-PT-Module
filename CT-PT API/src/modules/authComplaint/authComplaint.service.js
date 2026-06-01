@@ -2,6 +2,8 @@ const { authComplaintRepo, compListforSupRepo, compListforSIRepo, getImages,
   rslvdListbyVendorRepo, rslvdListbySupRepo
  } = require('./authComplaint.repo');
 
+const { complaintStatusUpdateRepo } = require('./authComplaint.repo');
+
 async function authComplaintService(payload) {
   return authComplaintRepo(payload);
 }
@@ -36,3 +38,9 @@ async function getrslvdListbySupService( ulbid, fromDate,toDate,status, page, li
 module.exports = {
   authComplaintService, getCompListForSupService, getCompListSIService, getImagesService, getrslvdListbyVendorService, getrslvdListbySupService
 };
+
+async function complaintStatusUpdateService(payload) {
+  return complaintStatusUpdateRepo(payload);
+}
+
+module.exports.complaintStatusUpdateService = complaintStatusUpdateService;
