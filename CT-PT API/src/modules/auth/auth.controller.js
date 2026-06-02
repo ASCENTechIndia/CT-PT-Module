@@ -33,7 +33,8 @@ async function login(req, res, next) {
       return res.fail(result.message, 401, { errorCode: result.errorCode });
     }
 
-    logApiSuccess(req, 200, { userId: result.user.userId, userName: result.user.userFullName }, `Login successful for user: ${result.user.userFullName}`);
+    // logApiSuccess(req, 200, { userId: result.user.userId, userName: result.user.userFullName }, `Login successful for user: ${result.user.userFullName}`);
+   
     res.cookie("access_token", result.token, {
   httpOnly: true,
   secure: true,
@@ -42,7 +43,14 @@ async function login(req, res, next) {
   path: "/",
   maxAge: 24 * 60 * 60 * 1000,
 });
-
+// logApiSuccess(
+//   req,
+//   200,
+//   {
+//     jwtToken: result.token
+//   },
+//   "Generated JWT Token"
+// );
     return res.ok({ token: result.token, user: result.user });
 
   } catch (error) {

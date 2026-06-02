@@ -6,6 +6,7 @@ import apiClient from '../../services/apiClient';
 import logo from "../../../public/assets/images/dhule-logo.png";
 import GetIPAddress from '../../utils/IpHelper';
 import config from '../../utils/config';
+import axios from 'axios';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
 
   const {
     register,
@@ -78,32 +79,44 @@ export default function Login() {
 
  //  without sso
 const loginUser = async (userid, password) => {
-  const ipAddress = await GetIPAddress();
+  try {
+    const ipAddress = await GetIPAddress();
 
-  console.log("🚀 Login Payload:", {
-    userId: userid,
-    password,
-    macaddr: config.macAddress,
-    ipaddr: ipAddress,
-    hostname: config.hostName,
-    source: config.source,
-  });
+    const payload = {
+      userId: userid,
+      password,
+      macaddr: config.macAddress,
+      ipaddr: ipAddress,
+      hostname: config.hostName,
+      source: config.source,
+    };
 
-  const res = await apiClient.post("/auth/login", {
-    userId: userid,
-    password,
-    macaddr: config.macAddress,
-    ipaddr: ipAddress,
-    hostname: config.hostName,
-    source: config.source,
-  });
+    // console.log("🚀 Login Payload:", payload);
 
-  console.log("✅ Login API Response:", res);
-  console.log("✅ Login API Data:", res.data);
+    const res = await apiClient.post(
+      "/auth/login",
+      payload,
+      { withCredentials: true }
+    );
 
-  return res.data;
+    // console.log("✅ Login API Response:", res);
+
+    if (!res.success) {
+      throw new Error("Login failed. Please try again.");
+    }
+
+    const { token, user } = res.data;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    return { token, user };
+  } catch (err) {
+    console.error("❌ Login Error:", err);
+    throw err;
+  }
 };
-  
+
  const onSubmit = async (values) => {
   setError("");
   setIsLoading(true);
@@ -174,27 +187,27 @@ const loginUser = async (userid, password) => {
   
  const handleSilentSubmit = async (userid, password) => {
   try {
-    console.log("🚀 Silent Login Start");
-    console.log("Userid:", userid);
-    console.log("Password:", password);
+    // console.log("🚀 Silent Login Start");
+    // console.log("Userid:", userid);
+    // console.log("Password:", password);
 
     setLoading(true);
 
     const data = await loginUser(userid, password);
 
-    console.log("✅ Login Response:", data);
+    // console.log("✅ Login Response:", data);
 
     const { token, user } = data;
 
-    console.log("Token:", token);
-    console.log("User:", user);
+    // console.log("Token:", token);
+    // console.log("User:", user);
 
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
 
-    loginAdmin(user, token);
+    login(user, token);
 
-    navigate("/dashboard");
+    navigate("/");
   } catch (err) {
     console.error("❌ Silent Login Error:", err);
     setError(err.message || "Silent login failed.");
@@ -205,39 +218,44 @@ const loginUser = async (userid, password) => {
   
 const validateTokenAndLogin = async () => {
   try {
-    console.log("🚀 Calling validate-token API...");
+    // console.log("🚀 Calling validate-token API...");
 
-    const response = await apiClient.post(
-      "/auth/validate-token",
+    const response = await axios.post(
+      `${API_BASE_URL}/auth/validate-token`,
       {},
-      { withCredentials: true }
+      {
+        withCredentials: true,
+      }
     );
 
-    console.log("✅ Full validate response:", response);
-    console.log("✅ Response Data:", response.data);
+    // console.log("✅ Validate Response:", response.data);
 
-    const outBinds = response.data?.outBinds;
+    const outBinds = response?.data?.outBinds;
 
-    console.log("🔥 outBinds:", outBinds);
-    console.log("🔥 out_ErrorCode:", outBinds?.out_ErrorCode);
-    console.log("🔥 out_userid:", outBinds?.out_userid);
-    console.log("🔥 out_encpassword:", outBinds?.out_encpassword);
+    // console.log("🔥 outBinds:", outBinds);
 
     if (Number(outBinds?.out_ErrorCode) === 9999) {
-      console.log("✅ Token Valid");
+      // console.log("✅ Token Valid");
+
       await handleSilentSubmit(
         outBinds.out_userid,
         outBinds.out_encpassword
       );
+
       return true;
     }
 
-    console.log("❌ Token Invalid");
+    // console.log(
+    //   "❌ Token Invalid:",
+    //   outBinds?.out_ErrorCode,
+    //   outBinds?.out_ErrorMsg
+    // );
+
     return false;
   } catch (err) {
     console.error("❌ Validate Token Error:", err);
-    console.error("❌ Response:", err?.response);
     console.error("❌ Response Data:", err?.response?.data);
+
     return false;
   }
 };
@@ -246,9 +264,9 @@ const validateTokenAndLogin = async () => {
     debugger;
     const checkSession = async () => {
       const ok = await validateTokenAndLogin();
-      // if (!ok) {
-      //   window.location.href = "https://nagarkaryavalinewuat.com/";
-      // }
+      if (!ok) {
+        window.location.href = "https://nagarkaryavalinewuat.com/";
+      }
     };
     checkSession();
   }, []);
