@@ -11,4 +11,5 @@ router.post('/validate-token', isValidToken);
 
 router.post('/login', validate(loginSchema), login);
 
+
 module.exports = router;
