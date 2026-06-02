@@ -1,5 +1,5 @@
 const oracledb = require('oracledb');
-const  getConnection  = require('../../config/db'); // Adjust the import path as needed
+const { getConnection } = require('../../config/db'); // Adjust the import path as needed
 
 
 async function isValidToken(req,res) {
