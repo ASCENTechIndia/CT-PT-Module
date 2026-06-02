@@ -34,8 +34,17 @@ async function login(req, res, next) {
     }
 
     logApiSuccess(req, 200, { userId: result.user.userId, userName: result.user.userFullName }, `Login successful for user: ${result.user.userFullName}`);
+    res.cookie("access_token", result.token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "None",
+  domain: ".nagarkaryavalinewuat.com",
+  path: "/",
+  maxAge: 24 * 60 * 60 * 1000,
+});
 
     return res.ok({ token: result.token, user: result.user });
+
   } catch (error) {
     logApiError(req, 500, error.message, 'Login controller error');
     return next(error);

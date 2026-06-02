@@ -77,29 +77,32 @@ export default function Login() {
   // };
 
  //  without sso
-  const loginUser = async (userid, password) => {
-       const ipAddress = await GetIPAddress();
-    const res = await apiClient.post("/auth/login", {
-        userId: userid,
-      password: password,
-      macaddr: config.macAddress,
-      ipaddr: ipAddress,
-      hostname: config.hostName,
-      source: config.source,
-    });
-  
-    if (!res?.data || typeof res.data !== "object") {
-      throw new Error("Invalid response");
-    }
-  
-    if (res.data?.result?.out_ErrorCode === 0 || res.data.token) {
-      return res.data;
-    } else {
-      throw new Error(
-        res.data?.result?.Out_ErrorMsg || "Invalid username or password."
-      );
-    }
-  };
+const loginUser = async (userid, password) => {
+  const ipAddress = await GetIPAddress();
+
+  console.log("🚀 Login Payload:", {
+    userId: userid,
+    password,
+    macaddr: config.macAddress,
+    ipaddr: ipAddress,
+    hostname: config.hostName,
+    source: config.source,
+  });
+
+  const res = await apiClient.post("/auth/login", {
+    userId: userid,
+    password,
+    macaddr: config.macAddress,
+    ipaddr: ipAddress,
+    hostname: config.hostName,
+    source: config.source,
+  });
+
+  console.log("✅ Login API Response:", res);
+  console.log("✅ Login API Data:", res.data);
+
+  return res.data;
+};
   
  const onSubmit = async (values) => {
   setError("");
@@ -169,58 +172,83 @@ export default function Login() {
   }
 };
   
-  const handleSilentSubmit = async (userid, password) => {
-    try {
-      setLoading(true);
+ const handleSilentSubmit = async (userid, password) => {
+  try {
+    console.log("🚀 Silent Login Start");
+    console.log("Userid:", userid);
+    console.log("Password:", password);
+
+    setLoading(true);
+
+    const data = await loginUser(userid, password);
+
+    console.log("✅ Login Response:", data);
+
+    const { token, user } = data;
+
+    console.log("Token:", token);
+    console.log("User:", user);
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    loginAdmin(user, token);
+
+    navigate("/dashboard");
+  } catch (err) {
+    console.error("❌ Silent Login Error:", err);
+    setError(err.message || "Silent login failed.");
+  } finally {
+    setLoading(false);
+  }
+};
   
-      const data = await loginUser(userid, password);
-  
-      const { token, user } = data;
-  
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-  
-      loginAdmin(user, token);
-  
-      // if (user.otpValidate === "Y") {
-      //   navigate("/otp-verification");
-      // } else {
-        navigate("/dashboard");
-      // }
-  
-    } catch (err) {
-      setError(err.message || "Silent login failed.");
-    } finally {
-      setLoading(false);
+const validateTokenAndLogin = async () => {
+  try {
+    console.log("🚀 Calling validate-token API...");
+
+    const response = await apiClient.post(
+      "/auth/validate-token",
+      {},
+      { withCredentials: true }
+    );
+
+    console.log("✅ Full validate response:", response);
+    console.log("✅ Response Data:", response.data);
+
+    const outBinds = response.data?.outBinds;
+
+    console.log("🔥 outBinds:", outBinds);
+    console.log("🔥 out_ErrorCode:", outBinds?.out_ErrorCode);
+    console.log("🔥 out_userid:", outBinds?.out_userid);
+    console.log("🔥 out_encpassword:", outBinds?.out_encpassword);
+
+    if (Number(outBinds?.out_ErrorCode) === 9999) {
+      console.log("✅ Token Valid");
+      await handleSilentSubmit(
+        outBinds.out_userid,
+        outBinds.out_encpassword
+      );
+      return true;
     }
-  };
-  
-  const validateTokenAndLogin = async () => {
-    try {
-      const response = await apiClient.post(`/auth/validate-token`, {}, { withCredentials: true });
-      const outBinds = response.data?.outBinds;
-      // console.log("🔥 validate response", outBinds);
-  
-      if (outBinds?.out_ErrorCode === 9999) {
-        // console.log("✅ Valid token, logging in silently...");
-        await handleSilentSubmit(outBinds.out_userid, outBinds.out_encpassword);
-        return true;
-      } else {
-        // console.log("❌ Invalid token, redirect needed");
-        return false;
-      }
-    } catch (err) {
-      // console.error("❌ API call failed:", err);
-      return false;
-    }
-  };
+
+    console.log("❌ Token Invalid");
+    return false;
+  } catch (err) {
+    console.error("❌ Validate Token Error:", err);
+    console.error("❌ Response:", err?.response);
+    console.error("❌ Response Data:", err?.response?.data);
+    return false;
+  }
+};
   
   useEffect(() => {
+    debugger;
     const checkSession = async () => {
       const ok = await validateTokenAndLogin();
-      if (!ok) {
-        window.location.href = "https://nagarkaryavalinewuat.com/";
-      }
+      // if (!ok) {
+      //   window.location.href = "https://nagarkaryavalinewuat.com/";
+      // }
     };
     checkSession();
   }, []);
