@@ -8,22 +8,34 @@ async function isValidToken(req, res) {
     req.cookies?.access_token ||
     req.body?.in_tokenno;
 
-  logApiSuccess(
-    req,
-    200,
-    {
-      hasToken: !!tokenno,
-      tokenLength: tokenno?.length,
-      tokenPreview: tokenno?.substring(0, 20),
-      cookies: req.cookies,
-    },
-    "Validate Token Request Received"
-  );
+  // logApiSuccess(
+  //   req,
+  //   200,
+  //   {
+  //     hasToken: !!tokenno,
+  //     tokenLength: tokenno?.length,
+  //     tokenPreview: tokenno
+  //       ? tokenno.substring(0, 50) + "..."
+  //       : null,
+  //     cookies: req.cookies,
+  //     cookieHeader: req.headers.cookie,
+  //   },
+  //   "Validate Token Request Received"
+  // );
 
   let connection;
 
   try {
     connection = await getConnection();
+
+    // logApiSuccess(
+    //   req,
+    //   200,
+    //   {
+    //     connection: "Oracle Connected"
+    //   },
+    //   "DB Connection Success"
+    // );
 
     const binds = {
       in_mode: 2,
@@ -34,6 +46,7 @@ async function isValidToken(req, res) {
       in_requestloginurl: "",
       in_requestfromurl: "",
       in_deptFlag: "",
+
       out_ErrorCode: {
         dir: oracledb.BIND_OUT,
         type: oracledb.NUMBER,
@@ -55,6 +68,22 @@ async function isValidToken(req, res) {
       },
     };
 
+    // logApiSuccess(
+    //   req,
+    //   200,
+    //   {
+    //     tokenSentToSP: tokenno,
+    //     tokenLength: tokenno?.length,
+    //     in_mode: binds.in_mode,
+    //     in_userid: binds.in_userid,
+    //     in_ipaddress: binds.in_ipaddress,
+    //     in_requestloginurl: binds.in_requestloginurl,
+    //     in_requestfromurl: binds.in_requestfromurl,
+    //     in_deptFlag: binds.in_deptFlag,
+    //   },
+    //   "Procedure Input Values"
+    // );
+
     const result = await connection.execute(
       `BEGIN
          admins.aoma_singlelogintoken_ins(
@@ -75,12 +104,15 @@ async function isValidToken(req, res) {
       binds
     );
 
-    logApiSuccess(
-      req,
-      200,
-      result.outBinds,
-      "Validate Token Procedure Response"
-    );
+    // logApiSuccess(
+    //   req,
+    //   200,
+    //   {
+    //     tokenSentToSP: tokenno,
+    //     outBinds: result.outBinds,
+    //   },
+    //   "Procedure Output Values"
+    // );
 
     return res.status(200).json({
       success: true,
@@ -88,18 +120,40 @@ async function isValidToken(req, res) {
     });
 
   } catch (err) {
-
-    logApiError(
-      req,
-      500,
-      err,
-      "Validate Token Failed"
-    );
+    // logApiError(
+    //   req,
+    //   500,
+    //   {
+    //     message: err.message,
+    //     stack: err.stack,
+    //   },
+    //   "Validate Token Failed"
+    // );
 
     return res.status(500).json({
       success: false,
       message: err.message,
     });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+
+        logApiSuccess(
+          req,
+          200,
+          {},
+          "DB Connection Closed"
+        );
+      } catch (closeErr) {
+        logApiError(
+          req,
+          500,
+          closeErr,
+          "DB Connection Close Failed"
+        );
+      }
+    }
   }
 }
 
