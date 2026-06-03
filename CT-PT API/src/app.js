@@ -16,6 +16,7 @@ function createApp() {
 
   app.use(helmet());
  const allowedOrigins = [
+   "http://localhost:5173",
   "https://ctpt.nagarkaryavalinewuat.com",
   "https://nagarkaryavalinewuat.com",
 ];
