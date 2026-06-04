@@ -681,6 +681,7 @@ const AssignComplaint = () => {
                   type="button"
                   className="btn btn-primary"
                   onClick={handleAssign}
+                  disabled={!supervisiorId}
                 >
                   <i className="bi bi-person-check me-1"></i> Assign Supervisior
                 </button>

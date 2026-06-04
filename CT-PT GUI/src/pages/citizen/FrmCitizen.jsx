@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import "../../assets/css/form-validation.css";
+import { useSearchParams } from "react-router-dom";
 
 const FrmCitizen = () => {
   const [selectedImages, setSelectedImages] = useState([]);
@@ -19,19 +20,27 @@ const FrmCitizen = () => {
   const [modalType, setModalType] = useState("info"); // success, error, warning, info
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
+  const [searchParams] = useSearchParams();
+
+const wardIdFromUrl = searchParams.get("wardId");
+const toiletIdFromUrl = searchParams.get("toiletId");
+
+const isWardLocked = !!wardIdFromUrl;
+const isToiletLocked = !!toiletIdFromUrl;
 
   const ulbId = 4; // Default ULB ID
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch,
-  } = useForm({
-    mode: "onBlur",
-    reValidateMode: "onChange",
-  });
+const {
+  register,
+  handleSubmit,
+  setValue,
+  formState: { errors },
+  reset,
+  watch,
+} = useForm({
+  mode: "onBlur",
+  reValidateMode: "onChange",
+});
 
   const unitOptions = Array.from({ length: 5}, (_, i) => i + 1);
 
@@ -48,26 +57,33 @@ const FrmCitizen = () => {
   };
 
   // Fetch Ward List on component mount
-  useEffect(() => {
-    const fetchWardList = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get("/registerComplaint/wardList", {
-          params: { ulbid: ulbId },
-        });
-        if (response.success && response.data) {
-          setWardOptions(response.data);
-        }
-      } catch (err) {
-        const errorMsg = err.message;
-        setError(errorMsg);
-        showModal("error", "Warning", "Failed to fetch ward list");
-        console.error("Error fetching ward list:", err);
-      }
-    };
+useEffect(() => {
+  const fetchWardList = async () => {
+    try {
+      setLoading(true);
 
-    fetchWardList();
-  }, []);
+      const response = await apiClient.get("/registerComplaint/wardList", {
+        params: { ulbid: ulbId },
+      });
+
+      if (response.success && response.data) {
+        setWardOptions(response.data);
+
+        if (wardIdFromUrl) {
+          setSelectedWard(String(wardIdFromUrl));
+          setValue("ward", String(wardIdFromUrl));
+        }
+      }
+    } catch (err) {
+      const errorMsg = err.message;
+      setError(errorMsg);
+      showModal("error", "Warning", "Failed to fetch ward list");
+      console.error("Error fetching ward list:", err);
+    }
+  };
+
+  fetchWardList();
+}, [setValue, wardIdFromUrl]);
 
   // Fetch Complaint Type List on component mount
   useEffect(() => {
@@ -94,30 +110,45 @@ const FrmCitizen = () => {
   }, []);
 
   // Fetch Toilet List when ward is selected
-  useEffect(() => {
-    if (selectedWard) {
-      const fetchToiletList = async () => {
-        try {
-          const response = await apiClient.get(
-            "/registerComplaint/toiletList",
-            {
-              params: { ulbid: ulbId, wardid: selectedWard },
-            }
-          );
-          if (response.success && response.data) {
-            setToiletOptions(response.data);
-          }
-        } catch (err) {
-          const errorMsg = err.message;
-          setError(errorMsg);
-          showModal("error", "Warning", "Failed to fetch toilet list");
-          console.error("Error fetching toilet list:", err);
-        }
-      };
+useEffect(() => {
+  if (!selectedWard) return;
 
-      fetchToiletList();
+  const fetchToiletList = async () => {
+    try {
+      const response = await apiClient.get(
+        "/registerComplaint/toiletList",
+        {
+          params: {
+            ulbid: ulbId,
+            wardid: selectedWard,
+          },
+        }
+      );
+
+      if (response.success && response.data) {
+        setToiletOptions(response.data);
+
+        if (toiletIdFromUrl) {
+          const toiletExists = response.data.some(
+            (item) =>
+              String(item.NUM_CTPTTYPE_ID) === String(toiletIdFromUrl)
+          );
+
+          if (toiletExists) {
+            setValue("toilet", String(toiletIdFromUrl));
+          }
+        }
+      }
+    } catch (err) {
+      const errorMsg = err.message;
+      setError(errorMsg);
+      showModal("error", "Warning", "Failed to fetch toilet list");
+      console.error("Error fetching toilet list:", err);
     }
-  }, [selectedWard]);
+  };
+
+  fetchToiletList();
+}, [selectedWard, toiletIdFromUrl, setValue]);
 
   // Handle multiple image upload & preview
   const handleImageChange = (e) => {
@@ -247,24 +278,33 @@ const FrmCitizen = () => {
             {/* Select Ward */}
             <div className="field-box">
               <i className="bi bi-diagram-3"></i>
-              <select
-                {...register("ward", { required: "Ward is required" })}
-                onChange={(e) => {
-                  setSelectedWard(e.target.value);
-                  setToiletOptions([]); // Reset toilet options
-                }}
-                className={errors.ward ? "input-error" : ""}
-              >
-                <option value="">Select Ward</option>
-                {wardOptions.map((ward) => (
-                  <option
-                    key={ward.NUM_CTPTTYPE_WARDID}
-                    value={ward.NUM_CTPTTYPE_WARDID}
-                  >
-                    Ward {ward.NUM_CTPTTYPE_WARDID}
-                  </option>
-                ))}
-              </select>
+            <select
+  {...register("ward", {
+    required: "Ward is required",
+  })}
+  value={watch("ward") || ""}
+  disabled={isWardLocked}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    setSelectedWard(value);
+    setValue("ward", value);
+    setToiletOptions([]);
+    setValue("toilet", "");
+  }}
+  className={errors.ward ? "input-error" : ""}
+>
+  <option value="">Select Ward</option>
+
+  {wardOptions.map((ward) => (
+    <option
+      key={ward.NUM_CTPTTYPE_WARDID}
+      value={ward.NUM_CTPTTYPE_WARDID}
+    >
+      Ward {ward.NUM_CTPTTYPE_WARDID}
+    </option>
+  ))}
+</select>
             </div>
             {errors.ward && (
               <p style={{ color: "red", fontSize: "12px", marginTop: "-10px" }}>
@@ -275,21 +315,25 @@ const FrmCitizen = () => {
             {/* Select Toilet */}
             <div className="field-box">
               <i className="bi bi-building"></i>
-              <select
-                {...register("toilet", { required: "Toilet is required" })}
-                disabled={toiletOptions.length === 0}
-                className={errors.toilet ? "input-error" : ""}
-              >
-                <option value="">Select Toilet</option>
-                {toiletOptions.map((toilet) => (
-                  <option
-                    key={toilet.VAR_CTPTTYPE_TOILETLOCATION}
-                    value={toilet.NUM_CTPTTYPE_ID}
-                  >
-                    {toilet.VAR_CTPTTYPE_TOILETLOCATION}
-                  </option>
-                ))} 
-              </select>
+             <select
+  {...register("toilet", {
+    required: "Toilet is required",
+  })}
+  value={watch("toilet") || ""}
+  disabled={toiletOptions.length === 0 || isToiletLocked}
+  className={errors.toilet ? "input-error" : ""}
+>
+  <option value="">Select Toilet</option>
+
+  {toiletOptions.map((toilet) => (
+    <option
+      key={toilet.NUM_CTPTTYPE_ID}
+      value={toilet.NUM_CTPTTYPE_ID}
+    >
+      {toilet.VAR_CTPTTYPE_TOILETLOCATION}
+    </option>
+  ))}
+</select>
             </div>
             {errors.toilet && (
               <p style={{ color: "red", fontSize: "12px", marginTop: "-10px" }}>

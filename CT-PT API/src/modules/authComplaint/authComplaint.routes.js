@@ -3,7 +3,7 @@ const validate = require('../../middleware/validate.middleware');
 const { authRequired } = require('../../middleware/auth');
 const { authComplaintSchema } = require('./authComplaint.validation');
 const { authComplaint, getCompListForSup, getCompListForSI, getImagesCon,
-    resolvedListbyVendor, resolvedListbySup, complaintStatusUpdate
+    resolvedListbyVendor, resolvedListbySup, complaintStatusUpdate, getSolvedComplaintImagesCon, getSupervisorStatusCon
   } = require('./authComplaint.controller');
 const { complaintStatusSchema } = require('./authComplaint.validation');
 
@@ -15,6 +15,8 @@ router.post('/complaintStatusUpdate', validate(complaintStatusSchema), complaint
 router.get('/getCompListForSup', getCompListForSup);
 router.get('/getCompListForSI', getCompListForSI);
 router.get('/getImages', getImagesCon);
+router.get('/getSolvedComplaintImages', getSolvedComplaintImagesCon);
+router.get('/supervisorStatus', getSupervisorStatusCon);
 router.get('/rslvdListbyVendor', resolvedListbyVendor);
 router.get('/rslvdListApprovedbySup', resolvedListbySup);
 

@@ -38,7 +38,8 @@ const SupervisorComplaintsList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [pageSize, setPageSize] = useState(5);
-
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [filters, setFilters] = useState({
     fromDate: getToday(),
     toDate: getToday(),
@@ -80,6 +81,20 @@ const SupervisorComplaintsList = () => {
     fetchComplaints(1);
   }, [filters, ulbid]);
 
+  // Convert file to Base64
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result.split(",")[1]; // Extract base64 part
+        resolve(result);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+
   // Handle submit complaint status update
   const handleSubmitComplaintStatus = async () => {
     // Validation
@@ -102,6 +117,12 @@ const SupervisorComplaintsList = () => {
     try {
       setLoading(true);
 
+      const base64Images = [];
+      for (let i = 0; i < selectedImages.length; i++) {
+        const base64 = await fileToBase64(selectedImages[i]);
+        base64Images.push(base64);
+      }
+
       const payload = {
         userId: userId,
         mode: 1,
@@ -111,6 +132,9 @@ const SupervisorComplaintsList = () => {
         superremark: supervisorRemark,
         wardno: selectedComplaint.PRBHAGID,
         ulbid: ulbid,
+        solvedImg1: base64Images[0] || null,
+        solvedImg2: base64Images[1] || null,
+        solvedImg3: base64Images[2] || null,
       };
 
       console.log("Submitting complaint status:", payload);
@@ -322,6 +346,27 @@ const SupervisorComplaintsList = () => {
       );
     }
   };
+
+   const handleImageChange = (e) => {
+  const files = Array.from(e.target.files);
+
+  if (files.length > 3) {
+    setModalType("error");
+    setModalTitle("Validation Error");
+    setModalMessage("You can upload a maximum of 3 images only.");
+    setIsModalOpen(true);
+
+    e.target.value = ""; // Clear file input
+    setSelectedImages([]);
+    setPreviewUrls([]);
+    return;
+  }
+
+  setSelectedImages(files);
+
+  const urls = files.map((file) => URL.createObjectURL(file));
+  setPreviewUrls(urls);
+};
 
   return (
     <Layout>
@@ -604,6 +649,35 @@ const SupervisorComplaintsList = () => {
                   {renderThumbnails(selectedComplaint)}
                 </div>
 
+                {/* Upload Complaint Images */}
+            <div className="upload-box mt-4 pt-3">
+              <i className="bi bi-cloud-arrow-up"></i>
+              <h6>Upload Solved Complaint Photos</h6>
+              <p>Multiple image upload supported</p>
+              <label className="upload-btn">
+                Choose Photos
+                <input
+                  id="imageUpload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                />
+              </label>
+              <div className="preview-images">
+                {previewUrls.map((url, idx) => (
+                  <img key={idx} src={url} alt={`preview-${idx}`} />
+                ))}
+              </div>
+            </div>
+            {selectedImages.length === 0 && (
+              <p
+                style={{ color: "red", fontSize: "12px", textAlign: "center" }}
+              >
+                At least one image is required
+              </p>
+            )}
+
                 {/* Supervisor Actions */}
                 <div className="mt-4 pt-3 border-top">
                   <label className="form-label fw-semibold">Supervisor Remark <span className="text-danger">*</span></label>
@@ -646,7 +720,7 @@ const SupervisorComplaintsList = () => {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  disabled={!(supervisorRemark.trim() && supervisorStatus.trim())}
+                  disabled={!(supervisorRemark.trim() && supervisorStatus.trim() && selectedImages.length > 0)}
                   onClick={handleSubmitComplaintStatus}
                 >
                   Submit

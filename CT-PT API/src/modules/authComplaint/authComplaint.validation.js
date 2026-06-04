@@ -21,6 +21,9 @@ const complaintStatusSchema = z.object({
   si_remrk: z.string().optional(),
   wardno: z.coerce.number().int().positive(),
   ulbid: z.coerce.number().int().positive(),
+  solvedImg1: z.string().nullable().optional(),
+  solvedImg2: z.string().nullable().optional(),
+  solvedImg3: z.string().nullable().optional(),
 });
 
 module.exports = {

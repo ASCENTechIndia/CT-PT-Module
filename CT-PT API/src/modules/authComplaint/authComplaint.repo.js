@@ -633,7 +633,10 @@ async function rslvdListbySupRepo(
       si_id,
       var_compaint_superremark,
       var_compaint_siremark,
-      complaintid
+      complaintid,
+      SOLVCOMPIMG1,
+      SOLVCOMPIMG2,
+      SOLVCOMPIMG3
     FROM vw_ctptpendingcomplaint_Resolved
     WHERE ulbid = :ulbid
   `;
@@ -677,6 +680,9 @@ async function rslvdListbySupRepo(
     row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
     row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
     row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
+    row.SOLVCOMPIMG1 = await lobToBase64(row.SOLVCOMPIMG1);
+    row.SOLVCOMPIMG2 = await lobToBase64(row.SOLVCOMPIMG2);
+    row.SOLVCOMPIMG3 = await lobToBase64(row.SOLVCOMPIMG3);
   }
 
   let countSql = `
@@ -724,11 +730,50 @@ async function rslvdListbySupRepo(
   };
 }
 
+async function getSolvedComplaintImagesRepo(ulbid, siid, complaintid) {
+  let sql = `
+    SELECT 
+      SOLVCOMPIMG1,
+      SOLVCOMPIMG2,
+      SOLVCOMPIMG3
+    FROM vw_ctptsolvcompimg_det
+    WHERE num_complaint_ulbid = :ulbid
+    AND num_complaint_siid = :siid
+    AND num_complaint_id = :complaintid
+  `;
+
+  const binds = {
+    ulbid: Number(ulbid),
+    siid: String(siid),
+    complaintid: Number(complaintid),
+  };
+
+  const result = await executeQuery(sql, binds);
+  const rows = result.rows || [];
+
+  for (const row of rows) {
+    row.SOLVCOMPIMG1 = await lobToBase64(row.SOLVCOMPIMG1);
+    row.SOLVCOMPIMG2 = await lobToBase64(row.SOLVCOMPIMG2);
+    row.SOLVCOMPIMG3 = await lobToBase64(row.SOLVCOMPIMG3);
+  }
+
+  return rows;
+}
+
+async function getSupervisorStatusRepo() {
+  return [
+    { value: 'WIP', label: 'WIP' },
+    { value: 'CLOSED', label: 'Closed' }
+  ];
+}
+
 module.exports = {
   authComplaintRepo,
   compListforSupRepo,
   compListforSIRepo,
-  getImages, rslvdListbyVendorRepo, rslvdListbySupRepo
+  getImages, rslvdListbyVendorRepo, rslvdListbySupRepo,
+  getSolvedComplaintImagesRepo,
+  getSupervisorStatusRepo
 };
 
 async function complaintStatusUpdateRepo(payload) {
@@ -746,6 +791,9 @@ async function complaintStatusUpdateRepo(payload) {
         :in_si_remrk,
         :in_wardno,
         :in_ulbid,
+        :in_solvcompimg1,
+        :in_solvcompimg2,
+        :in_solvcompimg3,
         :out_errcode,
         :out_ErrMsg
       );
@@ -764,6 +812,20 @@ async function complaintStatusUpdateRepo(payload) {
     in_si_remrk: payload.si_remrk,
     in_wardno: payload.wardno ? Number(payload.wardno) : null,
     in_ulbid: Number(payload.ulbid),
+     in_solvcompimg1: {
+          val: payload.solvedImg1 ? Buffer.from(payload.solvedImg1, "base64") : null,
+          type: oracledb.BLOB,
+        },
+    
+        in_solvcompimg2: {
+          val: payload.solvedImg2 ? Buffer.from(payload.solvedImg2, "base64") : null,
+          type: oracledb.BLOB,
+        },
+    
+        in_solvcompimg3: {
+          val: payload.solvedImg3 ? Buffer.from(payload.solvedImg3, "base64") : null,
+          type: oracledb.BLOB,
+        },
     out_errcode: {
       dir: oracledb.BIND_OUT,
       type: oracledb.NUMBER,
