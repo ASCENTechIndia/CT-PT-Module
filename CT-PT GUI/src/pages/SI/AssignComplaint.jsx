@@ -110,12 +110,12 @@ const AssignComplaint = () => {
     try {
       setLoading(true);
       const res = await apiClient.get(
-        `/registerComplaint/supervisorList?ulbid=${ulbid}`,
+        `/registerComplaint/vendorList?ulbid=${ulbid}`,
       );
       if (res?.success && res?.data?.length > 0) {
         const list = res.data.map((item) => ({
-          label: item.VAR_CTPTTYPE_USERNAME,
-          value: item.VAR_CTPTTYPE_SUPPID,
+          label: item.VAR_VENDOR_FORMNM,
+          value: item.NUM_VENDOR_ID,
         }));
         setSupervisiorList(list);
       } else {
@@ -328,7 +328,7 @@ const AssignComplaint = () => {
 
   const handleAssign = async () => {
     if (!supervisiorId) {
-      alert("Please Select Supervisior");
+      alert("Please Select vendor");
       return;
     }
     try {
@@ -336,7 +336,8 @@ const AssignComplaint = () => {
       const res = await apiClient.post(`/registerComplaint/assignComplaint`, {
         userId: userId,
         complaintId: selectedComplaint.COMPLAINTID,
-        supervisorId: supervisiorId,
+        supervisorId: selectedComplaint.SUPERWISER_ID,
+        vendorId:supervisiorId,
         wardNo: selectedComplaint.PRBHAGID,
         ulbId: ulbid,
       });
@@ -459,6 +460,7 @@ const AssignComplaint = () => {
                   <th scope="col">Name</th>
                   <th scope="col">Ward</th>
                   <th scope="col">Supervisior Name</th>
+                  <th scope="col">Ass. Supervisior Name</th>
                   <th scope="col">Phone</th>
                   <th scope="col">Status</th>
                   <th scope="col">Date</th>
@@ -473,6 +475,7 @@ const AssignComplaint = () => {
                     <td>{complaint.VAR_COMPLAINT_CITIZNAME}</td>
                     <td>{complaint.PRBHAG}</td>
                     <td>{complaint.SUPERWISER}</td>
+                    <td>{complaint.ASSIGN_SUPEVISOR_NAME}</td>
                     <td>{complaint.MOBILENO}</td>
                     <td>{getBadge(complaint.VAR_COMPLAINT_STATUS)}</td>
                     <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
@@ -650,7 +653,7 @@ const AssignComplaint = () => {
                 {/* Supervisor Actions */}
                 <div className="mt-4 pt-3 border-top d-flex flex-column">
                   <label className="form-label fw-semibold">
-                    Select Supervisior *
+                    Select Vendor *
                   </label>
                   <select
                     id="status"
@@ -658,7 +661,7 @@ const AssignComplaint = () => {
                     style={{ width: "230px" }}
                     onChange={(e) => setSupervisiorId(e.target.value)}
                   >
-                    <option value="">-- Select Supervisior --</option>
+                    <option value="">-- Select Vendor --</option>
                     {superVisiorList.map((item) => {
                       return (
                         <option key={item.value} value={item.value}>
@@ -683,7 +686,7 @@ const AssignComplaint = () => {
                   onClick={handleAssign}
                   disabled={!supervisiorId}
                 >
-                  <i className="bi bi-person-check me-1"></i> Assign Supervisior
+                  <i className="bi bi-person-check me-1"></i> Assign Vendor
                 </button>
               </div>
             </div>

@@ -14,6 +14,14 @@ async function repoWardList(ulbid) {
   return result.rows || [];
 }
 
+async function repoVendorList(ulbid) {
+  let sql = `
+   select num_vendor_id,var_vendor_formnm from aorts_vendor_mas where num_vendor_ulbid = :ulbid`;
+  const binds = { ulbid: Number(ulbid) };
+  const result = await executeQuery(sql, binds);
+  return result.rows || [];
+}
+
 async function repoToiletList(ulbid, wardid) {
   let sql = ` select distinct var_ctpttype_toiletlocation,num_ctpttype_id 
 from aorts_ctptlist_mas inner join aorts_empctptentry_mst
@@ -136,6 +144,7 @@ async function assignComplaintRepo(payload) {
         :in_superwiserid,
         :in_wardno,
         :in_ulbid,
+        :in_assvendorid,
         :out_errcode,
         :out_ErrMsg
       );
@@ -148,6 +157,7 @@ async function assignComplaintRepo(payload) {
     in_superwiserid: payload.supervisorId,
     in_wardno: payload.wardNo,
     in_ulbid: payload.ulbId,
+    in_assvendorid: payload.vendorId,
 
     out_errcode: {
       dir: oracledb.BIND_OUT,
@@ -270,5 +280,5 @@ async function repoSupervisorList(ulbid) {
 }
 
 module.exports = { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, compListRepo,assignComplaintRepo,
-  repoSupervisorList
+  repoSupervisorList,repoVendorList
  };

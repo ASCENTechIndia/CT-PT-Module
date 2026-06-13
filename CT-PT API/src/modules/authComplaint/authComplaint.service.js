@@ -1,5 +1,5 @@
 const { authComplaintRepo, compListforSupRepo, compListforSIRepo, getImages,
-  rslvdListbyVendorRepo, rslvdListbySupRepo, getSolvedComplaintImagesRepo, getSupervisorStatusRepo
+  rslvdListbyVendorRepo, rslvdListbySupRepo, getSolvedComplaintImagesRepo, getSupervisorStatusRepo,rslvdListbyVendorListRepo
  } = require('./authComplaint.repo');
 
 const { complaintStatusUpdateRepo } = require('./authComplaint.repo');
@@ -30,6 +30,16 @@ async function getrslvdListbyVendorService( ulbid,supervisorId, fromDate,toDate,
   limit ); 
   }
 
+  async function getrslvdListbyVendorListService( ulbid,vendorId, fromDate,toDate,status, page, limit ) {
+   return rslvdListbyVendorListRepo(ulbid,
+  vendorId,
+  fromDate,
+  toDate,
+  status,
+  page ,
+  limit ); 
+  }
+
 async function getrslvdListbySupService( ulbid, fromDate,toDate,status, page, limit ) {
    return rslvdListbySupRepo( ulbid, fromDate,toDate,status, page, limit ); 
   }
@@ -44,7 +54,7 @@ async function getSupervisorStatusService() {
 
 
 module.exports = {
-  authComplaintService, getCompListForSupService, getCompListSIService, getImagesService, getrslvdListbyVendorService, getrslvdListbySupService, getSolvedComplaintImagesService, getSupervisorStatusService
+  authComplaintService, getCompListForSupService, getCompListSIService, getImagesService, getrslvdListbyVendorService,getrslvdListbyVendorListService, getrslvdListbySupService, getSolvedComplaintImagesService, getSupervisorStatusService
 };
 
 async function complaintStatusUpdateService(payload) {

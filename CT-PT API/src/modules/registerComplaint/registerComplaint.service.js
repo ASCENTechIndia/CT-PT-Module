@@ -1,10 +1,15 @@
 const { repoWardList, repoToiletList, repoComplaintTypeList, regComplaintRepo, assignComplaintRepo, compListRepo,
-  repoSupervisorList
+  repoSupervisorList,repoVendorList
  } = require('./registerComplaint.repo');
 
 async function serviceWardList(ulbid) {
   return repoWardList(ulbid);
 }
+
+async function serviceVendorList(ulbid) {
+  return repoVendorList(ulbid);
+}
+
 async function serviceToiletList(ulbid, wardid) {
   return repoToiletList(ulbid, wardid);
 }
@@ -29,5 +34,5 @@ async function serviceSupervisorList(ulbid) {
 }
 
 module.exports = { serviceWardList, serviceToiletList, serviceComplaintTypeList, regComplaintService, assignComplaintService, compListService,
-  serviceSupervisorList
+  serviceSupervisorList, serviceVendorList
  };

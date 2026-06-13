@@ -33,7 +33,7 @@ const ApplicationList = () => {
     from: getTodayDate(),
     to: getTodayDate(),
   });
-  const [statusFilter, setStatusFilter] = useState("A");
+  const [statusFilter, setStatusFilter] = useState("");
 
   // Fetch applications from API
   const fetchApplications = async (page = 1) => {

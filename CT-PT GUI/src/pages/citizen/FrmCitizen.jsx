@@ -220,7 +220,7 @@ useEffect(() => {
         setError(null);
         showModal(
           "success",
-          "Success!","Complaint submitted successfully!"
+          "Success!",response.data.message
         );
         reset();
         setSelectedImages([]);

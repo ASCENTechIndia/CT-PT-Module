@@ -3,12 +3,13 @@ const validate = require('../../middleware/validate.middleware');
 const { authRequired } = require('../../middleware/auth');
 const { complaintRegistrationSchema, assignComplaintSchema } = require('./registerComplaint.validation');
 const { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList,
-    getSupervisorList
+    getSupervisorList,getVendorList
  } = require('./registerComplaint.controller');
 
 const router = express.Router();
 
 router.get('/wardList', getWardList);
+router.get('/vendorList', getVendorList);
 router.get('/toiletList', getToiletList);
 router.get('/complaintTypeList', getComplaintTypeList);
 router.post('/insertComplaint', validate(complaintRegistrationSchema), registerComplaint );

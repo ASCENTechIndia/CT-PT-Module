@@ -38,6 +38,7 @@ import ResolvedComplaintList from './pages/supervisior/ResolvedComplaintList';
 import SupervisorComplaintsList from './pages/supervisior/SupervisorComplaintsList';
 import AssignComplaint from './pages/SI/AssignComplaint';
 import ResolvedComplaint from './pages/SI/ResolvedComplaint';
+import HomeRedirect from './pages/HomeRedirect';
 
 function App() {
   return (
@@ -52,7 +53,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* Main Routes - Protected */}
-              <Route path="/" element={<ProtectedRoute><ComplaintsTable /></ProtectedRoute>} />
+              <Route path="/" element={<ProtectedRoute><HomeRedirect /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
               <Route path="/add-user" element={<ProtectedRoute><AddUser /></ProtectedRoute>} />
               <Route path="/user-details" element={<ProtectedRoute><UserDetails /></ProtectedRoute>} />
@@ -66,74 +67,74 @@ function App() {
               <Route path="/modals" element={<ProtectedRoute><Modals /></ProtectedRoute>} />
               <Route path="/blank" element={<ProtectedRoute><Blank /></ProtectedRoute>} />
               <Route
-  path="/create-agent"
-  element={
-    <ProtectedRoute>
-      <CreateAgent />
-    </ProtectedRoute>
-  }
-/>
+                path="/create-agent"
+                element={
+                  <ProtectedRoute>
+                    <CreateAgent />
+                  </ProtectedRoute>
+                }
+              />
 
-<Route
-  path="/register-complaint"
-  element={
-      <FrmCitizen />
-  }
-/>
+                <Route
+                  path="/register-complaint"
+                  element={
+                      <FrmCitizen />
+                  }
+                />
 
-<Route
-  path="/complaint-list"
-  element={
-    <ProtectedRoute>
-      <ComplaintsTable />
-    </ProtectedRoute>
-  }
-/>
+                <Route
+                  path="/complaint-list"
+                  element={
+                    <ProtectedRoute>
+                      <ComplaintsTable />
+                    </ProtectedRoute>
+                  }
+                />
 
-<Route
-  path="/application-list"
-  element={
-    <ProtectedRoute>
-      <ApplicationList />
-    </ProtectedRoute>
-  }
-/>
+                <Route
+                  path="/application-list"
+                  element={
+                    <ProtectedRoute>
+                      <ApplicationList />
+                    </ProtectedRoute>
+                  }
+                />
 
-<Route
-  path="/application-list-sanitary"
-  element={
-    <ProtectedRoute>
-      <ApplicationListSI />
-    </ProtectedRoute>
-  }
-/>
+                <Route
+                  path="/application-list-sanitary"
+                  element={
+                    <ProtectedRoute>
+                      <ApplicationListSI />
+                    </ProtectedRoute>
+                  }
+                />
 
-<Route
-  path="/all-complaint"
-  element={
-    <ProtectedRoute>
-      <AssignComplaint />
-    </ProtectedRoute>
-  }
-/>
+                <Route
+                  path="/all-complaint"
+                  element={
+                    <ProtectedRoute>
+                      <AssignComplaint />
+                    </ProtectedRoute>
+                  }
+                />
 
-<Route
-  path="/resolved-complaint"
-  element={
-    <ProtectedRoute>
-      <ResolvedComplaint />
-    </ProtectedRoute>
-  }
-/>
+                <Route
+                  path="/resolved-complaint"
+                  element={
+                    <ProtectedRoute>
+                      <ResolvedComplaint />
+                    </ProtectedRoute>
+                  }
+                />
 
-<Route
-  path="/supervisor-complaint-list"
-  element={
-    <ProtectedRoute>
-      <SupervisorComplaintsList />
-    </ProtectedRoute>
-  }
-/>
+                <Route
+                  path="/supervisor-complaint-list"
+                  element={
+                    <ProtectedRoute>
+                      <SupervisorComplaintsList />
+                    </ProtectedRoute>
+                  }
+                />
 
               {/* Error Routes */}
               <Route path="/500" element={<ServerError />} />

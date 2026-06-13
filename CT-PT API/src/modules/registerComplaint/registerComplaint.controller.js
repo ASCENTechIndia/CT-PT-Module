@@ -1,5 +1,5 @@
 const {serviceWardList,serviceToiletList,serviceComplaintTypeList,regComplaintService, assignComplaintService, compListService,
-  serviceSupervisorList
+  serviceSupervisorList,serviceVendorList
 } = require('./registerComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
 const { logApiSuccess, logApiError } = require('../../utils/log');
@@ -17,6 +17,17 @@ async function getWardList(req, res, next) {
     return res.ok(rows);
   } catch (error) {
     logApiError(req, 500, error.message, 'Ward List Report search error');
+    return next(error);
+  }
+}
+
+async function getVendorList(req, res, next) {
+  try {
+    const rows = await serviceVendorList(req.query.ulbid);
+    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Vendor List Report completed' );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Vendor List Report search error');
     return next(error);
   }
 }
@@ -54,7 +65,7 @@ async function registerComplaint(req, res, next) {
     const isSuccess = String(out.errorCode) === "9999";
 
     if (isSuccess) {
-      logApiSuccess(req, 200, "Complaint Registered Successfully");
+      logApiSuccess(req, 200, out.message);
     } else {
       logApiError(req, 400, out.message, "Complaint Registration failed");
     }
@@ -134,5 +145,5 @@ async function getSupervisorList(req, res, next) {
 }
 
 module.exports = { getWardList, getToiletList, getComplaintTypeList, registerComplaint, assignComplaint, getComplaintList ,
-  getSupervisorList
+  getSupervisorList,getVendorList
 };

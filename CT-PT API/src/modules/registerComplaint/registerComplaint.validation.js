@@ -26,6 +26,7 @@ const assignComplaintSchema = z.object({
     .transform(String),
   wardNo: z.coerce.number().int().positive(),
   ulbId: z.coerce.number().int().positive(),
+  vendorId: z.coerce.number().int().positive(),
 });
 
 module.exports = {

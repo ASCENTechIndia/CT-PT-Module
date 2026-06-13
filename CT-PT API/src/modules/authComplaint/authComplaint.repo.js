@@ -498,7 +498,10 @@ async function rslvdListbyVendorRepo(
       a.blob_complaint_unitimg5,
       a.ulbid,
       a.si_id,
-      a.complaintid
+      a.complaintid,
+      a.solved1,
+      a.solved2,
+      a.solved3
     FROM vw_ctptpendingcomplaint_assinlist a
     WHERE a.ulbid = :ulbid
       AND a.superwiser_id = :supervisorId
@@ -507,6 +510,145 @@ async function rslvdListbyVendorRepo(
   const binds = {
     ulbid: Number(ulbid),
     supervisorId: String(supervisorId),
+  };
+
+  // Date Filter
+  if (fromDate && toDate) {
+    sql += `
+      AND TRUNC(a.complaint_date)
+      BETWEEN TO_DATE(:fromDate,'YYYY-MM-DD')
+      AND TO_DATE(:toDate,'YYYY-MM-DD')
+    `;
+
+    binds.fromDate = fromDate;
+    binds.toDate = toDate;
+  }
+
+  // Status Filter
+  if (status && status !== "ALL") {
+    sql += `
+      AND a.var_complaint_status = :status
+    `;
+
+    binds.status = status;
+  }
+
+  sql += `
+    ORDER BY a.complaint_date DESC
+    OFFSET :offset ROWS
+    FETCH NEXT :limit ROWS ONLY
+  `;
+
+  binds.offset = offset;
+  binds.limit = Number(limit);
+
+  const result = await executeQuery(sql, binds);
+
+  const rows = result.rows || [];
+
+  // Convert images
+  for (const row of rows) {
+  row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG1);
+  row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG2);
+  row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
+  row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
+  row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
+
+  row.SOLVED1 = await lobToBase64(row.SOLVED1);
+  row.SOLVED2 = await lobToBase64(row.SOLVED2);
+  row.SOLVED3 = await lobToBase64(row.SOLVED3);
+}
+
+  // Count Query
+  let countSql = `
+    SELECT COUNT(*) AS TOTAL
+    FROM vw_ctptpendingcomplaint_assinlist a
+    WHERE a.ulbid = :ulbid
+      AND a.superwiser_id = :supervisorId
+  `;
+
+  const countBinds = {
+    ulbid: Number(ulbid),
+    supervisorId: String(supervisorId),
+  };
+
+  if (fromDate && toDate) {
+    countSql += `
+      AND TRUNC(a.complaint_date)
+      BETWEEN TO_DATE(:fromDate,'YYYY-MM-DD')
+      AND TO_DATE(:toDate,'YYYY-MM-DD')
+    `;
+
+    countBinds.fromDate = fromDate;
+    countBinds.toDate = toDate;
+  }
+
+  if (status && status !== "ALL") {
+    countSql += `
+      AND a.var_complaint_status = :status
+    `;
+
+    countBinds.status = status;
+  }
+
+  const countResult = await executeQuery(countSql, countBinds);
+
+  const total = countResult.rows?.[0]?.TOTAL || 0;
+
+  return {
+    data: rows,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
+}
+
+async function rslvdListbyVendorListRepo(
+  ulbid,
+  vendorId,
+  fromDate,
+  toDate,
+  status,
+  page = 1,
+  limit = 10
+) {
+  // console.log("Repo Params:", { ulbid, supervisorId, fromDate, toDate, status, page, limit });
+  const offset = (Number(page) - 1) * Number(limit);
+
+  let sql = `
+    SELECT
+      a.prbhag,
+      a.prbhagid,
+      a.superwiser_id,
+      a.superwiser,
+      a.location,
+      a.var_complaint_status,
+      a.var_complaint_citizname,
+      a.num_complaint_toilet,
+      a.mobileno,
+      a.complaint_date,
+      a.var_complaint_remark,
+      a.var_ctptsanitinspctor_name,
+      a.blob_complaint_unitimg1,
+      a.blob_complaint_unitimg2,
+      a.blob_complaint_unitimg3,
+      a.blob_complaint_unitimg4,
+      a.blob_complaint_unitimg5,
+      a.ulbid,
+      a.si_id,
+      a.complaintid,
+      a.assvendorid
+    FROM vw_ctptpendingcomplaint_assinlist a
+    WHERE a.ulbid = :ulbid
+      AND a.assvendorid = :vendorId
+  `;
+
+  const binds = {
+    ulbid: Number(ulbid),
+    vendorId: Number(vendorId),
   };
 
   // Date Filter
@@ -557,12 +699,12 @@ async function rslvdListbyVendorRepo(
     SELECT COUNT(*) AS TOTAL
     FROM vw_ctptpendingcomplaint_assinlist a
     WHERE a.ulbid = :ulbid
-      AND a.superwiser_id = :supervisorId
+      AND a.assvendorid = :vendorId
   `;
 
   const countBinds = {
     ulbid: Number(ulbid),
-    supervisorId: String(supervisorId),
+    vendorId: Number(vendorId),
   };
 
   if (fromDate && toDate) {
@@ -771,7 +913,7 @@ module.exports = {
   authComplaintRepo,
   compListforSupRepo,
   compListforSIRepo,
-  getImages, rslvdListbyVendorRepo, rslvdListbySupRepo,
+  getImages, rslvdListbyVendorRepo, rslvdListbySupRepo,rslvdListbyVendorListRepo,
   getSolvedComplaintImagesRepo,
   getSupervisorStatusRepo
 };
@@ -794,6 +936,8 @@ async function complaintStatusUpdateRepo(payload) {
         :in_solvcompimg1,
         :in_solvcompimg2,
         :in_solvcompimg3,
+        :in_Venderid,
+        :in_Venderremark,
         :out_errcode,
         :out_ErrMsg
       );
@@ -826,6 +970,8 @@ async function complaintStatusUpdateRepo(payload) {
           val: payload.solvedImg3 ? Buffer.from(payload.solvedImg3, "base64") : null,
           type: oracledb.BLOB,
         },
+        in_Venderid: payload.vendorId ? Number(payload.vendorId) : null,
+        in_Venderremark: payload.vendorRemark || null,
     out_errcode: {
       dir: oracledb.BIND_OUT,
       type: oracledb.NUMBER,

@@ -1,5 +1,5 @@
 const { authComplaintService, getCompListForSupService, getCompListSIService,
-    getImagesService,getrslvdListbyVendorService, getrslvdListbySupService, getSolvedComplaintImagesService, getSupervisorStatusService
+    getImagesService,getrslvdListbyVendorService, getrslvdListbySupService, getSolvedComplaintImagesService, getSupervisorStatusService,getrslvdListbyVendorListService
  } = require('./authComplaint.service');
 const { complaintStatusUpdateService } = require('./authComplaint.service');
 const { auditLog } = require('../../utils/audit-log');
@@ -191,6 +191,72 @@ async function resolvedListbyVendor(req, res, next) {
   if (typeof row.BLOB_COMPLAINT_UNITIMG5 === 'string')
     cleanRow.BLOB_COMPLAINT_UNITIMG5 = row.BLOB_COMPLAINT_UNITIMG5;
 
+  if (typeof row.SOLVED1 === 'string')
+  cleanRow.SOLVED1 = row.SOLVED1;
+
+if (typeof row.SOLVED2 === 'string')
+  cleanRow.SOLVED2 = row.SOLVED2;
+
+if (typeof row.SOLVED3 === 'string')
+  cleanRow.SOLVED3 = row.SOLVED3;
+  return cleanRow;
+});
+    
+    const pagination = {
+      page: result.pagination?.page || 1,
+      limit: result.pagination?.limit || 10,
+      total: result.pagination?.total || 0,
+      totalPages: result.pagination?.totalPages || 0
+    };
+    
+    logApiSuccess( req, 200, { count: cleanData?.length || 0 }, 'Resolved Complaint List for Supervisor completed' );
+    return res.ok({ data: cleanData, pagination }); 
+   }
+    catch (error) { logApiError( req, 500, error.message, 'Resolved Complaint List for Supervisor search error' );
+       return next(error); }
+       }
+
+       async function resolvedListbyVendorList(req, res, next) {
+   try { 
+    const { ulbid, vendorId, fromDate, toDate, status, page = 1, limit = 10 } = req.query;
+    const result = await getrslvdListbyVendorListService( ulbid, vendorId, fromDate, toDate, status, page, limit);
+    
+    // Sanitize the result to avoid circular references
+    const cleanData = (result.data || []).map(row => {
+  const cleanRow = {
+    PRBHAG: row.PRBHAG,
+    PRBHAGID: row.PRBHAGID,
+    SUPERWISER_ID: row.SUPERWISER_ID,
+    SUPERWISER: row.SUPERWISER,
+    LOCATION: row.LOCATION,
+    VAR_COMPLAINT_STATUS: row.VAR_COMPLAINT_STATUS,
+    VAR_COMPLAINT_CITIZNAME: row.VAR_COMPLAINT_CITIZNAME,
+    NUM_COMPLAINT_TOILET: row.NUM_COMPLAINT_TOILET,
+    MOBILENO: row.MOBILENO,
+    COMPLAINT_DATE: row.COMPLAINT_DATE,
+    VAR_COMPLAINT_REMARK: row.VAR_COMPLAINT_REMARK,
+    VAR_CTPTSANITINSPCTOR_NAME: row.VAR_CTPTSANITINSPCTOR_NAME,
+    ULBID: row.ULBID,
+    SI_ID: row.SI_ID,
+    COMPLAINTID: row.COMPLAINTID
+  };
+
+  // Only include image fields if they are strings (base64) and not LOB objects
+  if (typeof row.BLOB_COMPLAINT_UNITIMG1 === 'string')
+    cleanRow.BLOB_COMPLAINT_UNITIMG1 = row.BLOB_COMPLAINT_UNITIMG1;
+
+  if (typeof row.BLOB_COMPLAINT_UNITIMG2 === 'string')
+    cleanRow.BLOB_COMPLAINT_UNITIMG2 = row.BLOB_COMPLAINT_UNITIMG2;
+
+  if (typeof row.BLOB_COMPLAINT_UNITIMG3 === 'string')
+    cleanRow.BLOB_COMPLAINT_UNITIMG3 = row.BLOB_COMPLAINT_UNITIMG3;
+
+  if (typeof row.BLOB_COMPLAINT_UNITIMG4 === 'string')
+    cleanRow.BLOB_COMPLAINT_UNITIMG4 = row.BLOB_COMPLAINT_UNITIMG4;
+
+  if (typeof row.BLOB_COMPLAINT_UNITIMG5 === 'string')
+    cleanRow.BLOB_COMPLAINT_UNITIMG5 = row.BLOB_COMPLAINT_UNITIMG5;
+
   return cleanRow;
 });
     
@@ -300,7 +366,7 @@ async function getSupervisorStatusCon(req, res, next) {
   }
 }
        
-module.exports = { authComplaint, getCompListForSup, getCompListForSI, getImagesCon, resolvedListbyVendor, resolvedListbySup, getSolvedComplaintImagesCon, getSupervisorStatusCon };
+module.exports = { authComplaint, getCompListForSup, getCompListForSI, getImagesCon, resolvedListbyVendor, resolvedListbySup, getSolvedComplaintImagesCon, getSupervisorStatusCon,resolvedListbyVendorList };
 
 async function complaintStatusUpdate(req, res, next) {
   try {
@@ -313,11 +379,13 @@ async function complaintStatusUpdate(req, res, next) {
       superwiserId: body.superwiserId,
       superstatus: body.superstatus,
       superremark: body.superremark,
+      vendorRemark: body.vendorRemark,
       SIID: body.SIID || body.siId,
       si_status: body.si_status,
       si_remrk: body.si_remrk,
       wardno: body.wardno,
       ulbid: body.ulbid,
+      vendorId: body.vendorId,
       solvedImg1: body.solvedImg1,
       solvedImg2: body.solvedImg2,
       solvedImg3: body.solvedImg3,
