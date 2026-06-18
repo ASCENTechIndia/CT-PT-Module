@@ -73,7 +73,7 @@ async function compListforSupRepo(
   toDate,
   status,
   page = 1,
-  limit = 10
+  limit = 10,
 ) {
   // console.log("Repo Params:", { ulbid, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
@@ -148,18 +148,18 @@ async function compListforSupRepo(
   }
 
   // ================= STATUS FILTER =================
-if (status && status !== 'ALL') {
-  if (status === 'P') {
-    sql += `
+  if (status && status !== "ALL") {
+    if (status === "P") {
+      sql += `
       AND e.var_empctptentry_supflag IS NULL
     `;
-  } else {
-    sql += `
+    } else {
+      sql += `
       AND e.var_empctptentry_supflag = :status
     `;
-    binds.status = status;
+      binds.status = status;
+    }
   }
-}
 
   sql += `
     )
@@ -207,18 +207,18 @@ if (status && status !== 'ALL') {
     countBinds.toDate = toDate;
   }
 
- if (status && status !== 'ALL') {
-  if (status === 'P') {
-    countSql += `
+  if (status && status !== "ALL") {
+    if (status === "P") {
+      countSql += `
       AND e.var_empctptentry_supflag IS NULL
     `;
-  } else {
-    countSql += `
+    } else {
+      countSql += `
       AND e.var_empctptentry_supflag = :status
     `;
-    countBinds.status = status;
+      countBinds.status = status;
+    }
   }
-}
 
   countSql += `
     )
@@ -246,7 +246,7 @@ async function compListforSIRepo(
   toDate,
   status,
   page = 1,
-  limit = 10
+  limit = 10,
 ) {
   const safePage = Number.isFinite(Number(page)) ? Number(page) : 1;
   const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 10;
@@ -325,18 +325,18 @@ async function compListforSIRepo(
   }
 
   // ================= STATUS FILTER =================
- if (status && status !== 'ALL') {
-  if (status === 'P') {
-    sql += `
+  if (status && status !== "ALL") {
+    if (status === "P") {
+      sql += `
       AND e.var_empctptentry_siflag IS NULL
     `;
-  } else {
-    sql += `
+    } else {
+      sql += `
       AND e.var_empctptentry_siflag = :status
     `;
-    binds.status = status;
+      binds.status = status;
+    }
   }
-}
 
   sql += `
     )
@@ -387,18 +387,18 @@ async function compListforSIRepo(
     countBinds.toDate = toDate;
   }
 
-  if (status && status !== 'ALL') {
-  if (status === 'P') {
-    countSql += `
+  if (status && status !== "ALL") {
+    if (status === "P") {
+      countSql += `
       AND e.var_empctptentry_siflag IS NULL
     `;
-  } else {
-    countSql += `
+    } else {
+      countSql += `
       AND e.var_empctptentry_siflag = :status
     `;
-    countBinds.status = status;
+      countBinds.status = status;
+    }
   }
-}
 
   countSql += `
     )
@@ -464,7 +464,6 @@ ORDER BY num_empctptentry_stageid ASC
   return rows;
 }
 
-
 async function rslvdListbyVendorRepo(
   ulbid,
   supervisorId,
@@ -472,7 +471,7 @@ async function rslvdListbyVendorRepo(
   toDate,
   status,
   page = 1,
-  limit = 10
+  limit = 10,
 ) {
   // console.log("Repo Params:", { ulbid, supervisorId, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
@@ -499,10 +498,8 @@ async function rslvdListbyVendorRepo(
       a.ulbid,
       a.si_id,
       a.complaintid,
-      a.solved1,
-      a.solved2,
-      a.solved3
-    FROM vw_ctptpendingcomplaint_assinlist a
+      a.venderemark
+    FROM vw_ctptsuperwisercomplaint_list a
     WHERE a.ulbid = :ulbid
       AND a.superwiser_id = :supervisorId
   `;
@@ -548,16 +545,22 @@ async function rslvdListbyVendorRepo(
 
   // Convert images
   for (const row of rows) {
-  row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG1);
-  row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG2);
-  row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
-  row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
-  row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
-
-  row.SOLVED1 = await lobToBase64(row.SOLVED1);
-  row.SOLVED2 = await lobToBase64(row.SOLVED2);
-  row.SOLVED3 = await lobToBase64(row.SOLVED3);
-}
+    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG1,
+    );
+    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG2,
+    );
+    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG3,
+    );
+    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG4,
+    );
+    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG5,
+    );
+  }
 
   // Count Query
   let countSql = `
@@ -613,7 +616,7 @@ async function rslvdListbyVendorListRepo(
   toDate,
   status,
   page = 1,
-  limit = 10
+  limit = 10,
 ) {
   // console.log("Repo Params:", { ulbid, supervisorId, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
@@ -687,11 +690,21 @@ async function rslvdListbyVendorListRepo(
 
   // Convert images
   for (const row of rows) {
-    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG1);
-    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG2);
-    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
-    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
-    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
+    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG1,
+    );
+    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG2,
+    );
+    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG3,
+    );
+    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG4,
+    );
+    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG5,
+    );
   }
 
   // Count Query
@@ -741,14 +754,13 @@ async function rslvdListbyVendorListRepo(
   };
 }
 
-
 async function rslvdListbySupRepo(
   ulbid,
   fromDate,
   toDate,
   status,
   page = 1,
-  limit = 10
+  limit = 10,
 ) {
   const offset = (Number(page) - 1) * Number(limit);
 
@@ -815,13 +827,23 @@ async function rslvdListbySupRepo(
   const result = await executeQuery(sql, binds);
   const rows = result.rows || [];
 
-    // Convert images
+  // Convert images
   for (const row of rows) {
-    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG1);
-    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG2);
-    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG3);
-    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG4);
-    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(row.BLOB_COMPLAINT_UNITIMG5);
+    row.BLOB_COMPLAINT_UNITIMG1 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG1,
+    );
+    row.BLOB_COMPLAINT_UNITIMG2 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG2,
+    );
+    row.BLOB_COMPLAINT_UNITIMG3 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG3,
+    );
+    row.BLOB_COMPLAINT_UNITIMG4 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG4,
+    );
+    row.BLOB_COMPLAINT_UNITIMG5 = await lobToBase64(
+      row.BLOB_COMPLAINT_UNITIMG5,
+    );
     row.SOLVCOMPIMG1 = await lobToBase64(row.SOLVCOMPIMG1);
     row.SOLVCOMPIMG2 = await lobToBase64(row.SOLVCOMPIMG2);
     row.SOLVCOMPIMG3 = await lobToBase64(row.SOLVCOMPIMG3);
@@ -857,9 +879,7 @@ async function rslvdListbySupRepo(
   const countResult = await executeQuery(countSql, countBinds);
 
   const total =
-    countResult.rows?.[0]?.TOTAL ||
-    countResult.rows?.[0]?.total ||
-    0;
+    countResult.rows?.[0]?.TOTAL || countResult.rows?.[0]?.total || 0;
 
   return {
     data: rows,
@@ -904,8 +924,8 @@ async function getSolvedComplaintImagesRepo(ulbid, siid, complaintid) {
 
 async function getSupervisorStatusRepo() {
   return [
-    { value: 'WIP', label: 'WIP' },
-    { value: 'CLOSED', label: 'Closed' }
+    { value: "WIP", label: "WIP" },
+    { value: "CLOSED", label: "Closed" },
   ];
 }
 
@@ -913,15 +933,18 @@ module.exports = {
   authComplaintRepo,
   compListforSupRepo,
   compListforSIRepo,
-  getImages, rslvdListbyVendorRepo, rslvdListbySupRepo,rslvdListbyVendorListRepo,
+  getImages,
+  rslvdListbyVendorRepo,
+  rslvdListbySupRepo,
+  rslvdListbyVendorListRepo,
   getSolvedComplaintImagesRepo,
-  getSupervisorStatusRepo
+  getSupervisorStatusRepo,
 };
 
 async function complaintStatusUpdateRepo(payload) {
   const statement = `
     BEGIN
-      aorts.aorts_ctptcomplaintstatusupdt_ins(
+      aorts.aorts_ctptcomplaintrework_ins(
         :in_userid,
         :in_mode,
         :in_compaintid,
@@ -938,6 +961,8 @@ async function complaintStatusUpdateRepo(payload) {
         :in_solvcompimg3,
         :in_Venderid,
         :in_Venderremark,
+        :in_reworkflag,
+        :in_reworkid,
         :out_errcode,
         :out_ErrMsg
       );
@@ -947,7 +972,12 @@ async function complaintStatusUpdateRepo(payload) {
   const binds = {
     in_userid: payload.userId,
     in_mode: Number(payload.mode),
-    in_compaintid: Number(payload.compaintId ?? payload.complaintId ?? payload.compaintid ?? payload.complaintid),
+    in_compaintid: Number(
+      payload.compaintId ??
+        payload.complaintId ??
+        payload.compaintid ??
+        payload.complaintid,
+    ),
     in_superwiserid: payload.superwiserId,
     in_superstatus: payload.superstatus,
     in_superremark: payload.superremark,
@@ -956,22 +986,30 @@ async function complaintStatusUpdateRepo(payload) {
     in_si_remrk: payload.si_remrk,
     in_wardno: payload.wardno ? Number(payload.wardno) : null,
     in_ulbid: Number(payload.ulbid),
-     in_solvcompimg1: {
-          val: payload.solvedImg1 ? Buffer.from(payload.solvedImg1, "base64") : null,
-          type: oracledb.BLOB,
-        },
-    
-        in_solvcompimg2: {
-          val: payload.solvedImg2 ? Buffer.from(payload.solvedImg2, "base64") : null,
-          type: oracledb.BLOB,
-        },
-    
-        in_solvcompimg3: {
-          val: payload.solvedImg3 ? Buffer.from(payload.solvedImg3, "base64") : null,
-          type: oracledb.BLOB,
-        },
-        in_Venderid: payload.vendorId ? Number(payload.vendorId) : null,
-        in_Venderremark: payload.vendorRemark || null,
+    in_solvcompimg1: {
+      val: payload.solvedImg1
+        ? Buffer.from(payload.solvedImg1, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+
+    in_solvcompimg2: {
+      val: payload.solvedImg2
+        ? Buffer.from(payload.solvedImg2, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+
+    in_solvcompimg3: {
+      val: payload.solvedImg3
+        ? Buffer.from(payload.solvedImg3, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+    in_Venderid: payload.vendorId ? Number(payload.vendorId) : null,
+    in_Venderremark: payload.vendorRemark || null,
+    in_reworkflag: payload.reworkflag,
+    in_reworkid: payload.reworkId || null,
     out_errcode: {
       dir: oracledb.BIND_OUT,
       type: oracledb.NUMBER,

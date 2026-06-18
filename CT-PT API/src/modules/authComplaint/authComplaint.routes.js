@@ -10,7 +10,7 @@ const { complaintStatusSchema } = require('./authComplaint.validation');
 const router = express.Router();
 
 router.post('/authComplaint', validate(authComplaintSchema), authComplaint);
-router.post('/complaintStatusUpdate', validate(complaintStatusSchema), complaintStatusUpdate);
+router.post('/complaintStatusUpdate', validate(complaintStatusSchema), complaintStatusUpdate);// vendor submitting his work
 
 router.get('/getCompListForSup', getCompListForSup);
 router.get('/getCompListForSI', getCompListForSI);

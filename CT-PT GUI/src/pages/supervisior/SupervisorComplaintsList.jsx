@@ -13,8 +13,6 @@ const getToday = () => {
 const SupervisorComplaintsList = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
-  console.log(user);
-//   console.log("user Id", user);
   const userId = user?.userId;
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +92,6 @@ const SupervisorComplaintsList = () => {
     });
   };
 
-
   // Handle submit complaint status update
   const handleSubmitComplaintStatus = async () => {
     // Validation
@@ -152,7 +149,7 @@ const SupervisorComplaintsList = () => {
 
       const response = await apiClient.post(
         `/authComplaint/complaintStatusUpdate`,
-        payload
+        payload,
       );
 
       if (response.success) {
@@ -165,7 +162,7 @@ const SupervisorComplaintsList = () => {
         setShowModal(false);
         setSupervisorRemark("");
         setSupervisorStatus("");
-        
+
         // Refresh the complaints list
         setTimeout(() => {
           fetchComplaints(currentPage);
@@ -174,7 +171,8 @@ const SupervisorComplaintsList = () => {
         setModalType("error");
         setModalTitle("Error");
         setModalMessage(
-          response.message || "Failed to update complaint status. Please try again."
+          response.message ||
+            "Failed to update complaint status. Please try again.",
         );
         setIsModalOpen(true);
       }
@@ -183,7 +181,7 @@ const SupervisorComplaintsList = () => {
       setModalType("error");
       setModalTitle("Error");
       setModalMessage(
-        err.message || "Failed to update complaint status. Please try again."
+        err.message || "Failed to update complaint status. Please try again.",
       );
       setIsModalOpen(true);
     } finally {
@@ -299,107 +297,101 @@ const SupervisorComplaintsList = () => {
     ].filter((img) => img && img.trim() !== "");
   };
 
-    const getComplaintImages2 = (complaint) => {
-    return [
-      complaint?.SOLVED1,
-      complaint?.SOLVED2,
-      complaint?.SOLVED3,
-    ].filter((img) => img && img.trim() !== "");
+  const getComplaintImages2 = (complaint) => {
+    return [complaint?.SOLVED1, complaint?.SOLVED2, complaint?.SOLVED3].filter(
+      (img) => img && img.trim() !== "",
+    );
   };
 
   // Helper to render image thumbnails with click handler
   const renderThumbnails = (complaint) => {
-  const images = getComplaintImages(complaint);
+    const images = getComplaintImages(complaint);
 
-  return (
-    <div className="d-flex gap-2 flex-wrap mt-2">
-      {images.length > 0 ? (
-        images.map((img, idx) => (
-          <img
-            key={idx}
-            src={`data:image/png;base64,${img}`}
-            alt={`complaint-${idx}`}
-            style={{
-              width: "80px",
-              height: "80px",
-              objectFit: "cover",
-              borderRadius: "8px",
-              border: "2px solid #dee2e6",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-            }}
-            onClick={() => openImageInNewTab(img)}
-            onMouseEnter={(e) =>
-              (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.boxShadow = "none")
-            }
-          />
-        ))
-      ) : (
-        <p className="text-muted mb-0">No images available</p>
-      )}
-    </div>
-  );
-};
+    return (
+      <div className="d-flex gap-2 flex-wrap mt-2">
+        {images.length > 0 ? (
+          images.map((img, idx) => (
+            <img
+              key={idx}
+              src={`data:image/png;base64,${img}`}
+              alt={`complaint-${idx}`}
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "cover",
+                borderRadius: "8px",
+                border: "2px solid #dee2e6",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+              }}
+              onClick={() => openImageInNewTab(img)}
+              onMouseEnter={(e) =>
+                (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
+              }
+              onMouseLeave={(e) => (e.target.style.boxShadow = "none")}
+            />
+          ))
+        ) : (
+          <p className="text-muted mb-0">No images available</p>
+        )}
+      </div>
+    );
+  };
 
   const renderThumbnails2 = (complaint) => {
-  const images = getComplaintImages2(complaint);
+    const images = getComplaintImages2(complaint);
 
-  return (
-    <div className="d-flex gap-2 flex-wrap mt-2">
-      {images.length > 0 ? (
-        images.map((img, idx) => (
-          <img
-            key={idx}
-            src={`data:image/png;base64,${img}`}
-            alt={`complaint-${idx}`}
-            style={{
-              width: "80px",
-              height: "80px",
-              objectFit: "cover",
-              borderRadius: "8px",
-              border: "2px solid #dee2e6",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-            }}
-           onClick={() => openImageInNewTab(img)}
-            onMouseEnter={(e) =>
-              (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.boxShadow = "none")
-            }
-          />
-        ))
-      ) : (
-        <p className="text-muted mb-0">No images available</p>
-      )}
-    </div>
-  );
-};
+    return (
+      <div className="d-flex gap-2 flex-wrap mt-2">
+        {images.length > 0 ? (
+          images.map((img, idx) => (
+            <img
+              key={idx}
+              src={`data:image/png;base64,${img}`}
+              alt={`complaint-${idx}`}
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "cover",
+                borderRadius: "8px",
+                border: "2px solid #dee2e6",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+              }}
+              onClick={() => openImageInNewTab(img)}
+              onMouseEnter={(e) =>
+                (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
+              }
+              onMouseLeave={(e) => (e.target.style.boxShadow = "none")}
+            />
+          ))
+        ) : (
+          <p className="text-muted mb-0">No images available</p>
+        )}
+      </div>
+    );
+  };
 
-const openImageInNewTab = (img) => {
-      try {
-        // Convert base64 to blob
-        const binaryString = atob(img);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: "image/jpeg" });
-
-        // Create object URL from blob
-        const blobUrl = URL.createObjectURL(blob);
-
-        // Open in new tab
-        window.open(blobUrl, "_blank");
-      } catch (err) {
-        console.error("Error opening image:", err);
-        alert("Unable to open image. Please try again.");
+  const openImageInNewTab = (img) => {
+    try {
+      // Convert base64 to blob
+      const binaryString = atob(img);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
       }
-    };
+      const blob = new Blob([bytes], { type: "image/jpeg" });
+
+      // Create object URL from blob
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Open in new tab
+      window.open(blobUrl, "_blank");
+    } catch (err) {
+      console.error("Error opening image:", err);
+      alert("Unable to open image. Please try again.");
+    }
+  };
 
   const getBadge = (flag) => {
     if (flag === "CLOSED") {
@@ -410,7 +402,7 @@ const openImageInNewTab = (img) => {
       );
     } else if (flag === "WIP") {
       return (
-         <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
+        <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
           <i className="bi bi-clock-history me-1"></i> WIP
         </span>
       );
@@ -423,26 +415,26 @@ const openImageInNewTab = (img) => {
     }
   };
 
-//    const handleImageChange = (e) => {
-//   const files = Array.from(e.target.files);
+  //    const handleImageChange = (e) => {
+  //   const files = Array.from(e.target.files);
 
-//   if (files.length > 3) {
-//     setModalType("error");
-//     setModalTitle("Validation Error");
-//     setModalMessage("You can upload a maximum of 3 images only.");
-//     setIsModalOpen(true);
+  //   if (files.length > 3) {
+  //     setModalType("error");
+  //     setModalTitle("Validation Error");
+  //     setModalMessage("You can upload a maximum of 3 images only.");
+  //     setIsModalOpen(true);
 
-//     e.target.value = ""; // Clear file input
-//     setSelectedImages([]);
-//     setPreviewUrls([]);
-//     return;
-//   }
+  //     e.target.value = ""; // Clear file input
+  //     setSelectedImages([]);
+  //     setPreviewUrls([]);
+  //     return;
+  //   }
 
-//   setSelectedImages(files);
+  //   setSelectedImages(files);
 
-//   const urls = files.map((file) => URL.createObjectURL(file));
-//   setPreviewUrls(urls);
-// };
+  //   const urls = files.map((file) => URL.createObjectURL(file));
+  //   setPreviewUrls(urls);
+  // };
 
   return (
     <Layout>
@@ -560,7 +552,6 @@ const openImageInNewTab = (img) => {
                             : "btn-outline-primary"
                         }`}
                         disabled={complaint.VAR_COMPLAINT_STATUS === "CLOSED"}
-                      
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -727,43 +718,17 @@ const openImageInNewTab = (img) => {
 
                 <div className="mt-4 pt-3 border-top">
                   <label className="form-label fw-semibold">
-                    <i className="bi bi-images me-2"></i>Resolved Complaint Images
+                    <i className="bi bi-images me-2"></i>Resolved Complaint
+                    Images
                   </label>
                   {renderThumbnails2(selectedComplaint)}
                 </div>
 
-                {/* Upload Complaint Images */}
-            {/* <div className="upload-box mt-4 pt-3">
-              <i className="bi bi-cloud-arrow-up"></i>
-              <h6>Upload Solved Complaint Photos</h6>
-              <p>Multiple image upload supported</p>
-              <label className="upload-btn">
-                Choose Photos
-                <input
-                  id="imageUpload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange}
-                />
-              </label>
-              <div className="preview-images">
-                {previewUrls.map((url, idx) => (
-                  <img key={idx} src={url} alt={`preview-${idx}`} />
-                ))}
-              </div>
-            </div>
-            {selectedImages.length === 0 && (
-              <p
-                style={{ color: "red", fontSize: "12px", textAlign: "center" }}
-              >
-                At least one image is required
-              </p>
-            )} */}
-
                 {/* Supervisor Actions */}
                 <div className="mt-4 pt-3 border-top">
-                  <label className="form-label fw-semibold">Supervisor Remark <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold">
+                    Supervisor Remark <span className="text-danger">*</span>
+                  </label>
                   <textarea
                     className="form-control"
                     rows="3"
@@ -777,15 +742,19 @@ const openImageInNewTab = (img) => {
                 </div>
 
                 <div className="mt-4 pt-3 border-top">
-                  <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold">
+                    Status <span className="text-danger">*</span>
+                  </label>
                   <select
                     className="form-select"
                     value={supervisorStatus}
-                    onChange={(e) => { setSupervisorStatus(e.target.value) }}
+                    onChange={(e) => {
+                      setSupervisorStatus(e.target.value);
+                    }}
                   >
                     <option value="">--Select Status--</option>
-                    <option value="WIP">WIP</option>
-                    <option value="CLOSED">Closed</option>
+                    <option value="APPROVE">APPROVE</option>
+                    <option value="REJECT">REJECT</option>
                   </select>
                   <small className="text-muted mt-2 d-block">
                     Status is required to submit this complaint.
@@ -800,16 +769,28 @@ const openImageInNewTab = (img) => {
                 >
                   Close
                 </button>
-               {selectedComplaint?.SOLVED1 && (
-  <button
-    type="button"
-    className="btn btn-primary"
-    disabled={!(supervisorRemark.trim() && supervisorStatus.trim())}
-    onClick={handleSubmitComplaintStatus}
-  >
-    Submit
-  </button>
-)}
+                {/* {selectedComplaint?.SOLVED1 && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={
+                      !(supervisorRemark.trim() && supervisorStatus.trim())
+                    }
+                    onClick={handleSubmitComplaintStatus}
+                  >
+                    Submit
+                  </button>
+                )} */}
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={
+                      !(supervisorRemark.trim() && supervisorStatus.trim())
+                    }
+                    onClick={handleSubmitComplaintStatus}
+                  >
+                    Submit
+                  </button>
               </div>
             </div>
           </div>
@@ -883,7 +864,8 @@ const openImageInNewTab = (img) => {
                     className="btn btn-outline-light"
                     onClick={nextImage}
                     disabled={
-                      selectedImageIndex === getComplaintImages(selectedComplaint).length - 1
+                      selectedImageIndex ===
+                      getComplaintImages(selectedComplaint).length - 1
                     }
                   >
                     Next <i className="bi bi-chevron-right ms-1"></i>
