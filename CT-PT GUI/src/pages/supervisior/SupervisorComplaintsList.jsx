@@ -213,6 +213,18 @@ const SupervisorComplaintsList = () => {
     }
   };
 
+  const sortAndFormatByDate = (arr) => {
+    const validItems = arr.filter(
+      (item) =>
+        item && typeof item.date === "string" && item.date.trim() !== "",
+    );
+    const sorted = [...validItems].sort((a, b) => a.date.localeCompare(b.date));
+    return sorted.map((item) => ({
+      ...item,
+      date: item.date.replace("T", " "),
+    }));
+  };
+
   const getReworkImages = async (complaintId) => {
     try {
       setLoading(true);
@@ -221,11 +233,11 @@ const SupervisorComplaintsList = () => {
       );
       if (res?.success && res?.data?.length > 0) {
         const data = res.data.map((item) => ({
-          date:
-            item.IMAGE_DATE.split("T")[0].split("-").reverse().join("-") || "",
+          date: item.IMAGE_DATE.split(".")[0] || "",
           imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
         }));
-        setReworkImages(data);
+        const formatedData = sortAndFormatByDate(data);
+        setReworkImages(formatedData);
       } else {
         setReworkImages([]);
       }
@@ -423,6 +435,12 @@ const SupervisorComplaintsList = () => {
             <i className="bi bi-clock-history me-1"></i> PENDING
           </span>
         );
+      case "ASSIGN":
+        return (
+          <span className="badge bg-primary rounded-pill px-3 py-2">
+            <i className="bi bi-person-check me-1"></i> ASSIGN
+          </span>
+        );
       case "COMPLETED":
         return (
           <span className="badge bg-success rounded-pill px-3 py-2">
@@ -545,6 +563,7 @@ const SupervisorComplaintsList = () => {
                   >
                     <option value="">All</option>
                     <option value="PENDING">Pending</option>
+                    <option value="ASSIGN">Assign</option>
                     <option value="COMPLETED">Completed</option>
                     <option value="REJECT">Reject</option>
                     <option value="CLOSED">Closed</option>
@@ -775,27 +794,6 @@ const SupervisorComplaintsList = () => {
                     <i className="bi bi-images me-2"></i>Resolved Complaint
                     Images
                   </label>
-                  <div className="card">
-                    <div
-                      className="card-body"
-                      style={{ maxHeight: "300px", overflowY: "auto" }}
-                    >
-                      {reworkImages.length > 0 ? (
-                        reworkImages.map((item, i) => (
-                          <>
-                            <div key={i} className="mb-2">
-                              <div className="">
-                                <p className="mb-1">{item.date}</p>
-                              </div>
-                              {renderImageGallery(item.imgArr)}
-                            </div>
-                          </>
-                        ))
-                      ) : (
-                        <p className="text-muted">No images available</p>
-                      )}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Supervisor Actions */}

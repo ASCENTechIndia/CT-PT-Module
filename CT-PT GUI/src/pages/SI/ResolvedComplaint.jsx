@@ -28,6 +28,7 @@ const ResolvedComplaint = () => {
   const [modalType, setModalType] = useState("info");
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
+  const [reworkImages, setReworkImages] = useState([]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,7 +39,7 @@ const ResolvedComplaint = () => {
   const [filters, setFilters] = useState({
     fromDate: getToday(),
     toDate: getToday(),
-    status:""
+    status: "",
   });
 
   const handleDateChangeFilter = (e) => {
@@ -77,7 +78,7 @@ const ResolvedComplaint = () => {
     fetchComplaints(1);
   }, [fetchComplaints]);
 
-   const handleStatusChange = (e) => {
+  const handleStatusChange = (e) => {
     setFilters((prev) => ({ ...prev, status: e.target.value }));
   };
 
@@ -85,18 +86,56 @@ const ResolvedComplaint = () => {
     const clearedFilters = {
       fromDate: "",
       toDate: "",
-      status:""
+      status: "",
     };
     setFilters(clearedFilters);
   };
 
-  // Open modal and display selected complaint details (read-only)
+  const sortAndFormatByDate = (arr) => {
+    const validItems = arr.filter(
+      (item) =>
+        item && typeof item.date === "string" && item.date.trim() !== "",
+    );
+    const sorted = [...validItems].sort((a, b) => a.date.localeCompare(b.date));
+    return sorted.map((item) => ({
+      ...item,
+      date: item.date.replace("T", " "),
+    }));
+  };
+
+  const getReworkImages = async (complaintId) => {
+    try {
+      setLoading(true);
+      const res = await apiClient.get(
+        `/authComplaint/getReworkImages?complaintid=${complaintId}`,
+      );
+      if (res?.success && res?.data?.length > 0) {
+        const data = res.data.map((item) => ({
+          date: item.IMAGE_DATE.split(".")[0] || "",
+          imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
+        }));
+        const formatedData = sortAndFormatByDate(data);
+        setReworkImages(formatedData);
+      } else {
+        setReworkImages([]);
+      }
+    } catch (error) {
+      console.error(error);
+      setReworkImages([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleReviewClick = (complaint) => {
+    // fetching rework images
+    const reworkImages = getReworkImages(complaint.COMPLAINTID);
+
     setSelectedComplaint(complaint);
-    setShowModal(true);
     setSelectedImageIndex(0);
     setSiRemark("");
     setSanitaryinspectorstatus("");
+    setShowModal(true);
   };
 
   // Open image in full view
@@ -163,7 +202,9 @@ const ResolvedComplaint = () => {
     if (!siRemark.trim() || !sanitaryinspectorstatus) {
       setModalType("warning");
       setModalTitle("Validation Error");
-      setModalMessage("Please fill in both Sanitary Inspector Remark and Status");
+      setModalMessage(
+        "Please fill in both Sanitary Inspector Remark and Status",
+      );
       setIsModalOpen(true);
       return;
     }
@@ -180,9 +221,9 @@ const ResolvedComplaint = () => {
           si_status: sanitaryinspectorstatus,
           si_remrk: siRemark,
           wardno: selectedComplaint?.PRBHAGID,
-          superwiserId:selectedComplaint?.SUPERWISER_ID,
-          superstatus:selectedComplaint?.SUPERSTATUS,
-          superremark:selectedComplaint?.VAR_COMPAINT_SUPERREMARK,
+          superwiserId: selectedComplaint?.SUPERWISER_ID,
+          superstatus: selectedComplaint?.SUPERSTATUS,
+          superremark: selectedComplaint?.VAR_COMPAINT_SUPERREMARK,
           ulbid: ulbid,
         },
       );
@@ -203,14 +244,18 @@ const ResolvedComplaint = () => {
       } else {
         setModalType("error");
         setModalTitle("Error");
-        setModalMessage(response.message || "Failed to update complaint status");
+        setModalMessage(
+          response.message || "Failed to update complaint status",
+        );
         setIsModalOpen(true);
       }
     } catch (err) {
       console.error("Error updating complaint status:", err);
       setModalType("error");
       setModalTitle("Error");
-      setModalMessage(err.message || "Failed to update complaint status. Please try again.");
+      setModalMessage(
+        err.message || "Failed to update complaint status. Please try again.",
+      );
       setIsModalOpen(true);
     } finally {
       setIsSubmitting(false);
@@ -245,7 +290,7 @@ const ResolvedComplaint = () => {
       complaint?.SOLVCOMPIMG3 || "",
     ];
 
-     const openImageInNewTab = (img) => {
+    const openImageInNewTab = (img) => {
       try {
         // Convert base64 to blob
         const binaryString = atob(img);
@@ -320,6 +365,41 @@ const ResolvedComplaint = () => {
         </span>
       );
     }
+  };
+
+  const renderImageGallery = (images) => {
+    return (
+      <div className="d-flex gap-2 flex-wrap">
+        {images.length > 0 ? (
+          images.map((img, idx) => (
+            <div key={idx} style={{ position: "relative" }}>
+              {img && (
+                <img
+                  src={`data:image/jpeg;base64,${img}`}
+                  alt={`stage-${idx}`}
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    border: "2px solid #dee2e6",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                  onClick={() => openImageInNewTab(img)}
+                  onMouseEnter={(e) =>
+                    (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
+                  }
+                  onMouseLeave={(e) => (e.target.style.boxShadow = "none")}
+                />
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-muted mb-0">No images available</p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -431,11 +511,15 @@ const ResolvedComplaint = () => {
                       <button
                         onClick={() => handleReviewClick(complaint)}
                         className={`btn btn-sm ${
-                          complaint.SUPERSTATUS === "REJECT" || complaint.SISTATUS === "APPROVE"
+                          complaint.SUPERSTATUS === "REJECT" ||
+                          complaint.SISTATUS === "APPROVE"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
-                        disabled={complaint.SUPERSTATUS === "REJECT" || complaint.SISTATUS === "APPROVE"}
+                        disabled={
+                          complaint.SUPERSTATUS === "REJECT" ||
+                          complaint.SISTATUS === "APPROVE"
+                        }
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -588,7 +672,7 @@ const ResolvedComplaint = () => {
                     </p>
                   </div>
 
-                   <div className="col-md-12">
+                  <div className="col-md-12">
                     <label className="form-label fw-semibold text-muted">
                       Supervisor's Remark
                     </label>
@@ -601,13 +685,37 @@ const ResolvedComplaint = () => {
                 {/* Complaint Images Section */}
                 <div className="mt-4 pt-3 border-top">
                   <label className="form-label fw-semibold">
-                    <i className="bi bi-images me-2"></i>Resolved Complaint Images
+                    <i className="bi bi-images me-2"></i>Resolved Complaint
+                    Images
                   </label>
-                  {renderThumbnails(selectedComplaint)}
+                  <div className="card">
+                    <div
+                      className="card-body"
+                      style={{ maxHeight: "300px", overflowY: "auto" }}
+                    >
+                      {reworkImages.length > 0 ? (
+                        reworkImages.map((item, i) => (
+                          <>
+                            <div key={i} className="mb-2">
+                              <div className="">
+                                <p className="mb-1">{item.date}</p>
+                              </div>
+                              {renderImageGallery(item.imgArr)}
+                            </div>
+                          </>
+                        ))
+                      ) : (
+                        <p className="text-muted">No images available</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                  <div className="mt-4 pt-3 border-top">
-                  <label className="form-label fw-semibold">Sanitary Inspector Remark <span className="text-danger">*</span></label>
+                <div className="mt-4 pt-3 border-top">
+                  <label className="form-label fw-semibold">
+                    Sanitary Inspector Remark{" "}
+                    <span className="text-danger">*</span>
+                  </label>
                   <textarea
                     className="form-control"
                     rows="3"
@@ -621,11 +729,15 @@ const ResolvedComplaint = () => {
                 </div>
 
                 <div className="mt-4 pt-3 border-top">
-                  <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold">
+                    Status <span className="text-danger">*</span>
+                  </label>
                   <select
                     className="form-select"
                     value={sanitaryinspectorstatus}
-                    onChange={(e) => { setSanitaryinspectorstatus(e.target.value) }}
+                    onChange={(e) => {
+                      setSanitaryinspectorstatus(e.target.value);
+                    }}
                   >
                     <option value="">--Select Status--</option>
                     <option value="APPROVE">Approve</option>
@@ -637,7 +749,6 @@ const ResolvedComplaint = () => {
                 </div>
               </div>
 
-            
               <div className="modal-footer">
                 <button
                   type="button"
@@ -650,7 +761,9 @@ const ResolvedComplaint = () => {
                   type="button"
                   className="btn btn-primary"
                   onClick={handleSubmitSIRemark}
-                  disabled={!siRemark.trim() || !sanitaryinspectorstatus || isSubmitting}
+                  disabled={
+                    !siRemark.trim() || !sanitaryinspectorstatus || isSubmitting
+                  }
                 >
                   {isSubmitting ? (
                     <>
@@ -674,80 +787,85 @@ const ResolvedComplaint = () => {
       )}
 
       {/* Full-View Image Modal */}
-      {showImageModal && selectedComplaint && (() => {
-        const images = getComplaintImages(selectedComplaint);
-        return images.length > 0 ? (
-          <div
-            className="modal show d-block"
-            tabIndex="-1"
-            role="dialog"
-            style={{
-              backgroundColor: "rgba(0,0,0,0.8)",
-              zIndex: 2000,
-            }}
-          >
+      {showImageModal &&
+        selectedComplaint &&
+        (() => {
+          const images = getComplaintImages(selectedComplaint);
+          return images.length > 0 ? (
             <div
-              className="modal-dialog"
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
               style={{
-                maxWidth: "90vw",
-                height: "90vh",
-                display: "flex",
-                alignItems: "center",
+                backgroundColor: "rgba(0,0,0,0.8)",
+                zIndex: 2000,
               }}
             >
-              <div className="modal-content bg-dark" style={{ border: "none" }}>
-                <div className="modal-header bg-dark border-secondary">
-                  <h5 className="modal-title text-white">
-                    Image {selectedImageIndex + 1} of {images.length}
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white"
-                    onClick={() => setShowImageModal(false)}
-                  ></button>
-                </div>
-                <div className="modal-body p-0 d-flex align-items-center justify-content-center">
-                  <div
-                    style={{
-                      position: "relative",
-                      maxWidth: "100%",
-                      maxHeight: "70vh",
-                    }}
-                  >
-                    <img
-                      src={`data:image/png;base64,${images[selectedImageIndex]}`}
-                      alt={`complaint-full-${selectedImageIndex}`}
+              <div
+                className="modal-dialog"
+                style={{
+                  maxWidth: "90vw",
+                  height: "90vh",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  className="modal-content bg-dark"
+                  style={{ border: "none" }}
+                >
+                  <div className="modal-header bg-dark border-secondary">
+                    <h5 className="modal-title text-white">
+                      Image {selectedImageIndex + 1} of {images.length}
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close btn-close-white"
+                      onClick={() => setShowImageModal(false)}
+                    ></button>
+                  </div>
+                  <div className="modal-body p-0 d-flex align-items-center justify-content-center">
+                    <div
                       style={{
+                        position: "relative",
                         maxWidth: "100%",
                         maxHeight: "70vh",
-                        objectFit: "contain",
                       }}
-                    />
+                    >
+                      <img
+                        src={`data:image/png;base64,${images[selectedImageIndex]}`}
+                        alt={`complaint-full-${selectedImageIndex}`}
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "70vh",
+                          objectFit: "contain",
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="modal-footer bg-dark border-secondary justify-content-between">
-                  <button
-                    type="button"
-                    className="btn btn-outline-light"
-                    onClick={prevImage}
-                    disabled={selectedImageIndex === 0}
-                  >
-                    <i className="bi bi-chevron-left me-1"></i> Previous
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-light"
-                    onClick={nextImage}
-                    disabled={selectedImageIndex === images.length - 1}
-                  >
-                    Next <i className="bi bi-chevron-right ms-1"></i>
-                  </button>
+                  <div className="modal-footer bg-dark border-secondary justify-content-between">
+                    <button
+                      type="button"
+                      className="btn btn-outline-light"
+                      onClick={prevImage}
+                      disabled={selectedImageIndex === 0}
+                    >
+                      <i className="bi bi-chevron-left me-1"></i> Previous
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-light"
+                      onClick={nextImage}
+                      disabled={selectedImageIndex === images.length - 1}
+                    >
+                      Next <i className="bi bi-chevron-right ms-1"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : null;
-      })()}
+          ) : null;
+        })()}
 
       {/* Response Modal */}
       <ResponseModal
