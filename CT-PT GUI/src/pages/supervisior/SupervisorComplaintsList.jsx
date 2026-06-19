@@ -30,6 +30,7 @@ const SupervisorComplaintsList = () => {
   const [modalType, setModalType] = useState("info");
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
+  const [reworkImages, setReworkImages] = useState([]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -145,8 +146,6 @@ const SupervisorComplaintsList = () => {
         ulbid: ulbid,
       };
 
-      console.log("Submitting complaint status:", payload);
-
       const response = await apiClient.post(
         `/authComplaint/complaintStatusUpdate`,
         payload,
@@ -200,8 +199,6 @@ const SupervisorComplaintsList = () => {
         `/authComplaint/rslvdListbyVendor?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&status=${filters.status}&supervisorId=${userId}`,
       );
 
-      console.log("resp :", response);
-
       if (response.success && response.data.data) {
         setComplaints(response.data.data);
         setCurrentPage(response?.data?.pagination?.page || dataPage);
@@ -216,14 +213,39 @@ const SupervisorComplaintsList = () => {
     }
   };
 
-  // Open modal and display selected complaint details (read-only)
+  const getReworkImages = async (complaintId) => {
+    try {
+      setLoading(true);
+      const res = await apiClient.get(
+        `/authComplaint/getReworkImages?complaintid=${complaintId}`,
+      );
+      if (res?.success && res?.data?.length > 0) {
+        const data = res.data.map((item) => ({
+          date:
+            item.IMAGE_DATE.split("T")[0].split("-").reverse().join("-") || "",
+          imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
+        }));
+        setReworkImages(data);
+      } else {
+        setReworkImages([]);
+      }
+    } catch (error) {
+      console.error(error);
+      setReworkImages([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleReviewClick = (complaint) => {
-    console.log("popup complaint :", complaint);
+    // fetching rework images
+    const reworkImages = getReworkImages(complaint.COMPLAINTID);
+
     setSelectedComplaint(complaint);
-    setShowModal(true);
     setSelectedImageIndex(0);
     setSupervisorRemark("");
     setSupervisorStatus("");
+    setShowModal(true);
   };
 
   // Open image in full view
@@ -394,47 +416,74 @@ const SupervisorComplaintsList = () => {
   };
 
   const getBadge = (flag) => {
-    if (flag === "CLOSED") {
-      return (
-        <span className="badge bg-success rounded-pill px-3 py-2">
-          <i className="bi bi-check-circle me-1"></i> CLOSED
-        </span>
-      );
-    } else if (flag === "WIP") {
-      return (
-        <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
-          <i className="bi bi-clock-history me-1"></i> WIP
-        </span>
-      );
-    } else {
-      return (
-        <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
-          <i className="bi bi-clock-history me-1"></i> Pending
-        </span>
-      );
+    switch (flag) {
+      case "PENDING":
+        return (
+          <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
+            <i className="bi bi-clock-history me-1"></i> PENDING
+          </span>
+        );
+      case "COMPLETED":
+        return (
+          <span className="badge bg-success rounded-pill px-3 py-2">
+            <i className="bi bi-check-circle me-1"></i> COMPLETED
+          </span>
+        );
+      case "REJECT":
+        return (
+          <span className="badge bg-danger rounded-pill px-3 py-2">
+            <i className="bi bi-x-circle me-1"></i> REJECT
+          </span>
+        );
+      case "CLOSED":
+        return (
+          <span className="badge bg-secondary rounded-pill px-3 py-2">
+            <i className="bi bi-archive me-1"></i> CLOSED
+          </span>
+        );
+      default:
+        return (
+          <span className="badge bg-light text-dark rounded-pill px-3 py-2">
+            <i className="bi bi-question-circle me-1"></i> {flag || "UNKNOWN"}
+          </span>
+        );
     }
   };
 
-  //    const handleImageChange = (e) => {
-  //   const files = Array.from(e.target.files);
-
-  //   if (files.length > 3) {
-  //     setModalType("error");
-  //     setModalTitle("Validation Error");
-  //     setModalMessage("You can upload a maximum of 3 images only.");
-  //     setIsModalOpen(true);
-
-  //     e.target.value = ""; // Clear file input
-  //     setSelectedImages([]);
-  //     setPreviewUrls([]);
-  //     return;
-  //   }
-
-  //   setSelectedImages(files);
-
-  //   const urls = files.map((file) => URL.createObjectURL(file));
-  //   setPreviewUrls(urls);
-  // };
+  const renderImageGallery = (images) => {
+    return (
+      <div className="d-flex gap-2 flex-wrap">
+        {images.length > 0 ? (
+          images.map((img, idx) => (
+            <div key={idx} style={{ position: "relative" }}>
+              {img && (
+                <img
+                  src={`data:image/jpeg;base64,${img}`}
+                  alt={`stage-${idx}`}
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    border: "2px solid #dee2e6",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                  onClick={() => openImageInNewTab(img)}
+                  onMouseEnter={(e) =>
+                    (e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)")
+                  }
+                  onMouseLeave={(e) => (e.target.style.boxShadow = "none")}
+                />
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-muted mb-0">No images available</p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Layout>
@@ -495,9 +544,10 @@ const SupervisorComplaintsList = () => {
                     onChange={handleStatusChange}
                   >
                     <option value="">All</option>
-                    <option value="ASSIGN">Pending</option>
-                    <option value="CLOSED">CLOSED</option>
-                    <option value="WIP">WIP</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="REJECT">Reject</option>
+                    <option value="CLOSED">Closed</option>
                   </select>
                 </div>
 
@@ -535,7 +585,6 @@ const SupervisorComplaintsList = () => {
               <tbody>
                 {complaints.map((complaint) => (
                   <tr key={complaint.NUM_COMPLAINT_ID}>
-                    {/* <td className="fw-semibold">#{complaint.NUM_COMPLAINT_ID}</td> */}
                     <td>{complaint.VAR_COMPLAINT_CITIZNAME}</td>
                     <td>{complaint.PRBHAG}</td>
                     <td>{complaint.SUPERWISER}</td>
@@ -551,7 +600,12 @@ const SupervisorComplaintsList = () => {
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
-                        disabled={complaint.VAR_COMPLAINT_STATUS === "CLOSED"}
+                        disabled={
+                          complaint &&
+                          complaint.superstatus &&
+                          (complaint.superstatus === "APPROVE" ||
+                            complaint.superstatus === "REJECT")
+                        }
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -662,7 +716,7 @@ const SupervisorComplaintsList = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                {/* Read-only Details Section */}
+                {/* Details Section */}
                 <div className="row g-3 mb-4">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-muted">
@@ -721,7 +775,27 @@ const SupervisorComplaintsList = () => {
                     <i className="bi bi-images me-2"></i>Resolved Complaint
                     Images
                   </label>
-                  {renderThumbnails2(selectedComplaint)}
+                  <div className="card">
+                    <div
+                      className="card-body"
+                      style={{ maxHeight: "300px", overflowY: "auto" }}
+                    >
+                      {reworkImages.length > 0 ? (
+                        reworkImages.map((item, i) => (
+                          <>
+                            <div key={i} className="mb-2">
+                              <div className="">
+                                <p className="mb-1">{item.date}</p>
+                              </div>
+                              {renderImageGallery(item.imgArr)}
+                            </div>
+                          </>
+                        ))
+                      ) : (
+                        <p className="text-muted">No images available</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Supervisor Actions */}
@@ -781,16 +855,16 @@ const SupervisorComplaintsList = () => {
                     Submit
                   </button>
                 )} */}
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={
-                      !(supervisorRemark.trim() && supervisorStatus.trim())
-                    }
-                    onClick={handleSubmitComplaintStatus}
-                  >
-                    Submit
-                  </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={
+                    !(supervisorRemark.trim() && supervisorStatus.trim())
+                  }
+                  onClick={handleSubmitComplaintStatus}
+                >
+                  Submit
+                </button>
               </div>
             </div>
           </div>
