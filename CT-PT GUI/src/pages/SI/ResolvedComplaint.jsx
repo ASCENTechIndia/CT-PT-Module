@@ -180,9 +180,9 @@ const ResolvedComplaint = () => {
           si_status: sanitaryinspectorstatus,
           si_remrk: siRemark,
           wardno: selectedComplaint?.PRBHAGID,
-           superwiserId:selectedComplaint?.SUPERWISER_ID,
-    superstatus:selectedComplaint?.VAR_COMPLAINT_STATUS,
-    superremark:selectedComplaint?.VAR_COMPAINT_SUPERREMARK,
+          superwiserId:selectedComplaint?.SUPERWISER_ID,
+          superstatus:selectedComplaint?.SUPERSTATUS,
+          superremark:selectedComplaint?.VAR_COMPAINT_SUPERREMARK,
           ulbid: ulbid,
         },
       );
@@ -301,13 +301,13 @@ const ResolvedComplaint = () => {
   };
 
   const getBadge = (flag) => {
-    if (flag === "APPROVE") {
+    if (flag === "CLOSED") {
       return (
         <span className="badge bg-success rounded-pill px-3 py-2">
-          <i className="bi bi-check-circle me-1"></i> Approve
+          <i className="bi bi-check-circle me-1"></i> Closed
         </span>
       );
-    } else if (flag === "REJECT") {
+    } else if (flag === "REJECTED") {
       return (
         <span className="badge bg-danger rounded-pill px-3 py-2">
           <i className="bi bi-x-circle me-1"></i> Rejected
@@ -381,9 +381,9 @@ const ResolvedComplaint = () => {
                     onChange={handleStatusChange}
                   >
                     <option value="">All</option>
-                    <option value="CLOSED">Pending</option>
-                    <option value="APPROVE">Approved</option>
-                    <option value="REJECT">Rejected</option>
+                    <option value="COMPLETED">Pending</option>
+                    <option value="CLOSED">Closed</option>
+                    <option value="REJECTED">Rejected</option>
                   </select>
                 </div>
 
@@ -431,11 +431,11 @@ const ResolvedComplaint = () => {
                       <button
                         onClick={() => handleReviewClick(complaint)}
                         className={`btn btn-sm ${
-                          complaint.VAR_COMPLAINT_STATUS === "APPROVE" || complaint.VAR_COMPLAINT_STATUS === "REJECT"
+                          complaint.SUPERSTATUS === "REJECT" || complaint.SISTATUS === "APPROVE"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
-                        disabled={complaint.VAR_COMPLAINT_STATUS === "APPROVE" || complaint.VAR_COMPLAINT_STATUS === "REJECT"}
+                        disabled={complaint.SUPERSTATUS === "REJECT" || complaint.SISTATUS === "APPROVE"}
                       >
                         <i className="bi bi-eye me-1"></i> Review
                       </button>
@@ -628,8 +628,8 @@ const ResolvedComplaint = () => {
                     onChange={(e) => { setSanitaryinspectorstatus(e.target.value) }}
                   >
                     <option value="">--Select Status--</option>
-                    <option value="APPROVE">Approved</option>
-                    <option value="REJECT">Rejected</option>
+                    <option value="APPROVE">Approve</option>
+                    <option value="REJECT">Reject</option>
                   </select>
                   <small className="text-muted mt-2 d-block">
                     Status is required to submit this complaint.

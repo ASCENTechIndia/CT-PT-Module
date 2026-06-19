@@ -399,6 +399,8 @@ async function resolvedListbySup(req, res, next) {
         COMPLAINTID: row.COMPLAINTID,
         VAR_COMPAINT_SUPERREMARK: row.VAR_COMPAINT_SUPERREMARK,
         VAR_COMPAINT_SIREMARK: row.VAR_COMPAINT_SIREMARK,
+        SUPERSTATUS: row.SUPERSTATUS,
+        SISTATUS: row.SISTATUS,
       };
 
       // Only include image fields if they are strings (base64) and not LOB objects

@@ -792,8 +792,10 @@ async function rslvdListbySupRepo(
       complaintid,
       SOLVCOMPIMG1,
       SOLVCOMPIMG2,
-      SOLVCOMPIMG3
-    FROM vw_ctptpendingcomplaint_Resolved
+      SOLVCOMPIMG3,
+      SUPERSTATUS,
+      SISTATUS
+    FROM vw_ctptpendingcomplaint_Resolved_New
     WHERE ulbid = :ulbid
   `;
 
@@ -853,7 +855,7 @@ async function rslvdListbySupRepo(
 
   let countSql = `
     SELECT COUNT(*) AS total
-    FROM vw_ctptpendingcomplaint_Resolved
+    FROM vw_ctptpendingcomplaint_Resolved_New
     WHERE ulbid = :ulbid
   `;
 

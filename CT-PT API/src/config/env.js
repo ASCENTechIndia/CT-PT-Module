@@ -1,5 +1,8 @@
+const path = require("path");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({
+  path: path.join(__dirname, "../../.env")
+});
 
 function must(name) {
   const value = process.env[name];
