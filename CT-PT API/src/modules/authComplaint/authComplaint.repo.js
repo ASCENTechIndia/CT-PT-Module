@@ -498,7 +498,9 @@ async function rslvdListbyVendorRepo(
       a.ulbid,
       a.si_id,
       a.complaintid,
-      a.venderemark
+      a.venderemark,
+      a.superstatus,
+      a.superremark
     FROM vw_ctptsuperwisercomplaint_list a
     WHERE a.ulbid = :ulbid
       AND a.superwiser_id = :supervisorId
@@ -644,7 +646,7 @@ async function rslvdListbyVendorListRepo(
       a.si_id,
       a.complaintid,
       a.assvendorid
-    FROM vw_ctptpendingcomplaint_assinlist a
+    FROM vw_ctptpendingcomplaint_assinlist_new a
     WHERE a.ulbid = :ulbid
       AND a.assvendorid = :vendorId
   `;
@@ -922,6 +924,27 @@ async function getSolvedComplaintImagesRepo(ulbid, siid, complaintid) {
   return rows;
 }
 
+async function getReworkImages(complaintid) {
+  let sql = `
+   select * from vw_complaintrework_list WHERE complaint_id = :complaintid
+  `;
+
+  const binds = {
+    complaintid: String(complaintid),
+  };
+
+  const result = await executeQuery(sql, binds);
+  const rows = result.rows || [];
+
+  for (const row of rows) {
+    row.IMAGE1 = await lobToBase64(row.IMAGE1);
+    row.IMAGE2 = await lobToBase64(row.IMAGE2 );
+    row.IMAGE3 = await lobToBase64(row.IMAGE3);
+  }
+
+  return rows;
+}
+
 async function getSupervisorStatusRepo() {
   return [
     { value: "WIP", label: "WIP" },
@@ -939,6 +962,7 @@ module.exports = {
   rslvdListbyVendorListRepo,
   getSolvedComplaintImagesRepo,
   getSupervisorStatusRepo,
+  getReworkImages,
 };
 
 async function complaintStatusUpdateRepo(payload) {

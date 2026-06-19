@@ -8,6 +8,7 @@ const {
   getSolvedComplaintImagesService,
   getSupervisorStatusService,
   getrslvdListbyVendorListService,
+  getReworkImagesService,
 } = require("./authComplaint.service");
 const { complaintStatusUpdateService } = require("./authComplaint.service");
 const { auditLog } = require("../../utils/audit-log");
@@ -233,6 +234,8 @@ async function resolvedListbyVendor(req, res, next) {
         SI_ID: row.SI_ID,
         COMPLAINTID: row.COMPLAINTID,
         VENDEREMARK: row.VENDEREMARK,
+        superstatus: row.SUPERSTATUS,
+        superremark: row.SUPERREMARK,
       };
 
       // Only include image fields if they are strings (base64) and not LOB objects
@@ -477,6 +480,28 @@ async function getSolvedComplaintImagesCon(req, res, next) {
   }
 }
 
+async function getReworkComplaintImages(req, res, next) {
+  try {
+    const { complaintid } = req.query;
+    const rows = await getReworkImagesService(complaintid);
+    logApiSuccess(
+      req,
+      200,
+      { count: rows?.length || 0 },
+      "fetched rework images successfully",
+    );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(
+      req,
+      500,
+      error.message,
+      "Error retrieving solved complaint images",
+    );
+    return next(error);
+  }
+}
+
 async function getSupervisorStatusCon(req, res, next) {
   try {
     const statuses = await getSupervisorStatusService();
@@ -508,6 +533,7 @@ module.exports = {
   getSolvedComplaintImagesCon,
   getSupervisorStatusCon,
   resolvedListbyVendorList,
+  getReworkComplaintImages,
 };
 
 async function complaintStatusUpdate(req, res, next) {
