@@ -26,6 +26,7 @@ const complaintStatusSchema = z.object({
   solvedImg1: z.string().nullable().optional(),
   solvedImg2: z.string().nullable().optional(),
   solvedImg3: z.string().nullable().optional(),
+  reworkflag: z.string().optional(),
 });
 
 module.exports = {
