@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
+import { useLoader } from "../../context/LoaderContext";
 
 const getToday = () => {
   const d = new Date();
@@ -14,6 +15,7 @@ const ResolvedComplaint = () => {
   const ulbid = user?.orgId;
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { setLoader } = useLoader();
 
   const [showModal, setShowModal] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
@@ -91,30 +93,78 @@ const ResolvedComplaint = () => {
     setFilters(clearedFilters);
   };
 
+  // const sortAndFormatByDate = (arr) => {
+  //   const validItems = arr.filter(
+  //     (item) =>
+  //       item && typeof item.date === "string" && item.date.trim() !== "",
+  //   );
+  //   const sorted = [...validItems].sort((a, b) => a.date.localeCompare(b.date));
+  //   return sorted.map((item) => ({
+  //     ...item,
+  //     date: item.date.replace("T", " "),
+  //   }));
+  // };
+  // const getReworkImages = async (complaintId) => {
+  //   try {
+  //     setLoading(true);
+  //     const res = await apiClient.get(
+  //       `/authComplaint/getReworkImages?complaintid=${complaintId}`,
+  //     );
+  //     if (res?.success && res?.data?.length > 0) {
+  //       const data = res.data.map((item) => ({
+  //         date: item.IMAGE_DATE.split(".")[0] || "",
+  //         imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
+  //       }));
+  //       const formatedData = sortAndFormatByDate(data);
+  //       setReworkImages(formatedData);
+  //     } else {
+  //       setReworkImages([]);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     setReworkImages([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const sortAndFormatByDate = (arr) => {
     const validItems = arr.filter(
       (item) =>
         item && typeof item.date === "string" && item.date.trim() !== "",
     );
-    const sorted = [...validItems].sort((a, b) => a.date.localeCompare(b.date));
-    return sorted.map((item) => ({
-      ...item,
-      date: item.date.replace("T", " "),
-    }));
+
+    const sorted = [...validItems].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted.map((item) => {
+      const isoDate = item.date;
+      const dateObj = new Date(isoDate);
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const year = dateObj.getFullYear();
+      const hours = String(dateObj.getHours()).padStart(2, "0");
+      const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+      const formatted = `${day}-${month}-${year} ${hours}:${minutes}`;
+      return {
+        ...item,
+        date: formatted,
+      };
+    });
   };
 
   const getReworkImages = async (complaintId) => {
     try {
       setLoading(true);
+      setLoader(true);
       const res = await apiClient.get(
         `/authComplaint/getReworkImages?complaintid=${complaintId}`,
       );
       if (res?.success && res?.data?.length > 0) {
         const data = res.data.map((item) => ({
-          date: item.IMAGE_DATE.split(".")[0] || "",
+          date: item.IMAGE_DATE,
           imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
         }));
         const formatedData = sortAndFormatByDate(data);
+        console.log("formated images :", formatedData);
         setReworkImages(formatedData);
       } else {
         setReworkImages([]);
@@ -124,6 +174,7 @@ const ResolvedComplaint = () => {
       setReworkImages([]);
     } finally {
       setLoading(false);
+      setLoader(false);
     }
   };
 
@@ -274,15 +325,28 @@ const ResolvedComplaint = () => {
     });
   };
 
-  // Helper to render image thumbnails with click handler
+  const openImageInNewTab = (img) => {
+    try {
+      // Convert base64 to blob
+      const binaryString = atob(img);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: "image/jpeg" });
+
+      // Create object URL from blob
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Open in new tab
+      window.open(blobUrl, "_blank");
+    } catch (err) {
+      console.error("Error opening image:", err);
+      alert("Unable to open image. Please try again.");
+    }
+  };
+
   const renderThumbnails = (complaint) => {
-    // const images = [
-    //   complaint?.BLOB_COMPLAINT_UNITIMG1 || "",
-    //   complaint?.BLOB_COMPLAINT_UNITIMG2 || "",
-    //   complaint?.BLOB_COMPLAINT_UNITIMG3 || "",
-    //   complaint?.BLOB_COMPLAINT_UNITIMG4 || "",
-    //   complaint?.BLOB_COMPLAINT_UNITIMG5 || "",
-    // ];
 
     const images = [
       complaint?.SOLVCOMPIMG1 || "",
@@ -290,26 +354,6 @@ const ResolvedComplaint = () => {
       complaint?.SOLVCOMPIMG3 || "",
     ];
 
-    const openImageInNewTab = (img) => {
-      try {
-        // Convert base64 to blob
-        const binaryString = atob(img);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: "image/jpeg" });
-
-        // Create object URL from blob
-        const blobUrl = URL.createObjectURL(blob);
-
-        // Open in new tab
-        window.open(blobUrl, "_blank");
-      } catch (err) {
-        console.error("Error opening image:", err);
-        alert("Unable to open image. Please try again.");
-      }
-    };
     return (
       <div className="d-flex gap-2 flex-wrap mt-2">
         {images.length > 0 ? (
@@ -319,7 +363,6 @@ const ResolvedComplaint = () => {
                 <img
                   key={idx}
                   src={`data:image/png;base64,${img}`}
-                  // alt={`complaint-${idx}`}
                   style={{
                     width: "80px",
                     height: "80px",
@@ -346,24 +389,43 @@ const ResolvedComplaint = () => {
   };
 
   const getBadge = (flag) => {
-    if (flag === "CLOSED") {
-      return (
-        <span className="badge bg-success rounded-pill px-3 py-2">
-          <i className="bi bi-check-circle me-1"></i> Closed
-        </span>
-      );
-    } else if (flag === "REJECTED") {
-      return (
-        <span className="badge bg-danger rounded-pill px-3 py-2">
-          <i className="bi bi-x-circle me-1"></i> Rejected
-        </span>
-      );
-    } else {
-      return (
-        <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
-          <i className="bi bi-clock-history me-1"></i> Pending
-        </span>
-      );
+    switch (flag) {
+      case "P":
+        return (
+          <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
+            <i className="bi bi-clock-history me-1"></i> PENDING
+          </span>
+        );
+      case "ASSIGN":
+        return (
+          <span className="badge bg-primary rounded-pill px-3 py-2">
+            <i className="bi bi-person-check me-1"></i> ASSIGN
+          </span>
+        );
+      case "COMPLETED":
+        return (
+          <span className="badge bg-success rounded-pill px-3 py-2">
+            <i className="bi bi-check-circle me-1"></i> COMPLETED
+          </span>
+        );
+      case "REJECTED":
+        return (
+          <span className="badge bg-danger rounded-pill px-3 py-2">
+            <i className="bi bi-x-circle me-1"></i> REJECTED
+          </span>
+        );
+      case "CLOSED":
+        return (
+          <span className="badge bg-secondary rounded-pill px-3 py-2">
+            <i className="bi bi-archive me-1"></i> CLOSED
+          </span>
+        );
+      default:
+        return (
+          <span className="badge bg-light text-dark rounded-pill px-3 py-2">
+            <i className="bi bi-question-circle me-1"></i> {flag || "UNKNOWN"}
+          </span>
+        );
     }
   };
 
@@ -400,6 +462,32 @@ const ResolvedComplaint = () => {
         )}
       </div>
     );
+  };
+
+  const getAppRej = (flag) => {
+    switch (flag) {
+      case "APPROVE":
+        return (
+          <span className="badge rounded-pill px-3 py-2 bg-success-subtle text-success">
+            <i className="bi bi-check-circle me-1"></i> APPROVE
+          </span>
+        );
+      case "REJECT":
+        return (
+          <span className="badge rounded-pill px-3 py-2 bg-danger-subtle text-danger">
+            <i className="bi bi-x-circle me-1"></i> REJECT
+          </span>
+        );
+      default:
+        return (
+          <span
+            className="badge rounded-pill px-3 py-2"
+            style={{ background: "#fee3b1", color: "#ff930f" }}
+          >
+            <i className="bi bi-clock-history me-1"></i> PENDING
+          </span>
+        );
+    }
   };
 
   return (
@@ -492,6 +580,7 @@ const ResolvedComplaint = () => {
                   <th scope="col">Supervisior Name</th>
                   <th scope="col">Phone</th>
                   <th scope="col">Status</th>
+                  <th scope="col">SI Status</th>
                   <th scope="col">Date</th>
                   <th scope="col" className="text-end">
                     Action
@@ -506,19 +595,22 @@ const ResolvedComplaint = () => {
                     <td>{complaint.SUPERWISER}</td>
                     <td>{complaint.MOBILENO}</td>
                     <td>{getBadge(complaint.VAR_COMPLAINT_STATUS)}</td>
+                    <td>{getAppRej(complaint.SISTATUS)}</td>
                     <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
                     <td className="text-end">
                       <button
                         onClick={() => handleReviewClick(complaint)}
                         className={`btn btn-sm ${
                           complaint.SUPERSTATUS === "REJECT" ||
-                          complaint.SISTATUS === "APPROVE"
+                          complaint.SISTATUS === "APPROVE" ||
+                          complaint.SISTATUS === "REJECT"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
                         disabled={
                           complaint.SUPERSTATUS === "REJECT" ||
-                          complaint.SISTATUS === "APPROVE"
+                          complaint.SISTATUS === "APPROVE" ||
+                          complaint.SISTATUS === "REJECT"
                         }
                       >
                         <i className="bi bi-eye me-1"></i> Review
@@ -695,14 +787,12 @@ const ResolvedComplaint = () => {
                     >
                       {reworkImages.length > 0 ? (
                         reworkImages.map((item, i) => (
-                          <>
-                            <div key={i} className="mb-2">
-                              <div className="">
-                                <p className="mb-1">{item.date}</p>
-                              </div>
-                              {renderImageGallery(item.imgArr)}
+                          <div key={i} className="mb-2">
+                            <div className="">
+                              <p className="mb-1">{item.date}</p>
                             </div>
-                          </>
+                            {renderImageGallery(item.imgArr)}
+                          </div>
                         ))
                       ) : (
                         <p className="text-muted">No images available</p>

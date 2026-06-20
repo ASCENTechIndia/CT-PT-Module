@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
+import { useLoader } from "../../context/LoaderContext";
 
 const getToday = () => {
   const d = new Date();
@@ -16,6 +17,7 @@ const SupervisorComplaintsList = () => {
   const userId = user?.userId;
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { setLoader } = useLoader();
   const [error, setError] = useState(null);
 
   const [showModal, setShowModal] = useState(true);
@@ -218,25 +220,38 @@ const SupervisorComplaintsList = () => {
       (item) =>
         item && typeof item.date === "string" && item.date.trim() !== "",
     );
-    const sorted = [...validItems].sort((a, b) => a.date.localeCompare(b.date));
-    return sorted.map((item) => ({
-      ...item,
-      date: item.date.replace("T", " "),
-    }));
+
+    const sorted = [...validItems].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted.map((item) => {
+      const isoDate = item.date;
+      const dateObj = new Date(isoDate);
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const year = dateObj.getFullYear();
+      const hours = String(dateObj.getHours()).padStart(2, "0");
+      const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+      const formatted = `${day}-${month}-${year} ${hours}:${minutes}`;
+      return {
+        ...item,
+        date: formatted,
+      };
+    });
   };
 
   const getReworkImages = async (complaintId) => {
     try {
       setLoading(true);
+      setLoader(true);
       const res = await apiClient.get(
         `/authComplaint/getReworkImages?complaintid=${complaintId}`,
       );
       if (res?.success && res?.data?.length > 0) {
         const data = res.data.map((item) => ({
-          date: item.IMAGE_DATE.split(".")[0] || "",
+          date: item.IMAGE_DATE,
           imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
         }));
         const formatedData = sortAndFormatByDate(data);
+        console.log("formated images :", formatedData);
         setReworkImages(formatedData);
       } else {
         setReworkImages([]);
@@ -246,6 +261,7 @@ const SupervisorComplaintsList = () => {
       setReworkImages([]);
     } finally {
       setLoading(false);
+      setLoader(false);
     }
   };
 
@@ -429,7 +445,7 @@ const SupervisorComplaintsList = () => {
 
   const getBadge = (flag) => {
     switch (flag) {
-      case "PENDING":
+      case "P":
         return (
           <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
             <i className="bi bi-clock-history me-1"></i> PENDING
@@ -447,10 +463,10 @@ const SupervisorComplaintsList = () => {
             <i className="bi bi-check-circle me-1"></i> COMPLETED
           </span>
         );
-      case "REJECT":
+      case "REJECTED":
         return (
           <span className="badge bg-danger rounded-pill px-3 py-2">
-            <i className="bi bi-x-circle me-1"></i> REJECT
+            <i className="bi bi-x-circle me-1"></i> REJECTED
           </span>
         );
       case "CLOSED":
@@ -463,6 +479,29 @@ const SupervisorComplaintsList = () => {
         return (
           <span className="badge bg-light text-dark rounded-pill px-3 py-2">
             <i className="bi bi-question-circle me-1"></i> {flag || "UNKNOWN"}
+          </span>
+        );
+    }
+  };
+
+  const getAppRej = (flag) => {
+    switch (flag) {
+      case "APPROVE":
+        return (
+          <span className="badge rounded-pill px-3 py-2 bg-success-subtle text-success">
+            <i className="bi bi-check-circle me-1"></i> APPROVE
+          </span>
+        );
+      case "REJECT":
+        return (
+          <span className="badge rounded-pill px-3 py-2 bg-danger-subtle text-danger">
+            <i className="bi bi-x-circle me-1"></i> REJECT
+          </span>
+        );
+      default:
+        return (
+          <span className="badge rounded-pill px-3 py-2" style={{background: "#fee3b1", color: "#ff930f"}}>
+            <i className="bi bi-clock-history me-1"></i> PENDING
           </span>
         );
     }
@@ -562,10 +601,10 @@ const SupervisorComplaintsList = () => {
                     onChange={handleStatusChange}
                   >
                     <option value="">All</option>
-                    <option value="PENDING">Pending</option>
+                    <option value="P">Pending</option>
                     <option value="ASSIGN">Assign</option>
                     <option value="COMPLETED">Completed</option>
-                    <option value="REJECT">Reject</option>
+                    <option value="REJECTED">Reject</option>
                     <option value="CLOSED">Closed</option>
                   </select>
                 </div>
@@ -595,6 +634,7 @@ const SupervisorComplaintsList = () => {
                   <th scope="col">Supervisior Name</th>
                   <th scope="col">Phone</th>
                   <th scope="col">Status</th>
+                  <th scope="col">SuperVisior Status</th>
                   <th scope="col">Date</th>
                   <th scope="col" className="text-end">
                     Action
@@ -602,20 +642,23 @@ const SupervisorComplaintsList = () => {
                 </tr>
               </thead>
               <tbody>
-                {complaints.map((complaint) => (
-                  <tr key={complaint.NUM_COMPLAINT_ID}>
+                {complaints.map((complaint, i) => (
+                  <tr key={i}>
                     <td>{complaint.VAR_COMPLAINT_CITIZNAME}</td>
                     <td>{complaint.PRBHAG}</td>
                     <td>{complaint.SUPERWISER}</td>
                     <td>{complaint.MOBILENO}</td>
                     <td>{getBadge(complaint.VAR_COMPLAINT_STATUS)}</td>
+                    <td>{getAppRej(complaint.superstatus)}</td>
                     <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
                     <td className="text-end">
                       <button
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleReviewClick(complaint)}
                         className={`btn btn-sm ${
-                          complaint.VAR_COMPLAINT_STATUS === "CLOSED"
+                          complaint.VAR_COMPLAINT_STATUS === "CLOSED" ||
+                          complaint.superstatus === "APPROVE" ||
+                          complaint.superstatus === "REJECT"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
@@ -667,9 +710,9 @@ const SupervisorComplaintsList = () => {
                   </button>
                 </li>
 
-                {getPaginationPages().map((page) => (
+                {getPaginationPages().map((page, i) => (
                   <li
-                    key={page}
+                    key={i}
                     className={`page-item ${currentPage === page ? "active" : ""}`}
                   >
                     <button
@@ -794,6 +837,25 @@ const SupervisorComplaintsList = () => {
                     <i className="bi bi-images me-2"></i>Resolved Complaint
                     Images
                   </label>
+                  <div className="card">
+                    <div
+                      className="card-body"
+                      style={{ maxHeight: "300px", overflowY: "auto" }}
+                    >
+                      {reworkImages.length > 0 ? (
+                        reworkImages.map((item, i) => (
+                          <div key={i} className="mb-2">
+                            <div className="">
+                              <p className="mb-1">{item.date}</p>
+                            </div>
+                            {renderImageGallery(item.imgArr)}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted">No images available</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Supervisor Actions */}
