@@ -236,8 +236,8 @@ async function resolvedListbyVendor(req, res, next) {
         SI_ID: row.SI_ID,
         COMPLAINTID: row.COMPLAINTID,
         VENDEREMARK: row.VENDEREMARK,
-        superstatus: row.SUPERSTATUS,
-        superremark: row.SUPERREMARK,
+        SUPERSTATUS: row.SUPERSTATUS,
+        SUPERREMARK: row.SUPERREMARK,
       };
 
       // Only include image fields if they are strings (base64) and not LOB objects
