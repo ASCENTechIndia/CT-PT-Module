@@ -75,139 +75,132 @@ async function compListforSupRepo(
   page = 1,
   limit = 10,
 ) {
-  // console.log("Repo Params:", { ulbid, fromDate, toDate, status, page, limit });
   const offset = (Number(page) - 1) * Number(limit);
 
   let sql = `
-    select num_empctptwork_id,
-dat_empctptwork_date,
-var_empctptwork_latitude,
-var_empctptwork_longitude,
-num_empctptwork_id unique_id,
-var_empctptwork_supremark,
-var_empctptwork_supflag,
-var_user_username username,
-var_empctptwork_userid,
-num_empctptwork_toiletid,
-num_empctptwork_stageid,
-var_empctptwork_remark,
-dat_empctptwork_date,
-num_empctptwork_ulbid,
-num_ctpttype_wardid,
-var_ctpttype_toiletlocation,
-var_ctpttype_femaleseats,
-var_ctpttype_maleseats,
-var_ctpttype_totalseats,
-var_ctpttype_status,
-var_ctpttype_username,
-st.var_ctptstage_status,
-st.var_ctptstage_name,
-var_empctptwork_status
-from aorts.AORTS_EMPCTPTWORK_MST
-left join aorts_ctptlist_mas on num_ctpttype_id = num_empctptwork_id
-LEFT JOIN aorts_ctptstage_mas st
-        ON st.num_ctptstage_id = num_empctptwork_stageid
-INNER JOIN admins.aoma_user_def u
-        ON u.num_user_userid = var_empctptwork_userid
+    SELECT
+      w.num_empctptwork_id,
+      w.dat_empctptwork_date,
+      w.var_empctptwork_latitude,
+      w.var_empctptwork_longitude,
+      w.num_empctptwork_id AS unique_id,
+      w.var_empctptwork_supremark,
+      w.var_empctptwork_supflag,
+      u.var_user_username AS username,
+      w.var_empctptwork_userid,
+      w.num_empctptwork_toiletid,
+      w.num_empctptwork_stageid,
+      w.var_empctptwork_remark,
+      w.num_empctptwork_ulbid,
+      c.num_ctpttype_wardid,
+      c.var_ctpttype_toiletlocation,
+      c.var_ctpttype_femaleseats,
+      c.var_ctpttype_maleseats,
+      c.var_ctpttype_totalseats,
+      c.var_ctpttype_status,
+      c.var_ctpttype_username,
+      st.var_ctptstage_status,
+      st.var_ctptstage_name,
+      w.var_empctptwork_status
+    FROM aorts.AORTS_EMPCTPTWORK_MST w
+    LEFT JOIN aorts_ctptlist_mas c
+      ON c.num_ctpttype_id = w.num_empctptwork_toiletid
+    LEFT JOIN aorts_ctptstage_mas st
+      ON st.num_ctptstage_id = w.num_empctptwork_stageid
+    INNER JOIN admins.aoma_user_def u
+      ON u.num_user_userid = w.var_empctptwork_userid
+    WHERE w.num_empctptwork_ulbid = :ulbid
   `;
 
-  const binds = {
+  let binds = {
     ulbid: Number(ulbid),
   };
 
-  // ================= DATE FILTER =================
+  // Date Filter
   if (fromDate && toDate) {
     sql += `
-      AND TRUNC(dat_empctptwork_date)
+      AND TRUNC(w.dat_empctptwork_date)
       BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
       AND TO_DATE(:toDate, 'YYYY-MM-DD')
     `;
+
     binds.fromDate = fromDate;
     binds.toDate = toDate;
   }
 
-  // ================= STATUS FILTER =================
+  // Status Filter
   if (status && status !== "ALL") {
     if (status === "P") {
       sql += `
-      AND var_empctptwork_status IS NULL
-    `;
+        AND w.var_empctptwork_status IS NULL
+      `;
     } else {
       sql += `
-      AND var_empctptwork_status = :status
-    `;
+        AND w.var_empctptwork_status = :status
+      `;
       binds.status = status;
     }
   }
 
   sql += `
-    
-      AND num_empctptwork_ulbid = :ulbid
-
-    ORDER BY num_empctptwork_id DESC
-    OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
+    ORDER BY w.num_empctptwork_id DESC
+    OFFSET :offset ROWS
+    FETCH NEXT :limit ROWS ONLY
   `;
 
   binds.offset = Number(offset);
   binds.limit = Number(limit);
-  console.log("sql quryr :", sql)
-  console.log("sql quryr :", binds)
 
   const result = await executeQuery(sql, binds);
   const rows = result.rows || [];
 
   // ================= COUNT QUERY =================
-  // let countSql = `
-  //   SELECT COUNT(*) AS total FROM (
-  //     SELECT ROW_NUMBER() OVER (
-  //       PARTITION BY
-  //         e.var_empctptentry_userid,
-  //         e.num_empctptentry_toiletid,
-  //         TRUNC(e.dat_empctptentry_date)
-  //       ORDER BY e.dat_empctptentry_date DESC
-  //     ) AS rn,
-  //     e.num_empctptentry_ulbid
-  //     FROM aorts_empctptentry_mst e
-  //     LEFT JOIN aorts_ctptcitizencomplaint_mas c
-  //       ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-  //     WHERE e.num_empctptentry_stageid = 3
-  // `;
 
-  // const countBinds = {
-  //   ulbid: Number(ulbid),
-  // };
+  let countSql = `
+    SELECT COUNT(*) AS TOTAL
+    FROM aorts.AORTS_EMPCTPTWORK_MST w
+    LEFT JOIN aorts_ctptlist_mas c
+      ON c.num_ctpttype_id = w.num_empctptwork_toiletid
+    LEFT JOIN aorts_ctptstage_mas st
+      ON st.num_ctptstage_id = w.num_empctptwork_stageid
+    INNER JOIN admins.aoma_user_def u
+      ON u.num_user_userid = w.var_empctptwork_userid
+    WHERE w.num_empctptwork_ulbid = :ulbid
+  `;
 
-  // if (fromDate && toDate) {
-  //   countSql += `
-  //     AND TRUNC(e.dat_empctptentry_date)
-  //     BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
-  //     AND TO_DATE(:toDate, 'YYYY-MM-DD')
-  //   `;
-  //   countBinds.fromDate = fromDate;
-  //   countBinds.toDate = toDate;
-  // }
+  let countBinds = {
+    ulbid: Number(ulbid),
+  };
 
-  // if (status && status !== "ALL") {
-  //   if (status === "P") {
-  //     countSql += `
-  //     AND e.var_empctptentry_supflag IS NULL
-  //   `;
-  //   } else {
-  //     countSql += `
-  //     AND e.var_empctptentry_supflag = :status
-  //   `;
-  //     countBinds.status = status;
-  //   }
-  // }
+  // Date Filter
+  if (fromDate && toDate) {
+    countSql += `
+      AND TRUNC(w.dat_empctptwork_date)
+      BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
+      AND TO_DATE(:toDate, 'YYYY-MM-DD')
+    `;
 
-  // countSql += `
-  //   )
-  //   WHERE rn = 1
-  //     AND num_empctptentry_ulbid = :ulbid
-  // `;
+    countBinds.fromDate = fromDate;
+    countBinds.toDate = toDate;
+  }
+
+  // Status Filter
+  if (status && status !== "ALL") {
+    if (status === "P") {
+      countSql += `
+        AND w.var_empctptwork_status IS NULL
+      `;
+    } else {
+      countSql += `
+        AND w.var_empctptwork_status = :status
+      `;
+      countBinds.status = status;
+    }
+  }
 
   const countResult = await executeQuery(countSql, countBinds);
   const total = countResult.rows?.[0]?.TOTAL || 0;
+  console.log(total);
 
   return {
     data: rows,
@@ -400,75 +393,27 @@ async function compListforSIRepo(
   };
 }
 
-// async function getImages(ulbid, toiletId, applid) {
-//   let sql = `
-// SELECT num_empctptentry_id, dat_empctptentry_date, num_empctptentry_stageid,
-//         var_empctptentry_remark, num_empctptentry_ulbid,
-//         bolb_empctptentry_image,
-//         bolb_empctptentry_image2, bolb_empctptentry_image3,
-//         var_ctptstage_status, var_ctptstage_name
-//         FROM aorts_empctptentry_mst
-//         INNER JOIN admins.aoma_user_def ON num_user_userid = var_empctptentry_userid
-//         LEFT JOIN aorts_ctptlist_mas ctpt ON ctpt.num_ctpttype_id = num_empctptentry_toiletid
-//         LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = num_empctptentry_stageid
-//         WHERE num_empctptentry_ulbid= :ulbid 
-//         AND num_empctptentry_toiletid= :toiletId
-// AND TRUNC(dat_empctptentry_insdate)= (SELECT TRUNC(dat_empctptentry_date) FROM aorts_empctptentry_mst WHERE num_empctptentry_id= :applid )
-// ORDER BY num_empctptentry_stageid ASC
-//   `;
-
-//   const binds = {
-//     ulbid: Number(ulbid),
-//     toiletId: Number(toiletId),
-//     applid: Number(applid),
-//   };
-
-//   const result = await executeQuery(sql, binds);
-
-//   const rows = result.rows || [];
-
-//   for (const row of rows) {
-//     row.BOLB_EMPCTPTENTRY_IMAGE = await lobToBase64(
-//       row.BOLB_EMPCTPTENTRY_IMAGE,
-//     );
-
-//     row.BOLB_EMPCTPTENTRY_IMAGE2 = await lobToBase64(
-//       row.BOLB_EMPCTPTENTRY_IMAGE2,
-//     );
-
-//     row.BOLB_EMPCTPTENTRY_IMAGE3 = await lobToBase64(
-//       row.BOLB_EMPCTPTENTRY_IMAGE3,
-//     );
-//   }
-
-//   return rows;
-// }
-
 async function getImages(ulbid, toiletId, applid) {
-  let sql = `select w.num_empctptwork_id , 
-    d.dat_insdate , 
-    d.num_stage_id ,
-    d.bolb_empctptworkdetails_image , 
-    d.bolb_empctptworkdetails_image2 , 
-    d.bolb_empctptworkdetails_image3,
-    w.num_empctptwork_ulbid,
-    st.var_ctptstage_name,
-    st.var_ctptstage_status
-    from aorts.AORTS_EMPCTPTWORK_MST w
-    inner join aorts.AORTS_EMPCTPTWORKDETAILS_MST d on 
-    w.num_empctptwork_id = d.num_empctptwork_id
-    LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = d.num_stage_id
-    WHERE w.num_empctptwork_ulbid = :ulbid AND w.num_empctptwork_id = :applid
-    AND TRUNC(DAT_INSDATE)= (SELECT TRUNC(DAT_INSDATE) FROM AORTS_EMPCTPTWORK_MST WHERE num_empctptwork_id= :applid )
-    ORDER BY d.num_stage_id ASC`;
+  let sql = `
+SELECT num_empctptentry_id, dat_empctptentry_date, num_empctptentry_stageid,
+        var_empctptentry_remark, num_empctptentry_ulbid,
+        bolb_empctptentry_image,
+        bolb_empctptentry_image2, bolb_empctptentry_image3,
+        var_ctptstage_status, var_ctptstage_name
+        FROM aorts_empctptentry_mst
+        INNER JOIN admins.aoma_user_def ON num_user_userid = var_empctptentry_userid
+        LEFT JOIN aorts_ctptlist_mas ctpt ON ctpt.num_ctpttype_id = num_empctptentry_toiletid
+        LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = num_empctptentry_stageid
+        WHERE num_empctptentry_ulbid= :ulbid 
+        AND num_empctptentry_toiletid= :toiletId
+AND TRUNC(dat_empctptentry_insdate)= (SELECT TRUNC(dat_empctptentry_date) FROM aorts_empctptentry_mst WHERE num_empctptentry_id= :applid )
+ORDER BY num_empctptentry_stageid ASC
+  `;
 
-  // const binds = {
-  //   ulbid: Number(ulbid),
-  //   applid: Number(applid),
-  // };
   const binds = {
-    ulbid: ulbid,
-    applid: applid,
+    ulbid: Number(ulbid),
+    toiletId: Number(toiletId),
+    applid: Number(applid),
   };
 
   const result = await executeQuery(sql, binds);
@@ -476,16 +421,16 @@ async function getImages(ulbid, toiletId, applid) {
   const rows = result.rows || [];
 
   for (const row of rows) {
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE,
+    row.BOLB_EMPCTPTENTRY_IMAGE = await lobToBase64(
+      row.BOLB_EMPCTPTENTRY_IMAGE,
     );
 
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE2 = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
+    row.BOLB_EMPCTPTENTRY_IMAGE2 = await lobToBase64(
+      row.BOLB_EMPCTPTENTRY_IMAGE2,
     );
 
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE3 = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
+    row.BOLB_EMPCTPTENTRY_IMAGE3 = await lobToBase64(
+      row.BOLB_EMPCTPTENTRY_IMAGE3,
     );
   }
 

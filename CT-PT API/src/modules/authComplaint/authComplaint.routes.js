@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.post('/authComplaint', validate(authComplaintSchema), authComplaint);
 router.post('/complaintStatusUpdate', validate(complaintStatusSchema), complaintStatusUpdate);// vendor submitting his work
-router.post('/complaintWorkStatusIns', validate(complaintWorkStatusSchema), complaintWorkStatusIns);
+router.post('/complaintWorkStatusIns', complaintWorkStatusIns);
 
 router.get('/getCompListForSup', getCompListForSup);
 router.get('/getCompListForSI', getCompListForSI);
