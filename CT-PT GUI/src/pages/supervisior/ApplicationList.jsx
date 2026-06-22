@@ -8,6 +8,7 @@ const ApplicationList = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
   const [applications, setApplications] = useState([]);
+  const [stageId, setStageId] = useState("");
   const [originalApplicationData, setOriginalApplicationData] = useState([]);
   const [stageWiseImages, setStageWiseImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,11 +50,15 @@ const ApplicationList = () => {
         ...(statusFilter !== "" && { status: statusFilter }),
       };
 
-      const response = await apiClient.get(
-        "/authComplaint/getCompListForSup",
-        { params }
-      );
+      const response = await apiClient.get("/authComplaint/getCompListForSup", {
+        params,
+      });
       if (response.success && response.data) {
+        // check stage id
+        const stageId = response.data.data.find(
+          (item) => item.NUM_EMPCTPTWORK_STAGEID === 3,
+        );
+        setStageId(stageId);
         setApplications(response.data.data);
         setOriginalApplicationData(response.data.data);
         setCurrentPage(response.data.pagination.page);
@@ -522,10 +527,11 @@ const ApplicationList = () => {
                     <td>{formatDate(app.DAT_EMPCTPTWORK_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className={`btn btn-sm ${app.VAR_EMPCTPTWORK_SUPFLAG === "A"
+                        className={`btn btn-sm ${
+                          app.VAR_EMPCTPTWORK_SUPFLAG === "A"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
-                          }`}
+                        }`}
                         onClick={() => handleReviewClick(app)}
                         disabled={app.VAR_EMPCTPTWORK_SUPFLAG === "A"}
                         title={
@@ -590,8 +596,9 @@ const ApplicationList = () => {
                 ))}
 
                 <li
-                  className={`page-item ${currentPage === totalPages ? "disabled" : ""
-                    }`}
+                  className={`page-item ${
+                    currentPage === totalPages ? "disabled" : ""
+                  }`}
                 >
                   <button
                     className="page-link"
@@ -602,8 +609,9 @@ const ApplicationList = () => {
                   </button>
                 </li>
                 <li
-                  className={`page-item ${currentPage === totalPages ? "disabled" : ""
-                    }`}
+                  className={`page-item ${
+                    currentPage === totalPages ? "disabled" : ""
+                  }`}
                 >
                   <button
                     className="page-link"
@@ -816,7 +824,7 @@ const ApplicationList = () => {
                   type="button"
                   className="btn btn-danger"
                   onClick={handleReject}
-                  disabled={!supervisorRemark.trim()}
+                  disabled={!stageId}
                 >
                   <i className="bi bi-x-circle me-1"></i> Reject
                 </button>
@@ -824,7 +832,7 @@ const ApplicationList = () => {
                   type="button"
                   className="btn btn-success"
                   onClick={handleApprove}
-                  disabled={!supervisorRemark.trim()}
+                  disabled={!stageId}
                 >
                   <i className="bi bi-check-circle me-1"></i> Approve
                 </button>
