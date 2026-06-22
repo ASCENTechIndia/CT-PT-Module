@@ -1,4 +1,4 @@
-const { z } = require('zod');
+const { z } = require("zod");
 
 const authComplaintSchema = z.object({
   userId: z.string().trim().min(1),
@@ -29,8 +29,26 @@ const complaintStatusSchema = z.object({
   reworkflag: z.string().optional(),
 });
 
+const complaintWorkStatusSchema = z.object({
+  userId: z.string().trim().min(1),
+  ulbId: z.coerce.number().int().positive(),
+  attndDate: z.optional(),
+  attndLat: z.string().trim().min(1),
+  attndLong: z.string().trim().min(1),
+  appSource: z.string().trim().min(1),
+  flag: z.string().trim().min(1),
+  remark: z.string().trim().min(1),
+  toiletId: z.string().trim().min(1),
+  solvcompimg1: z.optional(),
+  solvcompimg2: z.optional(),
+  solvcompimg3: z.optional(),
+  workId: z.coerce.number().int(),
+  workFlag: z.string().trim().min(1),
+});
+
 module.exports = {
   authComplaintSchema,
+  complaintWorkStatusSchema,
 };
 
 module.exports.complaintStatusSchema = complaintStatusSchema;

@@ -9,6 +9,7 @@ const {
   getSupervisorStatusRepo,
   rslvdListbyVendorListRepo,
   getReworkImages,
+  complaintWorkStatusInsRepo,
 } = require("./authComplaint.repo");
 
 const { complaintStatusUpdateRepo } = require("./authComplaint.repo");
@@ -106,6 +107,14 @@ async function getReworkImagesService(complaintid) {
   return getReworkImages(complaintid);
 }
 
+async function complaintStatusUpdateService(payload) {
+  return complaintStatusUpdateRepo(payload);
+}
+
+async function complaintWorkStatusInsService(payload) {
+  return complaintWorkStatusInsRepo(payload);
+}
+
 module.exports = {
   authComplaintService,
   getCompListForSupService,
@@ -117,10 +126,7 @@ module.exports = {
   getSolvedComplaintImagesService,
   getSupervisorStatusService,
   getReworkImagesService,
+  complaintWorkStatusInsService,
 };
-
-async function complaintStatusUpdateService(payload) {
-  return complaintStatusUpdateRepo(payload);
-}
 
 module.exports.complaintStatusUpdateService = complaintStatusUpdateService;

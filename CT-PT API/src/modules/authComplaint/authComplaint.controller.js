@@ -9,6 +9,7 @@ const {
   getSupervisorStatusService,
   getrslvdListbyVendorListService,
   getReworkImagesService,
+  complaintWorkStatusInsService,
 } = require("./authComplaint.service");
 const { complaintStatusUpdateService } = require("./authComplaint.service");
 const { auditLog } = require("../../utils/audit-log");
@@ -525,19 +526,6 @@ async function getSupervisorStatusCon(req, res, next) {
   }
 }
 
-module.exports = {
-  authComplaint,
-  getCompListForSup,
-  getCompListForSI,
-  getImagesCon,
-  resolvedListbyVendor,
-  resolvedListbySup,
-  getSolvedComplaintImagesCon,
-  getSupervisorStatusCon,
-  resolvedListbyVendorList,
-  getReworkComplaintImages,
-};
-
 async function complaintStatusUpdate(req, res, next) {
   try {
     const body = req.body || {};
@@ -594,5 +582,68 @@ async function complaintStatusUpdate(req, res, next) {
     return next(error);
   }
 }
+
+async function complaintWorkStatusIns(req, res, next) {
+  try {
+    const body = req.body || {};
+
+    const payload = {
+      userId: body.userId,
+      ulbId: body.ulbId,
+      attndDate: body.attndDate,
+      attndLat: body.attndLat,
+      attndLong: body.attndLong,
+      appSource: body.appSource,
+      flag: body.flag,
+      remark: body.remark,
+      toiletId: body.toiletId,
+      solvcompimg1: body.solvcompimg1,
+      solvcompimg2: body.solvcompimg2,
+      solvcompimg3: body.solvcompimg3,
+      workId: body.workId,
+      workFlag: body.workFlag,
+    };
+
+    const out = await complaintWorkStatusInsService(payload)
+    const isSuccess = String(out.errorCode) === "9999";
+
+    if (isSuccess) {
+      logApiSuccess(req, 200, {}, "Complaint work status inserted succeeded");
+    } else {
+      logApiError(req, 400, out.message, "Complaint work status inserted failed");
+    }
+
+    auditLog({
+      action: "CTPT_COMPLAINT_WORK_STATUS_INSERT",
+      actor: req.user?.userId || payload.userId || "system",
+      module: "authComplaint",
+      status: isSuccess ? "SUCCESS" : "FAILED",
+      details: {
+        outErrorCode: out.errorCode,
+        outErrorMsg: out.message,
+      },
+      requestMeta: requestMeta(req),
+    });
+
+    return res.ok(out);
+  } catch (error) {
+    logApiError(req, 500, error.message, "Complaint work status insert error");
+    return next(error);
+  }
+}
+
+module.exports = {
+  authComplaint,
+  getCompListForSup,
+  getCompListForSI,
+  getImagesCon,
+  resolvedListbyVendor,
+  resolvedListbySup,
+  getSolvedComplaintImagesCon,
+  getSupervisorStatusCon,
+  resolvedListbyVendorList,
+  getReworkComplaintImages,
+  complaintWorkStatusIns,
+};
 
 module.exports.complaintStatusUpdate = complaintStatusUpdate;

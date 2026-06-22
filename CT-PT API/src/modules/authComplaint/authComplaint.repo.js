@@ -940,7 +940,7 @@ async function getReworkImages(complaintid) {
 
   for (const row of rows) {
     row.IMAGE1 = await lobToBase64(row.IMAGE1);
-    row.IMAGE2 = await lobToBase64(row.IMAGE2 );
+    row.IMAGE2 = await lobToBase64(row.IMAGE2);
     row.IMAGE3 = await lobToBase64(row.IMAGE3);
   }
 
@@ -953,19 +953,6 @@ async function getSupervisorStatusRepo() {
     { value: "CLOSED", label: "Closed" },
   ];
 }
-
-module.exports = {
-  authComplaintRepo,
-  compListforSupRepo,
-  compListforSIRepo,
-  getImages,
-  rslvdListbyVendorRepo,
-  rslvdListbySupRepo,
-  rslvdListbyVendorListRepo,
-  getSolvedComplaintImagesRepo,
-  getSupervisorStatusRepo,
-  getReworkImages,
-};
 
 async function complaintStatusUpdateRepo(payload) {
   const statement = `
@@ -1056,5 +1043,99 @@ async function complaintStatusUpdateRepo(payload) {
   };
 }
 
-// expose new repo function
+async function complaintWorkStatusInsRepo(payload) {
+  const statement = `
+    BEGIN
+      aorts.aorts_ctptworkstatus_ins(
+        :in_UserId,
+        :in_ULBId,
+        :in_attnd_date,
+        :in_attnd_latitude,
+        :in_attnd_longitude,
+        :in_appsource,
+        :in_flag,
+        :in_remark,
+        :in_toiletId,
+        :in_solvcompimg1,
+        :in_solvcompimg2,
+        :in_solvcompimg3,
+        :in_workid,
+        :in_workflag,
+        :Out_ErrorCode,
+        :Out_ErrorMsg,
+        :out_str
+      );
+    END;
+  `;
+
+  const binds = {
+    in_UserId: payload.userId,
+    in_ULBId: payload.ulbId,
+    in_attnd_date: payload.attndDate,
+    in_attnd_latitude: payload.attndLat,
+    in_attnd_longitude: payload.attndLong,
+    in_appsource: payload.appSource,
+    in_flag: payload.flag,
+    in_remark: payload.remark,
+    in_toiletId: payload.toiletId,
+    in_solvcompimg1: {
+      val: payload.solvcompimg1
+        ? Buffer.from(payload.solvcompimg1, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+    in_solvcompimg2: {
+      val: payload.solvcompimg2
+        ? Buffer.from(payload.solvcompimg2, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+    in_solvcompimg3: {
+      val: payload.solvcompimg3
+        ? Buffer.from(payload.solvcompimg3, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+    in_workid: payload.workId,
+    in_workflag: payload.workFlag,
+    Out_ErrorCode: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.NUMBER,
+    },
+    Out_ErrorMsg: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
+    out_str: {
+      dir: oracledb.BIND_OUT,
+      type: oracledb.STRING,
+      maxSize: 1000,
+    },
+  };
+
+  const result = await executeProcedure({ statement, binds, useTx: false });
+  const out = result.outBinds || {};
+
+  return {
+    errorCode: out.Out_ErrorCode,
+    message: out.Out_ErrorMsg,
+    out_str: out.out_str,
+  };
+}
+
+module.exports = {
+  authComplaintRepo,
+  compListforSupRepo,
+  compListforSIRepo,
+  getImages,
+  rslvdListbyVendorRepo,
+  rslvdListbySupRepo,
+  rslvdListbyVendorListRepo,
+  getSolvedComplaintImagesRepo,
+  getSupervisorStatusRepo,
+  getReworkImages,
+  complaintWorkStatusInsRepo,
+};
+
 module.exports.complaintStatusUpdateRepo = complaintStatusUpdateRepo;
