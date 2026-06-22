@@ -129,9 +129,9 @@ const ApplicationListSI = () => {
         }
 
         const images = [
-          entry.BOLB_EMPCTPTENTRY_IMAGE,
-          entry.BOLB_EMPCTPTENTRY_IMAGE2,
-          entry.BOLB_EMPCTPTENTRY_IMAGE3,
+          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE,
+          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
+          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
         ].filter((img) => img && img !== null && img.trim() !== "");
 
         stagesMap.get(stageName).images.push(...images);

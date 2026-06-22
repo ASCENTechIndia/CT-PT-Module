@@ -91,7 +91,7 @@ const ApplicationList = () => {
   const fetchStageWiseImages = async (application) => {
     try {
       const response = await apiClient.get(
-        `/authComplaint/getImages?ulbid=${ulbid}&applid=${application.NUM_EMPCTPTENTRY_ID}`,
+        `/authComplaint/getImages?ulbid=${ulbid}&applid=${application.NUM_EMPCTPTWORK_ID}`,
       );
 
       if (response.success && response.data) {
@@ -510,28 +510,29 @@ const ApplicationList = () => {
               </thead>
               <tbody>
                 {applications.map((app, idx) => (
-                  <tr key={app.NUM_EMPCTPTENTRY_ID || idx}>
+                  <tr key={app.NUM_EMPCTPTWORK_ID || idx}>
                     <td className="fw-semibold">
                       Ward {app.NUM_CTPTTYPE_WARDID}
                     </td>
+
                     <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
                     <td>{app.VAR_CTPTTYPE_USERNAME}</td>
                     <td>{app.USERNAME}</td>
-                    <td>{getBadge(app.VAR_EMPCTPTENTRY_SUPFLAG)}</td>
+                    <td>{getBadge(app.VAR_EMPCTPTWORK_SUPFLAG)}</td>
                     <td style={{ maxWidth: "250px" }}>
-                      <small>{app.VAR_EMPCTPTENTRY_REMARK}</small>
+                      <small>{app.VAR_EMPCTPTWORK_REMARK}</small>
                     </td>
-                    <td>{formatDate(app.DAT_EMPCTPTENTRY_DATE)}</td>
+                    <td>{formatDate(app.DAT_EMPCTPTWORK_DATE)}</td>
                     <td className="text-end">
                       <button
-                        className={`btn btn-sm ${app.VAR_EMPCTPTENTRY_SUPFLAG === "A"
+                        className={`btn btn-sm ${app.VAR_EMPCTPTWORK_SUPFLAG === "A"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                           }`}
                         onClick={() => handleReviewClick(app)}
-                        disabled={app.VAR_EMPCTPTENTRY_SUPFLAG === "A"}
+                        disabled={app.VAR_EMPCTPTWORK_SUPFLAG === "A"}
                         title={
-                          app.VAR_EMPCTPTENTRY_SUPFLAG === "A"
+                          app.VAR_EMPCTPTWORK_SUPFLAG === "A"
                             ? "Already approved"
                             : ""
                         }
