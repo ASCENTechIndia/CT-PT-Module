@@ -49,13 +49,10 @@ const ApplicationList = () => {
         ...(statusFilter !== "" && { status: statusFilter }),
       };
 
-      console.log(params);
-
       const response = await apiClient.get(
         "/authComplaint/getCompListForSup",
         { params }
       );
-      console.log(response);
       if (response.success && response.data) {
         setApplications(response.data.data);
         setOriginalApplicationData(response.data.data);

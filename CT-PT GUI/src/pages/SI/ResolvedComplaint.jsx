@@ -164,7 +164,6 @@ const ResolvedComplaint = () => {
           imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
         }));
         const formatedData = sortAndFormatByDate(data);
-        console.log("formated images :", formatedData);
         setReworkImages(formatedData);
       } else {
         setReworkImages([]);
