@@ -420,27 +420,75 @@ async function compListforSIRepo(
   };
 }
 
-async function getImages(ulbid, toiletId, applid) {
-  let sql = `
-SELECT num_empctptentry_id, dat_empctptentry_date, num_empctptentry_stageid,
-        var_empctptentry_remark, num_empctptentry_ulbid,
-        bolb_empctptentry_image,
-        bolb_empctptentry_image2, bolb_empctptentry_image3,
-        var_ctptstage_status, var_ctptstage_name
-        FROM aorts_empctptentry_mst
-        INNER JOIN admins.aoma_user_def ON num_user_userid = var_empctptentry_userid
-        LEFT JOIN aorts_ctptlist_mas ctpt ON ctpt.num_ctpttype_id = num_empctptentry_toiletid
-        LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = num_empctptentry_stageid
-        WHERE num_empctptentry_ulbid= :ulbid 
-        AND num_empctptentry_toiletid= :toiletId
-AND TRUNC(dat_empctptentry_insdate)= (SELECT TRUNC(dat_empctptentry_date) FROM aorts_empctptentry_mst WHERE num_empctptentry_id= :applid )
-ORDER BY num_empctptentry_stageid ASC
-  `;
+// async function getImages(ulbid, toiletId, applid) {
+//   let sql = `
+// SELECT num_empctptentry_id, dat_empctptentry_date, num_empctptentry_stageid,
+//         var_empctptentry_remark, num_empctptentry_ulbid,
+//         bolb_empctptentry_image,
+//         bolb_empctptentry_image2, bolb_empctptentry_image3,
+//         var_ctptstage_status, var_ctptstage_name
+//         FROM aorts_empctptentry_mst
+//         INNER JOIN admins.aoma_user_def ON num_user_userid = var_empctptentry_userid
+//         LEFT JOIN aorts_ctptlist_mas ctpt ON ctpt.num_ctpttype_id = num_empctptentry_toiletid
+//         LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = num_empctptentry_stageid
+//         WHERE num_empctptentry_ulbid= :ulbid 
+//         AND num_empctptentry_toiletid= :toiletId
+// AND TRUNC(dat_empctptentry_insdate)= (SELECT TRUNC(dat_empctptentry_date) FROM aorts_empctptentry_mst WHERE num_empctptentry_id= :applid )
+// ORDER BY num_empctptentry_stageid ASC
+//   `;
 
+//   const binds = {
+//     ulbid: Number(ulbid),
+//     toiletId: Number(toiletId),
+//     applid: Number(applid),
+//   };
+
+//   const result = await executeQuery(sql, binds);
+
+//   const rows = result.rows || [];
+
+//   for (const row of rows) {
+//     row.BOLB_EMPCTPTENTRY_IMAGE = await lobToBase64(
+//       row.BOLB_EMPCTPTENTRY_IMAGE,
+//     );
+
+//     row.BOLB_EMPCTPTENTRY_IMAGE2 = await lobToBase64(
+//       row.BOLB_EMPCTPTENTRY_IMAGE2,
+//     );
+
+//     row.BOLB_EMPCTPTENTRY_IMAGE3 = await lobToBase64(
+//       row.BOLB_EMPCTPTENTRY_IMAGE3,
+//     );
+//   }
+
+//   return rows;
+// }
+
+async function getImages(ulbid, toiletId, applid) {
+  let sql = `select w.num_empctptwork_id , 
+    d.dat_insdate , 
+    d.num_stage_id ,
+    d.bolb_empctptworkdetails_image , 
+    d.bolb_empctptworkdetails_image2 , 
+    d.bolb_empctptworkdetails_image3,
+    w.num_empctptwork_ulbid,
+    st.var_ctptstage_name,
+    st.var_ctptstage_status
+    from aorts.AORTS_EMPCTPTWORK_MST w
+    inner join aorts.AORTS_EMPCTPTWORKDETAILS_MST d on 
+    w.num_empctptwork_id = d.num_empctptwork_id
+    LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = d.num_stage_id
+    WHERE w.num_empctptwork_ulbid = :ulbid AND w.num_empctptwork_id = :applid
+    AND TRUNC(DAT_INSDATE)= (SELECT TRUNC(DAT_INSDATE) FROM AORTS_EMPCTPTWORK_MST WHERE num_empctptwork_id= :applid )
+    ORDER BY d.num_stage_id ASC`;
+
+  // const binds = {
+  //   ulbid: Number(ulbid),
+  //   applid: Number(applid),
+  // };
   const binds = {
-    ulbid: Number(ulbid),
-    toiletId: Number(toiletId),
-    applid: Number(applid),
+    ulbid: ulbid,
+    applid: applid,
   };
 
   const result = await executeQuery(sql, binds);
@@ -448,16 +496,16 @@ ORDER BY num_empctptentry_stageid ASC
   const rows = result.rows || [];
 
   for (const row of rows) {
-    row.BOLB_EMPCTPTENTRY_IMAGE = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE,
+    row.BOLB_EMPCTPTWORKDETAILS_IMAGE = await lobToBase64(
+      row.BOLB_EMPCTPTWORKDETAILS_IMAGE,
     );
 
-    row.BOLB_EMPCTPTENTRY_IMAGE2 = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE2,
+    row.BOLB_EMPCTPTWORKDETAILS_IMAGE2 = await lobToBase64(
+      row.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
     );
 
-    row.BOLB_EMPCTPTENTRY_IMAGE3 = await lobToBase64(
-      row.BOLB_EMPCTPTENTRY_IMAGE3,
+    row.BOLB_EMPCTPTWORKDETAILS_IMAGE3 = await lobToBase64(
+      row.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
     );
   }
 

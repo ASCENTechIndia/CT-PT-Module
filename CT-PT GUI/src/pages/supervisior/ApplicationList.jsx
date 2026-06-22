@@ -91,7 +91,7 @@ const ApplicationList = () => {
   const fetchStageWiseImages = async (application) => {
     try {
       const response = await apiClient.get(
-        `/authComplaint/getImages?ulbid=${ulbid}&toiletId=${application.NUM_EMPCTPTENTRY_TOILETID}&applid=${application.NUM_EMPCTPTENTRY_ID}`,
+        `/authComplaint/getImages?ulbid=${ulbid}&applid=${application.NUM_EMPCTPTENTRY_ID}`,
       );
 
       if (response.success && response.data) {
@@ -99,7 +99,6 @@ const ApplicationList = () => {
       }
     } catch (err) {
       console.error("Error fetching stage-wise images:", err);
-      // Don't show error for images, they might already be in the main response
     }
   };
 
@@ -143,9 +142,9 @@ const ApplicationList = () => {
         }
 
         const images = [
-          entry.BOLB_EMPCTPTENTRY_IMAGE,
-          entry.BOLB_EMPCTPTENTRY_IMAGE2,
-          entry.BOLB_EMPCTPTENTRY_IMAGE3,
+          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE,
+          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
+          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
         ].filter((img) => img && img !== null && img.trim() !== "");
 
         stagesMap.get(stageName).images.push(...images);
