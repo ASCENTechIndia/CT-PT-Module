@@ -79,57 +79,36 @@ async function compListforSupRepo(
   const offset = (Number(page) - 1) * Number(limit);
 
   let sql = `
-    SELECT * FROM (
-      SELECT
-        e.num_empctptentry_id,
-        e.dat_empctptentry_date,
-        e.var_empctptentry_latitude,
-        e.num_empctptentry_id AS uniqueid,
-        e.var_empctptentry_supremark,
-        e.var_empctptentry_supflag,
-        u.var_user_username AS username,
-        e.var_empctptentry_userid AS userid,
-        e.var_empctptentry_longitude,
-        e.num_empctptentry_toiletid,
-        e.num_empctptentry_stageid,
-        e.var_empctptentry_remark,
-        e.dat_empctptentry_insdate,
-        e.num_empctptentry_ulbid,
-
-        ctpt.num_ctpttype_wardid,
-        ctpt.var_ctpttype_toiletlocation,
-        ctpt.var_ctpttype_femaleseats,
-        ctpt.var_ctpttype_maleseats,
-        ctpt.var_ctpttype_totalseats,
-        ctpt.var_ctpttype_status,
-        ctpt.var_ctpttype_username,
-
-        st.var_ctptstage_status,
-        st.var_ctptstage_name,
-
-        ROW_NUMBER() OVER (
-          PARTITION BY
-            e.var_empctptentry_userid,
-            e.num_empctptentry_toiletid,
-            TRUNC(e.dat_empctptentry_date)
-          ORDER BY e.dat_empctptentry_date DESC
-        ) AS rn
-
-      FROM aorts_empctptentry_mst e
-
-      INNER JOIN admins.aoma_user_def u
-        ON u.num_user_userid = e.var_empctptentry_userid
-
-      LEFT JOIN aorts_ctptlist_mas ctpt
-        ON ctpt.num_ctpttype_id = e.num_empctptentry_toiletid
-
-      LEFT JOIN aorts_ctptstage_mas st
-        ON st.num_ctptstage_id = e.num_empctptentry_stageid
-
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-
-      WHERE e.num_empctptentry_stageid = 3
+    select num_empctptwork_id,
+dat_empctptwork_date,
+var_empctptwork_latitude,
+var_empctptwork_longitude,
+num_empctptwork_id unique_id,
+var_empctptwork_supremark,
+var_empctptwork_supflag,
+var_user_username username,
+var_empctptwork_userid,
+num_empctptwork_toiletid,
+num_empctptwork_stageid,
+var_empctptwork_remark,
+dat_empctptwork_date,
+num_empctptwork_ulbid,
+num_ctpttype_wardid,
+var_ctpttype_toiletlocation,
+var_ctpttype_femaleseats,
+var_ctpttype_maleseats,
+var_ctpttype_totalseats,
+var_ctpttype_status,
+var_ctpttype_username,
+st.var_ctptstage_status,
+st.var_ctptstage_name,
+var_empctptwork_status
+from aorts.AORTS_EMPCTPTWORK_MST
+left join aorts_ctptlist_mas on num_ctpttype_id = num_empctptwork_id
+LEFT JOIN aorts_ctptstage_mas st
+        ON st.num_ctptstage_id = num_empctptwork_stageid
+INNER JOIN admins.aoma_user_def u
+        ON u.num_user_userid = var_empctptwork_userid
   `;
 
   const binds = {
@@ -139,7 +118,7 @@ async function compListforSupRepo(
   // ================= DATE FILTER =================
   if (fromDate && toDate) {
     sql += `
-      AND TRUNC(e.dat_empctptentry_date)
+      AND TRUNC(dat_empctptwork_date)
       BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
       AND TO_DATE(:toDate, 'YYYY-MM-DD')
     `;
@@ -151,80 +130,81 @@ async function compListforSupRepo(
   if (status && status !== "ALL") {
     if (status === "P") {
       sql += `
-      AND e.var_empctptentry_supflag IS NULL
+      AND var_empctptwork_status IS NULL
     `;
     } else {
       sql += `
-      AND e.var_empctptentry_supflag = :status
+      AND var_empctptwork_status = :status
     `;
       binds.status = status;
     }
   }
 
   sql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
+    
+      AND num_empctptwork_ulbid = :ulbid
 
-    ORDER BY num_empctptentry_id DESC
+    ORDER BY num_empctptwork_id DESC
     OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
   `;
 
   binds.offset = Number(offset);
   binds.limit = Number(limit);
+  console.log("sql quryr :", sql)
+  console.log("sql quryr :", binds)
 
   const result = await executeQuery(sql, binds);
   const rows = result.rows || [];
 
   // ================= COUNT QUERY =================
-  let countSql = `
-    SELECT COUNT(*) AS total FROM (
-      SELECT ROW_NUMBER() OVER (
-        PARTITION BY
-          e.var_empctptentry_userid,
-          e.num_empctptentry_toiletid,
-          TRUNC(e.dat_empctptentry_date)
-        ORDER BY e.dat_empctptentry_date DESC
-      ) AS rn,
-      e.num_empctptentry_ulbid
-      FROM aorts_empctptentry_mst e
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-      WHERE e.num_empctptentry_stageid = 3
-  `;
+  // let countSql = `
+  //   SELECT COUNT(*) AS total FROM (
+  //     SELECT ROW_NUMBER() OVER (
+  //       PARTITION BY
+  //         e.var_empctptentry_userid,
+  //         e.num_empctptentry_toiletid,
+  //         TRUNC(e.dat_empctptentry_date)
+  //       ORDER BY e.dat_empctptentry_date DESC
+  //     ) AS rn,
+  //     e.num_empctptentry_ulbid
+  //     FROM aorts_empctptentry_mst e
+  //     LEFT JOIN aorts_ctptcitizencomplaint_mas c
+  //       ON e.num_empctptentry_toiletid = c.num_complaint_toilet
+  //     WHERE e.num_empctptentry_stageid = 3
+  // `;
 
-  const countBinds = {
-    ulbid: Number(ulbid),
-  };
+  // const countBinds = {
+  //   ulbid: Number(ulbid),
+  // };
 
-  if (fromDate && toDate) {
-    countSql += `
-      AND TRUNC(e.dat_empctptentry_date)
-      BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
-      AND TO_DATE(:toDate, 'YYYY-MM-DD')
-    `;
-    countBinds.fromDate = fromDate;
-    countBinds.toDate = toDate;
-  }
+  // if (fromDate && toDate) {
+  //   countSql += `
+  //     AND TRUNC(e.dat_empctptentry_date)
+  //     BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
+  //     AND TO_DATE(:toDate, 'YYYY-MM-DD')
+  //   `;
+  //   countBinds.fromDate = fromDate;
+  //   countBinds.toDate = toDate;
+  // }
 
-  if (status && status !== "ALL") {
-    if (status === "P") {
-      countSql += `
-      AND e.var_empctptentry_supflag IS NULL
-    `;
-    } else {
-      countSql += `
-      AND e.var_empctptentry_supflag = :status
-    `;
-      countBinds.status = status;
-    }
-  }
+  // if (status && status !== "ALL") {
+  //   if (status === "P") {
+  //     countSql += `
+  //     AND e.var_empctptentry_supflag IS NULL
+  //   `;
+  //   } else {
+  //     countSql += `
+  //     AND e.var_empctptentry_supflag = :status
+  //   `;
+  //     countBinds.status = status;
+  //   }
+  // }
 
-  countSql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
-  `;
+  // countSql += `
+  //   )
+  //   WHERE rn = 1
+  //     AND num_empctptentry_ulbid = :ulbid
+  // `;
 
   const countResult = await executeQuery(countSql, countBinds);
   const total = countResult.rows?.[0]?.TOTAL || 0;
