@@ -7,7 +7,6 @@ import { useAuth } from "../../context/AuthContext";
 const ApplicationListSI = () => {
   const { user } = useAuth();
   const [applications, setApplications] = useState([]);
-  const [originalApplicationData, setOriginalApplicationData] = useState([]);
   const [stageWiseImages, setStageWiseImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +26,7 @@ const ApplicationListSI = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [dateFilter, setDateFilter] = useState({
     from: getTodayDate(),
     to: getTodayDate(),
@@ -42,25 +41,33 @@ const ApplicationListSI = () => {
     return `${year}-${month}-${day}`;
   }
 
-  // Fetch applications from API
   const fetchApplications = async (page = 1) => {
     try {
       setLoading(true);
+      const params = new URLSearchParams();
+      params.append("ulbid", 4);
+      params.append("page", page);
+      params.append("limit", pageSize);
+
+      if (dateFilter.from) params.append("fromDate", dateFilter.from);
+      if (dateFilter.to) params.append("toDate", dateFilter.to);
+
+      if (statusFilter !== "all") params.append("status", statusFilter);
+
       const response = await apiClient.get(
-        `/authComplaint/getCompListForSI?ulbid=4&page=${page}&limit=${pageSize}`,
+        `/authComplaint/getCompListForSI?${params.toString()}`,
       );
 
       if (response.success && response.data) {
         setApplications(response.data.data);
-        setOriginalApplicationData(response.data.data);
         setCurrentPage(response.data.pagination.page);
         setTotalPages(response.data.pagination.totalPages);
         setTotalRecords(response.data.pagination.total);
       }
     } catch (err) {
       console.error("Error fetching applications:", err);
-      setModalType("error");
-      setModalTitle("Error");
+      setModalType("");
+      setModalTitle("");
       setModalMessage("Failed to load applications. Please try again later.");
       setIsModalOpen(true);
     } finally {
@@ -68,24 +75,25 @@ const ApplicationListSI = () => {
     }
   };
 
-  // Fetch applications on component mount
   useEffect(() => {
     fetchApplications(1);
   }, []);
+
+  useEffect(() => {
+    fetchApplications(1);
+  }, [dateFilter, statusFilter]);
 
   // Fetch stage-wise images for selected application
   const fetchStageWiseImages = async (application) => {
     try {
       const response = await apiClient.get(
-        `/authComplaint/getImages?ulbid=4&toiletId=${application.NUM_EMPCTPTENTRY_TOILETID}&applid=${application.NUM_EMPCTPTENTRY_ID}`,
+        `/authComplaint/getImages?ulbid=4&toiletId=${application.NUM_EMPCTPTWORK_TOILETID}&applid=${application.NUM_EMPCTPTWORK_ID}`,
       );
-
       if (response.success && response.data) {
         setStageWiseImages(response.data);
       }
     } catch (err) {
       console.error("Error fetching stage-wise images:", err);
-      // Don't show error for images, they might already be in the main response
     }
   };
 
@@ -93,11 +101,8 @@ const ApplicationListSI = () => {
   const handleReviewClick = async (application) => {
     setSelectedApplication(application);
     setSupervisorRemark("");
-    setStageWiseImages([]); // Reset images
-
-    // Fetch stage-wise images
+    setStageWiseImages([]);
     await fetchStageWiseImages(application);
-
     setShowModal(true);
   };
 
@@ -116,28 +121,20 @@ const ApplicationListSI = () => {
   // Group images by stage
   const getImagesByStage = () => {
     const stagesMap = new Map();
-
-    // If stageWiseImages is populated, use it
     if (stageWiseImages && stageWiseImages.length > 0) {
       stageWiseImages.forEach((entry) => {
         const stageName = entry.VAR_CTPTSTAGE_NAME;
         if (!stagesMap.has(stageName)) {
-          stagesMap.set(stageName, {
-            stageName: stageName,
-            images: [],
-          });
+          stagesMap.set(stageName, { stageName, images: [] });
         }
-
         const images = [
           entry.BOLB_EMPCTPTWORKDETAILS_IMAGE,
           entry.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
           entry.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
         ].filter((img) => img && img !== null && img.trim() !== "");
-
         stagesMap.get(stageName).images.push(...images);
       });
     }
-
     return Array.from(stagesMap.values());
   };
 
@@ -150,31 +147,27 @@ const ApplicationListSI = () => {
       setIsModalOpen(true);
       return;
     }
-
     try {
       const payload = {
-        userId: user.userId, // TODO: Get from user context/login
-        applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
+        userId: user.userId,
+        applId: selectedApplication.NUM_EMPCTPTWORK_ID,
         ulbId: 4,
-        mode: 2, // 1 for supervisor
-        status: "A", // A for approve
+        mode: 2,
+        status: "A",
         remark: supervisorRemark,
       };
-
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
         payload,
       );
-
       if (response.success) {
         setModalType("success");
         setModalTitle("Success");
         setModalMessage(response.data.message);
         setIsModalOpen(true);
-
         setShowModal(false);
         setSupervisorRemark("");
-        fetchApplications(currentPage); // Refresh the list with current page
+        fetchApplications(currentPage);
       }
     } catch (err) {
       console.error("Error approving application:", err);
@@ -194,31 +187,27 @@ const ApplicationListSI = () => {
       setIsModalOpen(true);
       return;
     }
-
     try {
       const payload = {
-        userId: user.userId, // TODO: Get from user context/login
-        applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
+        userId: user.userId,
+        applId: selectedApplication.NUM_EMPCTPTWORK_ID,
         ulbId: 4,
-        mode: 2, // 1 for supervisor
-        status: "R", // R for reject
+        mode: 2,
+        status: "R",
         remark: supervisorRemark,
       };
-
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
         payload,
       );
-
       if (response.success) {
         setModalType("success");
         setModalTitle("Success");
         setModalMessage(response.data.message);
         setIsModalOpen(true);
-
         setShowModal(false);
         setSupervisorRemark("");
-        fetchApplications(currentPage); // Refresh the list with current page
+        fetchApplications(currentPage);
       }
     } catch (err) {
       console.error("Error rejecting application:", err);
@@ -243,34 +232,26 @@ const ApplicationListSI = () => {
     const maxPagesToShow = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
     let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
     if (endPage - startPage + 1 < maxPagesToShow) {
       startPage = Math.max(1, endPage - maxPagesToShow + 1);
     }
-
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-
     return pages;
   };
 
-  // Render image thumbnails with click handler
+  // Render image thumbnails
   const renderImageGallery = (images) => {
     const openImageInNewTab = (img) => {
       try {
-        // Convert base64 to blob
         const binaryString = atob(img);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
         const blob = new Blob([bytes], { type: "image/jpeg" });
-
-        // Create object URL from blob
         const blobUrl = URL.createObjectURL(blob);
-
-        // Open in new tab
         window.open(blobUrl, "_blank");
       } catch (err) {
         console.error("Error opening image:", err);
@@ -323,6 +304,12 @@ const ApplicationListSI = () => {
           <i className="bi bi-x-circle me-1"></i> Rejected
         </span>
       );
+    } else if (flag === "C") {
+      return (
+        <span className="badge bg-primary rounded-pill px-3 py-2">
+          <i className="bi bi-x-circle me-1"></i> Completed
+        </span>
+      );
     } else {
       return (
         <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
@@ -332,55 +319,30 @@ const ApplicationListSI = () => {
     }
   };
 
-  // Helper function to compare only the date part (YYYY-MM-DD)
-  const isDateInRange = (dateISO, fromDate, toDate) => {
-    if (!dateISO) return false;
-    const dateOnly = dateISO.split("T")[0]; // "2026-05-29"
-    if (fromDate && toDate) {
-      return dateOnly >= fromDate && dateOnly <= toDate;
-    } else if (fromDate) {
-      return dateOnly >= fromDate;
-    } else if (toDate) {
-      return dateOnly <= toDate;
+  const getSIBadge = (flag) => {
+    if (flag === "A") {
+      return (
+        <span className="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+          <i className="bi bi-check-circle me-1"></i> Approve
+        </span>
+      );
+    } else if (flag === "R") {
+      return (
+        <span className="badge bg-danger-subtle text-danger rounded-pill px-3 py-2">
+          <i className="bi bi-x-circle me-1"></i> Rejected
+        </span>
+      );
+    } else {
+      // Handles null, undefined, "P", or any other value
+      return (
+        <span className="badge bg-warning-subtle text-warning rounded-pill px-3 py-2">
+          <i className="bi bi-clock-history me-1"></i> Pending
+        </span>
+      );
     }
-    return true;
   };
 
-  // date and status filter both
-  useEffect(() => {
-    let filtered = [...originalApplicationData];
-
-    // 1. Apply date filter
-    if (dateFilter.from || dateFilter.to) {
-      filtered = filtered.filter((item) =>
-        isDateInRange(
-          item.DAT_EMPCTPTENTRY_DATE,
-          dateFilter.from,
-          dateFilter.to,
-        ),
-      );
-    }
-
-    // 2. Apply status filter
-    if (statusFilter === "A") {
-      filtered = filtered.filter(
-        (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "A",
-      );
-    } else if (statusFilter === "R") {
-      filtered = filtered.filter(
-        (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "R",
-      );
-    } else if (statusFilter === "P") {
-      filtered = filtered.filter(
-        (item) =>
-          item.VAR_EMPCTPTENTRY_SUPFLAG !== "A" &&
-          item.VAR_EMPCTPTENTRY_SUPFLAG !== "R",
-      );
-    }
-
-    setApplications(filtered);
-  }, [dateFilter, statusFilter, originalApplicationData]);
-
+  // Filter handlers
   const handleDateChangeFilter = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({ ...prev, [name]: value }));
@@ -389,10 +351,9 @@ const ApplicationListSI = () => {
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
   };
+
   const handleClearFilters = () => {
-    // Reset date filter state
     setDateFilter({ from: "", to: "" });
-    // Reset status filter state
     setStatusFilter("all");
   };
 
@@ -453,7 +414,7 @@ const ApplicationListSI = () => {
                     <option value="all">All</option>
                     <option value="A">Approve</option>
                     <option value="R">Reject</option>
-                    <option value="P">Pending</option>
+                    <option value="C">Pending</option>
                   </select>
                 </div>
                 <div
@@ -480,6 +441,7 @@ const ApplicationListSI = () => {
                   <th scope="col">Toilet Manager</th>
                   <th scope="col">Employee</th>
                   <th scope="col">Status</th>
+                  <th scope="col">SI Status</th>
                   <th scope="col">Remark</th>
                   <th scope="col">Date</th>
                   <th scope="col" className="text-end">
@@ -489,29 +451,30 @@ const ApplicationListSI = () => {
               </thead>
               <tbody>
                 {applications.map((app, idx) => (
-                  <tr key={app.NUM_EMPCTPTENTRY_ID || idx}>
+                  <tr key={app.NUM_EMPCTPTWORK_ID || idx}>
                     <td className="fw-semibold">
                       Ward {app.NUM_CTPTTYPE_WARDID}
                     </td>
                     <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
                     <td>{app.VAR_CTPTTYPE_USERNAME}</td>
                     <td>{app.USERNAME}</td>
-                    <td>{getBadge(app.VAR_EMPCTPTENTRY_SIFLAG)}</td>
+                    <td>{getBadge(app.VAR_EMPCTPTWORK_STATUS)}</td>
+                    <td>{getSIBadge(app.VAR_EMPCTPTWORK_SIFLAG)}</td>
                     <td style={{ maxWidth: "250px" }}>
-                      <small>{app.VAR_EMPCTPTENTRY_REMARK}</small>
+                      <small>{app.VAR_EMPCTPTWORK_REMARK}</small>
                     </td>
-                    <td>{formatDate(app.DAT_EMPCTPTENTRY_DATE)}</td>
+                    <td>{formatDate(app.DAT_EMPCTPTWORK_DATE)}</td>
                     <td className="text-end">
                       <button
                         className={`btn btn-sm ${
-                          app.VAR_EMPCTPTENTRY_SIFLAG === "A"
+                          app.VAR_EMPCTPTWORK_STATUS === "R"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
                         onClick={() => handleReviewClick(app)}
-                        disabled={app.VAR_EMPCTPTENTRY_SIFLAG === "A"}
+                        disabled={app.VAR_EMPCTPTWORK_STATUS === "R"}
                         title={
-                          app.VAR_EMPCTPTENTRY_SIFLAG === "A"
+                          app.VAR_EMPCTPTWORK_STATUS === "A"
                             ? "Already approved"
                             : ""
                         }
@@ -603,7 +566,7 @@ const ApplicationListSI = () => {
         </div>
       )}
 
-      {/* Review Application Modal - Two Column Layout */}
+      {/* Review Application Modal */}
       {showModal && selectedApplication && (
         <div
           className="modal show d-block"
@@ -626,7 +589,7 @@ const ApplicationListSI = () => {
               </div>
               <div className="modal-body">
                 <div className="row g-3">
-                  {/* Left Column - Application Details and Supervisor Action */}
+                  {/* Left Column */}
                   <div className="col-lg-5">
                     {/* Application Details */}
                     <div className="card mb-3">
@@ -693,18 +656,11 @@ const ApplicationListSI = () => {
                               {selectedApplication.VAR_EMPCTPTENTRY_REMARK}
                             </p>
                           </div>
-                          {/* <div className="col-md-12">
-                            <label className="form-label fw-semibold text-muted">
-                              Supervisor Remark
-                            </label>
-                            <p className="h6 mb-0">
-                              {selectedApplication.VAR_EMPCTPTENTRY_REMARK}
-                            </p>
-                          </div> */}
                         </div>
                       </div>
                     </div>
 
+                    {/* Supervisor Action */}
                     <div className="card mb-3">
                       <div className="card-header">
                         <h6 className="mb-0">Supervisor Action</h6>
@@ -716,7 +672,8 @@ const ApplicationListSI = () => {
                         </small>
                       </div>
                     </div>
-                    {/* Supervisor Action */}
+
+                    {/* Sanitary Inspector Action */}
                     <div className="card">
                       <div className="card-header">
                         <h6 className="mb-0">Sanitary Inspector Action</h6>
@@ -819,7 +776,7 @@ const ApplicationListSI = () => {
                   type="button"
                   className="btn btn-danger"
                   onClick={handleReject}
-                  disabled={!supervisorRemark.trim()}
+                  disabled={applications.VAR_EMPCTPTWORK_SUPFLAG === "A"}
                 >
                   <i className="bi bi-x-circle me-1"></i> Reject
                 </button>
@@ -827,7 +784,7 @@ const ApplicationListSI = () => {
                   type="button"
                   className="btn btn-success"
                   onClick={handleApprove}
-                  disabled={!supervisorRemark.trim()}
+                  disabled={applications.VAR_EMPCTPTWORK_SUPFLAG === "A"}
                 >
                   <i className="bi bi-check-circle me-1"></i> Approve
                 </button>

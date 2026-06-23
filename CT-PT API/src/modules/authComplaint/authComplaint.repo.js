@@ -243,12 +243,14 @@ async function compListforSIRepo(
       ctpt.var_ctpttype_femaleseats,
       ctpt.var_ctpttype_maleseats,
       ctpt.var_ctpttype_totalseats,
+      ctpt.num_ctpttype_wardid,
       ctpt.var_ctpttype_username,
       st.var_ctptstage_name,
       st.var_ctptstage_status,
       e.var_empctptwork_supflag,
       e.var_empctptwork_siflag,
-      e.var_empctptwork_siremark
+      e.var_empctptwork_siremark,
+      e.var_empctptwork_status
     FROM AORTS_EMPCTPTWORK_MST e
     LEFT JOIN aorts_ctptlist_mas ctpt
       ON ctpt.num_ctpttype_id = e.num_empctptwork_toiletid
