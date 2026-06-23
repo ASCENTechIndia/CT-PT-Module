@@ -168,13 +168,16 @@ const ApplicationList = () => {
 
     try {
       const payload = {
-        userId: user.userId, // TODO: Get from user context/login
-        applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
+        userId: user.userId,
+        applId: selectedApplication.NUM_EMPCTPTWORK_ID,
         ulbId: ulbid,
-        mode: 1, // 1 for supervisor
-        status: "A", // A for approve
+        mode: 1, 
+        status: "A", 
         remark: supervisorRemark,
       };
+
+      console.log("payload :" ,payload)
+      console.log("payload :" ,selectedApplication)
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
@@ -212,11 +215,11 @@ const ApplicationList = () => {
 
     try {
       const payload = {
-        userId: user.userId, // TODO: Get from user context/login
-        applId: selectedApplication.NUM_EMPCTPTENTRY_ID,
+        userId: user.userId, 
+        applId: selectedApplication.NUM_EMPCTPTWORK_ID,
         ulbId: ulbid,
-        mode: 1, // 1 for supervisor
-        status: "R", // R for reject
+        mode: 1, 
+        status: "R", 
         remark: supervisorRemark,
       };
 
@@ -831,7 +834,7 @@ const ApplicationList = () => {
                 <button
                   type="button"
                   className="btn btn-success"
-                  onClick={handleApprove}
+                  onClick={() => handleApprove()}
                   disabled={!stageId}
                 >
                   <i className="bi bi-check-circle me-1"></i> Approve

@@ -5,7 +5,7 @@ const { executeProcedure } = require("../../db/procedureExecutor");
 async function authComplaintRepo(payload) {
   const statement = `
     BEGIN
-      aorts.aorts_empctptauth_ins(
+      aorts.aorts_ctptworkauth_ins(
         :in_UserId,
         :in_applid,
         :in_ULBId,
