@@ -54,11 +54,6 @@ const ApplicationList = () => {
         params,
       });
       if (response.success && response.data) {
-        // check stage id
-        const stageId = response.data.data.find(
-          (item) => item.NUM_EMPCTPTWORK_STAGEID === 3,
-        );
-        setStageId(stageId);
         setApplications(response.data.data);
         setOriginalApplicationData(response.data.data);
         setCurrentPage(response.data.pagination.page);
@@ -106,7 +101,12 @@ const ApplicationList = () => {
 
   // Open modal and display selected application details
   const handleReviewClick = async (application) => {
+    const stageId = Object.keys(application).some(
+      (item) => item === "NUM_EMPCTPTWORK_STAGEID" && application[item] === 3,
+    );
+    setStageId(stageId)
     setSelectedApplication(application);
+
     setSupervisorRemark("");
     setStageWiseImages([]); // Reset images
 
