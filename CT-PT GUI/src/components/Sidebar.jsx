@@ -18,6 +18,7 @@ export default function Sidebar() {
         { path: "/all-complaint", icon: "bi-file-earmark-text", label: 'Pending Complaint'},
         { path: "/resolved-complaint", icon: "bi-file-earmark-text", label: 'Resolved Complaint'},
         { path: "/application-list-sanitary", icon: "bi-file-earmark-text", label: 'Applications'},
+        { path: "/fine-list", icon: "bi-file-earmark-text", label: 'Fine'},
       ]
     };
 

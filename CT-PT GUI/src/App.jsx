@@ -39,6 +39,7 @@ import SupervisorComplaintsList from './pages/supervisior/SupervisorComplaintsLi
 import AssignComplaint from './pages/SI/AssignComplaint';
 import ResolvedComplaint from './pages/SI/ResolvedComplaint';
 import HomeRedirect from './pages/HomeRedirect';
+import FineList from './pages/SI/FineList';
 
 function App() {
   return (
@@ -105,6 +106,15 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <ApplicationListSI />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/fine-list"
+                  element={
+                    <ProtectedRoute>
+                      <FineList />
                     </ProtectedRoute>
                   }
                 />
