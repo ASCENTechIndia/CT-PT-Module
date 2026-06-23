@@ -16,5 +16,5 @@ router.use('/auth', authRoutes);
 router.use('/authComplaint', authComplaintRoutes);
 router.use('/registerComplaint',require('../modules/registerComplaint/registerComplaint.routes'));
 router.use('/authComplaint', require('../modules/authComplaint/authComplaint.routes'));
-
+router.use('/report', require('../modules/report/report.routes'));
 module.exports = router;

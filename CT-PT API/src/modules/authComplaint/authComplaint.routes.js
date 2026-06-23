@@ -17,8 +17,7 @@ const {
   getSupervisorStatusCon,
   resolvedListbyVendorList,
   getReworkComplaintImages,
-  complaintWorkStatusIns,
-  getVendorList,
+  getVendorList,complaintWorkStatusIns,getUserDetailsController
 } = require("./authComplaint.controller");
 const { complaintStatusSchema } = require("./authComplaint.validation");
 
@@ -42,5 +41,6 @@ router.get("/rslvdListbyVendorList", resolvedListbyVendorList);
 router.get("/rslvdListApprovedbySup", resolvedListbySup);
 router.get("/getReworkImages", getReworkComplaintImages);
 router.get("/vendorList", getVendorList);
+router.post('/get-user-details', getUserDetailsController);
 
 module.exports = router;
