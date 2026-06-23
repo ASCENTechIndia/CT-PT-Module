@@ -10,6 +10,7 @@ const {
   getrslvdListbyVendorListService,
   getReworkImagesService,
   complaintWorkStatusInsService,
+  vendorListService,
 } = require("./authComplaint.service");
 const { complaintStatusUpdateService } = require("./authComplaint.service");
 const { auditLog } = require("../../utils/audit-log");
@@ -91,7 +92,7 @@ async function getCompListForSup(req, res, next) {
       VAR_CTPTTYPE_USERNAME: row.VAR_CTPTTYPE_USERNAME,
       VAR_CTPTSTAGE_STATUS: row.VAR_CTPTSTAGE_STATUS,
       VAR_CTPTSTAGE_NAME: row.VAR_CTPTSTAGE_NAME,
-      VAR_EMPCTPTWORK_STATUS: row.VAR_EMPCTPTWORK_STATUS
+      VAR_EMPCTPTWORK_STATUS: row.VAR_EMPCTPTWORK_STATUS,
     }));
 
     const pagination = {
@@ -133,30 +134,27 @@ async function getCompListForSI(req, res, next) {
 
     // Sanitize the result to avoid circular references
     const cleanData = (result.data || []).map((row) => ({
-      NUM_EMPCTPTENTRY_ID: row.NUM_EMPCTPTENTRY_ID,
-      DAT_EMPCTPTENTRY_DATE: row.DAT_EMPCTPTENTRY_DATE,
-      VAR_EMPCTPTENTRY_LATITUDE: row.VAR_EMPCTPTENTRY_LATITUDE,
-      UNIQUEID: row.UNIQUEID,
+      NUM_EMPCTPTWORK_ID: row.NUM_EMPCTPTWORK_ID,
+      DAT_EMPCTPTWORK_DATE: row.DAT_EMPCTPTWORK_DATE,
+      UNIQUE_ID: row.UNIQUE_ID,
       USERNAME: row.USERNAME,
-      VAR_EMPCTPTENTRY_USERID: row.VAR_EMPCTPTENTRY_USERID,
-      VAR_EMPCTPTENTRY_LONGITUDE: row.VAR_EMPCTPTENTRY_LONGITUDE,
-      NUM_EMPCTPTENTRY_TOILETID: row.NUM_EMPCTPTENTRY_TOILETID,
-      NUM_EMPCTPTENTRY_STAGEID: row.NUM_EMPCTPTENTRY_STAGEID,
-      VAR_EMPCTPTENTRY_REMARK: row.VAR_EMPCTPTENTRY_REMARK,
-      DAT_EMPCTPTENTRY_INSDATE: row.DAT_EMPCTPTENTRY_INSDATE,
-      NUM_EMPCTPTENTRY_ULBID: row.NUM_EMPCTPTENTRY_ULBID,
-      NUM_CTPTTYPE_WARDID: row.NUM_CTPTTYPE_WARDID,
+      VAR_EMPCTPTWORK_LATITUDE: row.VAR_EMPCTPTWORK_LATITUDE,
+      VAR_EMPCTPTWORK_LONGITUDE: row.VAR_EMPCTPTWORK_LONGITUDE,
+      NUM_EMPCTPTWORK_TOILETID: row.NUM_EMPCTPTWORK_TOILETID,
+      NUM_EMPCTPTWORK_STAGEID: row.NUM_EMPCTPTWORK_STAGEID,
+      VAR_EMPCTPTWORK_REMARK: row.VAR_EMPCTPTWORK_REMARK,
+      DAT_EMPCTPTWORK_INSDATE: row.DAT_EMPCTPTWORK_INSDATE,
+      NUM_EMPCTPTWORK_ULBID: row.NUM_EMPCTPTWORK_ULBID,
       VAR_CTPTTYPE_TOILETLOCATION: row.VAR_CTPTTYPE_TOILETLOCATION,
       VAR_CTPTTYPE_FEMALESEATS: row.VAR_CTPTTYPE_FEMALESEATS,
       VAR_CTPTTYPE_MALESEATS: row.VAR_CTPTTYPE_MALESEATS,
       VAR_CTPTTYPE_TOTALSEATS: row.VAR_CTPTTYPE_TOTALSEATS,
-      VAR_CTPTTYPE_STATUS: row.VAR_CTPTTYPE_STATUS,
       VAR_CTPTTYPE_USERNAME: row.VAR_CTPTTYPE_USERNAME,
-      VAR_CTPTSTAGE_STATUS: row.VAR_CTPTSTAGE_STATUS,
       VAR_CTPTSTAGE_NAME: row.VAR_CTPTSTAGE_NAME,
-      VAR_EMPCTPTENTRY_SUPFLAG: row.VAR_EMPCTPTENTRY_SUPFLAG,
-      VAR_EMPCTPTENTRY_SIFLAG: row.VAR_EMPCTPTENTRY_SIFLAG,
-      VAR_EMPCTPTENTRY_SIREMARK: row.VAR_EMPCTPTENTRY_SIREMARK,
+      VAR_CTPTSTAGE_STATUS: row.VAR_CTPTSTAGE_STATUS,
+      VAR_EMPCTPTWORK_SUPFLAG: row.VAR_EMPCTPTWORK_SUPFLAG,
+      VAR_EMPCTPTWORK_SIFLAG: row.VAR_EMPCTPTWORK_SIFLAG,
+      VAR_EMPCTPTWORK_SIREMARK: row.VAR_EMPCTPTWORK_SIREMARK,
     }));
 
     const pagination = {
@@ -175,6 +173,19 @@ async function getCompListForSI(req, res, next) {
     return res.ok({ data: cleanData, pagination });
   } catch (error) {
     logApiError(req, 500, error.message, "Complaint List for SI  search error");
+    return next(error);
+  }
+}
+
+async function getVendorList(req, res, next) {
+  try {
+    const { fromDate, toDate, status, userId } = req.query;
+    const result = await vendorListService(fromDate, toDate, status, userId);
+
+    logApiSuccess(req, 200, { count: result?.length || 0 }, "Vendor List");
+    return res.ok({ data: result });
+  } catch (error) {
+    logApiError(req, 500, error.message, "Vendor List");
     return next(error);
   }
 }
@@ -605,13 +616,18 @@ async function complaintWorkStatusIns(req, res, next) {
       workFlag: body.workFlag,
     };
 
-    const out = await complaintWorkStatusInsService(payload)
+    const out = await complaintWorkStatusInsService(payload);
     const isSuccess = String(out.errorCode) === "9999";
 
     if (isSuccess) {
       logApiSuccess(req, 200, {}, "Complaint work status inserted succeeded");
     } else {
-      logApiError(req, 400, out.message, "Complaint work status inserted failed");
+      logApiError(
+        req,
+        400,
+        out.message,
+        "Complaint work status inserted failed",
+      );
     }
 
     auditLog({
@@ -645,6 +661,7 @@ module.exports = {
   resolvedListbyVendorList,
   getReworkComplaintImages,
   complaintWorkStatusIns,
+  getVendorList,
 };
 
 module.exports.complaintStatusUpdate = complaintStatusUpdate;

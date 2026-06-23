@@ -10,6 +10,7 @@ const {
   rslvdListbyVendorListRepo,
   getReworkImages,
   complaintWorkStatusInsRepo,
+  getVendorListRepo,
 } = require("./authComplaint.repo");
 
 const { complaintStatusUpdateRepo } = require("./authComplaint.repo");
@@ -115,6 +116,10 @@ async function complaintWorkStatusInsService(payload) {
   return complaintWorkStatusInsRepo(payload);
 }
 
+async function vendorListService(fromDate, toDate, status, userId) {
+  return getVendorListRepo(fromDate, toDate, status, userId);
+}
+
 module.exports = {
   authComplaintService,
   getCompListForSupService,
@@ -127,6 +132,7 @@ module.exports = {
   getSupervisorStatusService,
   getReworkImagesService,
   complaintWorkStatusInsService,
+  vendorListService,
 };
 
 module.exports.complaintStatusUpdateService = complaintStatusUpdateService;

@@ -104,7 +104,7 @@ const ApplicationList = () => {
     const stageId = Object.keys(application).some(
       (item) => item === "NUM_EMPCTPTWORK_STAGEID" && application[item] === 3,
     );
-    setStageId(stageId)
+    setStageId(stageId);
     setSelectedApplication(application);
 
     setSupervisorRemark("");
@@ -171,13 +171,10 @@ const ApplicationList = () => {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
         ulbId: ulbid,
-        mode: 1, 
-        status: "A", 
+        mode: 1,
+        status: "A",
         remark: supervisorRemark,
       };
-
-      console.log("payload :" ,payload)
-      console.log("payload :" ,selectedApplication)
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
@@ -215,11 +212,11 @@ const ApplicationList = () => {
 
     try {
       const payload = {
-        userId: user.userId, 
+        userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
         ulbId: ulbid,
-        mode: 1, 
-        status: "R", 
+        mode: 1,
+        status: "R",
         remark: supervisorRemark,
       };
 
@@ -341,19 +338,52 @@ const ApplicationList = () => {
           <i className="bi bi-x-circle me-1"></i> Rejected
         </span>
       );
-    } else {
+    } else if (flag === "C") {
+      return (
+        <span className="badge bg-primary rounded-pill px-3 py-2">
+          <i className="bi bi-check2-circle me-1"></i> Completed
+        </span>
+      );
+    } else if (flag === "P" || !flag) {
+      // Handles null, undefined, "P"
       return (
         <span className="badge bg-warning rounded-pill px-3 py-2 text-dark">
           <i className="bi bi-clock-history me-1"></i> Pending
         </span>
       );
+    } else {
+      return "";
     }
   };
 
-  // Helper function to compare only the date part (YYYY-MM-DD)
+  const getSupBadge = (flag) => {
+    if (flag === "A") {
+      return (
+        <span className="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+          <i className="bi bi-check-circle me-1"></i> Approve
+        </span>
+      );
+    } else if (flag === "R") {
+      return (
+        <span className="badge bg-danger-subtle text-danger rounded-pill px-3 py-2">
+          <i className="bi bi-x-circle me-1"></i> Rejected
+        </span>
+      );
+    } else if (flag === "P" || !flag) {
+      // Handles "P", null, undefined
+      return (
+        <span className="badge bg-warning-subtle text-warning rounded-pill px-3 py-2">
+          <i className="bi bi-clock-history me-1"></i> Pending
+        </span>
+      );
+    } else {
+      return "";
+    }
+  };
+
   const isDateInRange = (dateISO, fromDate, toDate) => {
     if (!dateISO) return false;
-    const dateOnly = dateISO.split("T")[0]; // "2026-05-29"
+    const dateOnly = dateISO.split("T")[0];
     if (fromDate && toDate) {
       return dateOnly >= fromDate && dateOnly <= toDate;
     } else if (fromDate) {
@@ -364,41 +394,6 @@ const ApplicationList = () => {
     return true;
   };
 
-  // date and status filter both
-  // useEffect(() => {
-  //   let filtered = [...originalApplicationData];
-
-  //   // 1. Apply date filter
-  //   if (dateFilter.from || dateFilter.to) {
-  //     filtered = filtered.filter((item) =>
-  //       isDateInRange(
-  //         item.DAT_EMPCTPTENTRY_DATE,
-  //         dateFilter.from,
-  //         dateFilter.to,
-  //       ),
-  //     );
-  //   }
-
-  //   // 2. Apply status filter
-  //   if (statusFilter === "A") {
-  //     filtered = filtered.filter(
-  //       (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "A",
-  //     );
-  //   } else if (statusFilter === "R") {
-  //     filtered = filtered.filter(
-  //       (item) => item.VAR_EMPCTPTENTRY_SUPFLAG === "R",
-  //     );
-  //   } else if (statusFilter === "P") {
-  //     filtered = filtered.filter(
-  //       (item) =>
-  //         item.VAR_EMPCTPTENTRY_SUPFLAG !== "A" &&
-  //         item.VAR_EMPCTPTENTRY_SUPFLAG !== "R",
-  //     );
-  //   }
-
-  //   setApplications(filtered);
-  // }, [dateFilter, statusFilter, originalApplicationData]);
-
   const handleDateChangeFilter = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({ ...prev, [name]: value }));
@@ -407,12 +402,7 @@ const ApplicationList = () => {
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
   };
-  // const handleClearFilters = () => {
-  //   // Reset date filter state
-  //   setDateFilter({ from: "", to: "" });
-  //   // Reset status filter state
-  //   setStatusFilter("all");
-  // };
+
   const handleClearFilters = () => {
     setDateFilter({
       from: "",
@@ -506,6 +496,7 @@ const ApplicationList = () => {
                   <th scope="col">Toilet Manager</th>
                   <th scope="col">Employee</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Super Status</th>
                   <th scope="col">Remark</th>
                   <th scope="col">Date</th>
                   <th scope="col" className="text-end">
@@ -523,7 +514,8 @@ const ApplicationList = () => {
                     <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
                     <td>{app.VAR_CTPTTYPE_USERNAME}</td>
                     <td>{app.USERNAME}</td>
-                    <td>{getBadge(app.VAR_EMPCTPTWORK_SUPFLAG)}</td>
+                    <td>{getBadge(app.VAR_EMPCTPTWORK_STATUS)}</td>
+                    <td>{getSupBadge(app.VAR_EMPCTPTWORK_SUPFLAG)}</td>
                     <td style={{ maxWidth: "250px" }}>
                       <small>{app.VAR_EMPCTPTWORK_REMARK}</small>
                     </td>

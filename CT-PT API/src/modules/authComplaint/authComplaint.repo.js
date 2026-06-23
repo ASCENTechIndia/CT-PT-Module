@@ -225,71 +225,50 @@ async function compListforSIRepo(
   const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 10;
   const offset = (safePage - 1) * safeLimit;
 
+  // ─── MAIN QUERY ──────────────────────────────────────────────
   let sql = `
-    SELECT * FROM (
-      SELECT
-        e.num_empctptentry_id,
-        e.dat_empctptentry_date,
-        e.var_empctptentry_latitude,
-        e.num_empctptentry_id AS uniqueid,
-        u.var_user_username AS username,
-        e.var_empctptentry_userid AS userid,
-        e.var_empctptentry_longitude,
-        e.num_empctptentry_toiletid,
-        e.num_empctptentry_stageid,
-        e.var_empctptentry_remark,
-        e.dat_empctptentry_insdate,
-        e.num_empctptentry_ulbid,
-
-        ctpt.num_ctpttype_wardid,
-        ctpt.var_ctpttype_toiletlocation,
-        ctpt.var_ctpttype_femaleseats,
-        ctpt.var_ctpttype_maleseats,
-        ctpt.var_ctpttype_totalseats,
-        ctpt.var_ctpttype_status,
-        ctpt.var_ctpttype_username,
-
-        st.var_ctptstage_status,
-        st.var_ctptstage_name,
-
-        e.var_empctptentry_supflag,
-        e.var_empctptentry_siflag,
-        e.var_empctptentry_siremark,
-
-        ROW_NUMBER() OVER (
-          PARTITION BY
-            e.var_empctptentry_userid,
-            e.num_empctptentry_toiletid,
-            TRUNC(e.dat_empctptentry_date)
-          ORDER BY e.dat_empctptentry_date DESC
-        ) AS rn
-
-      FROM aorts_empctptentry_mst e
-
-      INNER JOIN admins.aoma_user_def u
-        ON u.num_user_userid = e.var_empctptentry_userid
-
-      LEFT JOIN aorts_ctptlist_mas ctpt
-        ON ctpt.num_ctpttype_id = e.num_empctptentry_toiletid
-
-      LEFT JOIN aorts_ctptstage_mas st
-        ON st.num_ctptstage_id = e.num_empctptentry_stageid
-
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-
-      WHERE e.num_empctptentry_stageid = 3
-        AND e.var_empctptentry_supflag = 'A'
+    SELECT 
+      e.num_empctptwork_id,
+      e.dat_empctptwork_date,
+      e.num_empctptwork_id AS unique_id,
+      u.var_user_username AS username,
+      e.var_empctptwork_latitude,
+      e.var_empctptwork_longitude,
+      e.num_empctptwork_toiletid,
+      e.num_empctptwork_stageid,
+      e.var_empctptwork_remark,
+      e.dat_empctptwork_insdate,
+      e.num_empctptwork_ulbid,
+      ctpt.var_ctpttype_toiletlocation,
+      ctpt.var_ctpttype_femaleseats,
+      ctpt.var_ctpttype_maleseats,
+      ctpt.var_ctpttype_totalseats,
+      ctpt.var_ctpttype_username,
+      st.var_ctptstage_name,
+      st.var_ctptstage_status,
+      e.var_empctptwork_supflag,
+      e.var_empctptwork_siflag,
+      e.var_empctptwork_siremark
+    FROM AORTS_EMPCTPTWORK_MST e
+    LEFT JOIN aorts_ctptlist_mas ctpt
+      ON ctpt.num_ctpttype_id = e.num_empctptwork_toiletid
+    LEFT JOIN aorts_ctptstage_mas st
+      ON st.num_ctptstage_id = e.num_empctptwork_stageid
+    INNER JOIN admins.aoma_user_def u
+      ON u.num_user_userid = e.var_empctptwork_userid
+    WHERE 1=1
   `;
 
-  const binds = {
-    ulbid: Number(ulbid),
-  };
+  const binds = {};
 
-  // ================= DATE FILTER =================
+  // ULBID
+  sql += ` AND e.num_empctptwork_ulbid = :ulbid`;
+  binds.ulbid = Number(ulbid);
+
+  // Date filter
   if (fromDate && toDate) {
     sql += `
-      AND TRUNC(e.dat_empctptentry_date)
+      AND TRUNC(e.dat_empctptwork_date)
       BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
       AND TO_DATE(:toDate, 'YYYY-MM-DD')
     `;
@@ -297,62 +276,44 @@ async function compListforSIRepo(
     binds.toDate = toDate;
   }
 
-  // ================= STATUS FILTER =================
+  // Status filter
   if (status && status !== "ALL") {
     if (status === "P") {
-      sql += `
-      AND e.var_empctptentry_siflag IS NULL
-    `;
+      sql += ` AND e.var_empctptwork_status IS NULL`;
     } else {
-      sql += `
-      AND e.var_empctptentry_siflag = :status
-    `;
+      sql += ` AND e.var_empctptwork_status = :status`;
       binds.status = status;
     }
   }
 
+  // Order & pagination
   sql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
-    ORDER BY num_empctptentry_id DESC
+    ORDER BY e.num_empctptwork_id DESC
     OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
   `;
-
   binds.offset = offset;
   binds.limit = safeLimit;
 
-  const result = await executeQuery(sql, binds);
-  const rows = result.rows || [];
-
-  // ================= COUNT QUERY =================
+  // ─── COUNT QUERY ─────────────────────────────────────────────
+  // Same joins and filters, but only count rows
   let countSql = `
-    SELECT COUNT(*) AS total FROM (
-      SELECT
-        ROW_NUMBER() OVER (
-          PARTITION BY
-            e.var_empctptentry_userid,
-            e.num_empctptentry_toiletid,
-            TRUNC(e.dat_empctptentry_date)
-          ORDER BY e.dat_empctptentry_date DESC
-        ) AS rn,
-        e.num_empctptentry_ulbid
-      FROM aorts_empctptentry_mst e
-
-      LEFT JOIN aorts_ctptcitizencomplaint_mas c
-        ON e.num_empctptentry_toiletid = c.num_complaint_toilet
-
-      WHERE e.num_empctptentry_stageid = 3
-        AND e.var_empctptentry_supflag = 'A'
+    SELECT COUNT(*) AS total
+    FROM AORTS_EMPCTPTWORK_MST e
+    LEFT JOIN aorts_ctptlist_mas ctpt
+      ON ctpt.num_ctpttype_id = e.num_empctptwork_toiletid
+    LEFT JOIN aorts_ctptstage_mas st
+      ON st.num_ctptstage_id = e.num_empctptwork_stageid
+    INNER JOIN admins.aoma_user_def u
+      ON u.num_user_userid = e.var_empctptwork_userid
+    WHERE 1=1
+      AND e.num_empctptwork_ulbid = :ulbid
   `;
 
-  const countBinds = {
-    ulbid: Number(ulbid),
-  };
+  const countBinds = { ulbid: Number(ulbid) };
 
   if (fromDate && toDate) {
     countSql += `
-      AND TRUNC(e.dat_empctptentry_date)
+      AND TRUNC(e.dat_empctptwork_date)
       BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
       AND TO_DATE(:toDate, 'YYYY-MM-DD')
     `;
@@ -362,24 +323,20 @@ async function compListforSIRepo(
 
   if (status && status !== "ALL") {
     if (status === "P") {
-      countSql += `
-      AND e.var_empctptentry_siflag IS NULL
-    `;
+      countSql += ` AND e.var_empctptwork_status IS NULL`;
     } else {
-      countSql += `
-      AND e.var_empctptentry_siflag = :status
-    `;
+      countSql += ` AND e.var_empctptwork_status = :status`;
       countBinds.status = status;
     }
   }
 
-  countSql += `
-    )
-    WHERE rn = 1
-      AND num_empctptentry_ulbid = :ulbid
-  `;
+  // Execute both queries
+  const [result, countResult] = await Promise.all([
+    executeQuery(sql, binds),
+    executeQuery(countSql, countBinds),
+  ]);
 
-  const countResult = await executeQuery(countSql, countBinds);
+  const rows = result.rows || [];
   const total = countResult.rows?.[0]?.TOTAL || 0;
 
   return {
@@ -583,6 +540,74 @@ async function rslvdListbyVendorRepo(
       total,
       totalPages: Math.ceil(total / Number(limit)),
     },
+  };
+}
+
+async function getVendorListRepo(fromDate, toDate, status, userId) {
+  let sql = `
+    select a.num_empctptwork_id,
+    a.dat_empctptwork_date,
+    a.var_empctptwork_latitude,
+    a.var_empctptwork_longitude,
+    a.num_empctptwork_toiletid,
+    a.num_empctptwork_stageid,
+    a.var_empctptwork_remark,
+    a.var_empctptwork_appsource,
+    a.var_empctptwork_status,
+    dtls.num_stage_id,
+    dtls.bolb_empctptworkdetails_image,
+    dtls.bolb_empctptworkdetails_image2,
+    dtls.bolb_empctptworkdetails_image3,
+    dtls.var_insby
+    From AORTS_EMPCTPTWORK_MST a
+    inner join aorts_empctptworkdetails_mst dtls on a.num_empctptwork_id= dtls.num_empctptwork_id
+    where var_empctptwork_userid = :userId
+  `;
+
+  const binds = {
+    userId: userId,
+  };
+
+  // Date Filter
+  if (fromDate && toDate) {
+    sql += `
+      AND TRUNC(a.dat_empctptwork_date)
+      BETWEEN TO_DATE(:fromDate,'YYYY-MM-DD')
+      AND TO_DATE(:toDate,'YYYY-MM-DD')
+    `;
+
+    binds.fromDate = fromDate;
+    binds.toDate = toDate;
+  }
+
+  // Status Filter
+  if (status && status !== "ALL") {
+    sql += `
+      AND a.var_empctptwork_status = :status
+    `;
+
+    binds.status = status;
+  }
+
+  const result = await executeQuery(sql, binds);
+
+  const rows = result.rows || [];
+
+  // Convert images
+  for (const row of rows) {
+    row.BOLB_EMPCTPTWORKDETAILS_IMAGE = await lobToBase64(
+      row.BOLB_EMPCTPTWORKDETAILS_IMAGE,
+    );
+    row.BOLB_EMPCTPTWORKDETAILS_IMAGE2 = await lobToBase64(
+      row.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
+    );
+    row.BOLB_EMPCTPTWORKDETAILS_IMAGE3 = await lobToBase64(
+      row.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
+    );
+  }
+
+  return {
+    data: rows,
   };
 }
 
@@ -1111,6 +1136,7 @@ module.exports = {
   getSupervisorStatusRepo,
   getReworkImages,
   complaintWorkStatusInsRepo,
+  getVendorListRepo,
 };
 
 module.exports.complaintStatusUpdateRepo = complaintStatusUpdateRepo;
