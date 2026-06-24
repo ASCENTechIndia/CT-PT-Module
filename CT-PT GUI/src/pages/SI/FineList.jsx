@@ -225,7 +225,7 @@ const FineList = () => {
           </div>
         </div>
 
-        <div className="table-responsive">
+        <div className="table-responsive" style={{height: "auto", maxHeight: "500px"}}>
           <table
             className="table align-middle mb-0"
             style={{ tableLayout: "fixed", width: "100%" }}
@@ -421,7 +421,7 @@ const FineList = () => {
                   ) : breakdownData.length === 0 ? (
                     <p className="text-muted">No breakdown records found.</p>
                   ) : (
-                    <div className="table-responsive">
+                    <div className="table-responsive" style={{height: "auto", maxHeight: "350px"}}>
                       <table className="table table-bordered table-striped table-hover align-middle mb-0">
                         <thead className="table-light">
                           <tr>
