@@ -11,7 +11,8 @@ const {
   getReworkImagesService,
   complaintWorkStatusInsService,
   userDetailsService,
-  fineApplicationListService
+  fineApplicationListService,
+  fineBreakdownService,
 } = require("./report.service");
 const { complaintStatusUpdateService } = require("./report.service");
 const { auditLog } = require("../../utils/audit-log");
@@ -93,7 +94,7 @@ async function getCompListForSup(req, res, next) {
       VAR_CTPTTYPE_USERNAME: row.VAR_CTPTTYPE_USERNAME,
       VAR_CTPTSTAGE_STATUS: row.VAR_CTPTSTAGE_STATUS,
       VAR_CTPTSTAGE_NAME: row.VAR_CTPTSTAGE_NAME,
-      VAR_EMPCTPTWORK_STATUS: row.VAR_EMPCTPTWORK_STATUS
+      VAR_EMPCTPTWORK_STATUS: row.VAR_EMPCTPTWORK_STATUS,
     }));
 
     const pagination = {
@@ -607,13 +608,18 @@ async function complaintWorkStatusIns(req, res, next) {
       workFlag: body.workFlag,
     };
 
-    const out = await complaintWorkStatusInsService(payload)
+    const out = await complaintWorkStatusInsService(payload);
     const isSuccess = String(out.errorCode) === "9999";
 
     if (isSuccess) {
       logApiSuccess(req, 200, {}, "Complaint work status inserted succeeded");
     } else {
-      logApiError(req, 400, out.message, "Complaint work status inserted failed");
+      logApiError(
+        req,
+        400,
+        out.message,
+        "Complaint work status inserted failed",
+      );
     }
 
     auditLog({
@@ -646,15 +652,19 @@ async function getUserDetailsController(req, res, next) {
     );
     // console.log("Login result:", result);
     if (!result.success) {
-      logApiError(req, 401, result.message, `user details not found: ${payload.userId}`);
+      logApiError(
+        req,
+        401,
+        result.message,
+        `user details not found: ${payload.userId}`,
+      );
       return res.fail(result.message, 401, { errorCode: result.errorCode });
     }
 
     // logApiSuccess(req, 200, { userId: result.user.userId, userName: result.user.userFullName }, `Login successful for user: ${result.user.userFullName}`);
     return res.ok(result.data);
-
   } catch (error) {
-    logApiError(req, 500, error.message, 'user details error');
+    logApiError(req, 500, error.message, "user details error");
     return next(error);
   }
 }
@@ -680,7 +690,7 @@ async function fineApplicationListController(req, res, next) {
       SIID: row.SIID,
       WORK_DATE: row.WORK_DATE,
       TOTAL_FINE: row.TOTAL_FINE,
-      ULBID: row.ULBID
+      ULBID: row.ULBID,
     }));
 
     const pagination = {
@@ -708,6 +718,24 @@ async function fineApplicationListController(req, res, next) {
   }
 }
 
+async function fineBreakdownController(req, res, next) {
+  try {
+    const { ulbid, workId } = req.query;
+    const result = await fineBreakdownService(ulbid, workId);
+
+    logApiSuccess(
+      req,
+      200,
+      { count: result?.length || 0 },
+      "Breakdown of fine application",
+    );
+    return res.ok({ data: result });
+  } catch (error) {
+    logApiError(req, 500, error.message, "Breakdown of fine application error");
+    return next(error);
+  }
+}
+
 module.exports = {
   authComplaint,
   getCompListForSup,
@@ -721,7 +749,8 @@ module.exports = {
   getReworkComplaintImages,
   complaintWorkStatusIns,
   getUserDetailsController,
-  fineApplicationListController
+  fineApplicationListController,
+  fineBreakdownController,
 };
 
 module.exports.complaintStatusUpdate = complaintStatusUpdate;

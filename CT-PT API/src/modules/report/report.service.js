@@ -11,7 +11,8 @@ const {
   getReworkImages,
   complaintWorkStatusInsRepo,
   userDetailsRepo,
-  fineApplicationListRepo
+  fineApplicationListRepo,
+  fineBreakdownRepo,
 } = require("./report.repo");
 
 const { complaintStatusUpdateRepo } = require("./report.repo");
@@ -117,11 +118,7 @@ async function complaintWorkStatusInsService(payload) {
   return complaintWorkStatusInsRepo(payload);
 }
 
-async function userDetailsService(
-  userId,
-  ulbId,
-  toiletId
-) {
+async function userDetailsService(userId, ulbId, toiletId) {
   return userDetailsRepo(userId, ulbId, toiletId);
 }
 
@@ -133,6 +130,10 @@ async function fineApplicationListService(
   limit,
 ) {
   return fineApplicationListRepo(ulbid, fromDate, toDate, page, limit);
+}
+
+async function fineBreakdownService(ulbid, workId) {
+  return fineBreakdownRepo(ulbid, workId);
 }
 
 module.exports = {
@@ -148,7 +149,8 @@ module.exports = {
   getReworkImagesService,
   complaintWorkStatusInsService,
   userDetailsService,
-  fineApplicationListService
+  fineApplicationListService,
+  fineBreakdownService,
 };
 
 module.exports.complaintStatusUpdateService = complaintStatusUpdateService;
