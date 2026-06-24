@@ -15,7 +15,8 @@ const FineList = () => {
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
-  const [approveRemark, setApproveRemark] = useState("");
+  const [breakdownData, setBreakdownData] = useState([]);
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
 
   // Response Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,24 +44,6 @@ const FineList = () => {
     return `${year}-${month}-${day}`;
   }
 
-  const getBreakdownData = (totalFine) => {
-    if (!totalFine || totalFine === 0) {
-      return [
-        { amount: 0, label: "Fine 1" },
-        { amount: 0, label: "Fine 2" },
-        { amount: 0, label: "Fine 3" },
-      ];
-    }
-
-    const base = Math.floor(totalFine / 3);
-    const remainder = totalFine - base * 3;
-    return [
-      { amount: base + (remainder > 0 ? 1 : 0), label: "Fine 1" },
-      { amount: base + (remainder > 1 ? 1 : 0), label: "Fine 2" },
-      { amount: base, label: "Fine 3" },
-    ];
-  };
-
   // Fetch applications from API
   const fetchApplications = async (page = 1) => {
     if (!ulbId) {
@@ -82,7 +65,6 @@ const FineList = () => {
 
       if (response.success && response.data) {
         setApplications(response.data.data);
-        // ✅ Handle both 0‑based and 1‑based page numbers
         const apiPage = response.data.pagination.page;
         setCurrentPage(apiPage === 0 ? 1 : apiPage);
         setTotalPages(response.data.pagination.totalPages);
@@ -102,6 +84,29 @@ const FineList = () => {
       );
       setIsModalOpen(true);
     } finally {
+      setLoader(false);
+    }
+  };
+
+  // Fetch breakdown data for modal
+  const fetchBreakdown = async (workId) => {
+    if (!ulbId) return;
+    try {
+      setBreakdownLoading(true);
+      setLoader(true);
+      const response = await apiClient.get(
+        `/report/get-fine-breakdown?ulbid=${ulbId}&workId=${workId}`,
+      );
+      if (response.success && response.data?.data?.data) {
+        setBreakdownData(response.data.data.data);
+      } else {
+        setBreakdownData([]);
+      }
+    } catch (err) {
+      console.error("Error fetching breakdown:", err);
+      setBreakdownData([]);
+    } finally {
+      setBreakdownLoading(false);
       setLoader(false);
     }
   };
@@ -152,28 +157,29 @@ const FineList = () => {
     return pages;
   };
 
-  // Open review modal
-  const handleReviewClick = (application) => {
+  // Open review modal and fetch breakdown
+  const handleReviewClick = async (application) => {
     setSelectedApplication(application);
-    setApproveRemark("");
+    setBreakdownData([]);
     setShowModal(true);
+    await fetchBreakdown(application.WORK_ID);
   };
-
-  // Placeholder approve/reject (commented out – kept for future use)
-  // const handleApprove = () => { ... };
-  // const handleReject = () => { ... };
 
   // Format date
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (!dateString) return "";
+    // Extract date and time parts
+    const [datePart, timePart] = dateString.split("T");
+    const [year, month, day] = datePart.split("-");
+    const time = timePart.split(".")[0]; // remove milliseconds
+    return `${day}-${month}-${year} ${time}`;
   };
+
+  // Calculate total fine from breakdown
+  const totalBreakdownFine = breakdownData.reduce(
+    (sum, item) => sum + (item.FINE_AMT || 0),
+    0,
+  );
 
   return (
     <Layout>
@@ -241,9 +247,6 @@ const FineList = () => {
                 <th scope="col" style={{ width: "8%" }} className="text-center">
                   Ward ID
                 </th>
-                <th scope="col" style={{ width: "8%" }} className="text-center">
-                  Toilet ID
-                </th>
                 <th
                   scope="col"
                   style={{ width: "15%" }}
@@ -293,12 +296,11 @@ const FineList = () => {
                 <tr key={app.WORK_ID}>
                   <td className="fw-semibold text-center">{app.WORK_ID}</td>
                   <td className="text-center">{app.WARD_ID}</td>
-                  <td className="text-center">{app.TOILET_ID}</td>
                   <td className="text-center">{app.TOILET_LOCATION}</td>
                   <td className="text-center">{app.SUPERID || "—"}</td>
                   <td className="text-center">{app.SIID || "—"}</td>
                   <td className="text-center">{formatDate(app.WORK_DATE)}</td>
-                  <td className="text-center">
+                  <td className="text-center fw-semibold text-danger">
                     ₹{app.TOTAL_FINE?.toLocaleString() || 0}
                   </td>
                   <td className="text-center" style={{ whiteSpace: "nowrap" }}>
@@ -400,7 +402,7 @@ const FineList = () => {
           <div className="modal-dialog modal-xl modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">
+                <h5 className="modal-title mb-0">
                   <i className="bi bi-file-earmark-check me-2"></i>
                   Work Details #{selectedApplication.WORK_ID}
                 </h5>
@@ -411,143 +413,79 @@ const FineList = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      Work ID
-                    </label>
-                    <p className="h6 mb-0">{selectedApplication.WORK_ID}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      Ward ID
-                    </label>
-                    <p className="h6 mb-0">{selectedApplication.WARD_ID}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      Toilet ID
-                    </label>
-                    <p className="h6 mb-0">{selectedApplication.TOILET_ID}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      Toilet Location
-                    </label>
-                    <p className="h6 mb-0">
-                      {selectedApplication.TOILET_LOCATION}
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      Supervisor ID
-                    </label>
-                    <p className="h6 mb-0">
-                      {selectedApplication.SUPERID || "—"}
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      SI ID
-                    </label>
-                    <p className="h6 mb-0">{selectedApplication.SIID || "—"}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      Work Date
-                    </label>
-                    <p className="h6 mb-0">
-                      {formatDate(selectedApplication.WORK_DATE)}
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-muted">
-                      Total Fine
-                    </label>
-                    <p className="h6 mb-0 text-success fw-bold">
-                      ₹{selectedApplication.TOTAL_FINE?.toLocaleString() || 0}
-                    </p>
-                  </div>
-                </div>
-
                 {/* Breakdown Table Section */}
-                <div className="mt-4 pt-3 border-top">
-                  <h6 className="mb-3">
+                <div className="">
+                  <h6 className="">
                     <i className="bi bi-list-ul me-2"></i>
                     Fine Breakdown
                   </h6>
-                  <div className="table-responsive">
-                    <table className="table table-bordered table-striped table-hover align-middle mb-0">
-                      <thead className="table-light">
-                        <tr>
-                          <th className="text-center">Work ID</th>
-                          <th className="text-center">Ward ID</th>
-                          <th className="text-center">Toilet ID</th>
-                          <th className="text-center">Toilet Location</th>
-                          <th className="text-center">Supervisor ID</th>
-                          <th className="text-center">SI ID</th>
-                          <th className="text-center">Work Date</th>
-                          <th className="text-center">Fine (₹)</th>
-                          <th className="text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(() => {
-                          const totalFine = selectedApplication.TOTAL_FINE || 0;
-                          const breakdown = getBreakdownData(totalFine);
-                          return breakdown.map((item, index) => (
+                  {breakdownLoading ? (
+                    <div className="text-center">
+                      <div
+                        className="spinner-border spinner-border-sm text-primary"
+                        role="status"
+                      >
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <p className="text-muted mt-2">Loading breakdown...</p>
+                    </div>
+                  ) : breakdownData.length === 0 ? (
+                    <p className="text-muted">No breakdown records found.</p>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="table table-bordered table-striped table-hover align-middle mb-0">
+                        <thead className="table-light">
+                          <tr>
+                            <th className="text-center">Date</th>
+                            <th className="text-center">Work ID</th>
+                            <th className="text-center">Ward ID</th>
+                            <th className="text-center">Toilet Location</th>
+                            <th className="text-center">Supervisor ID</th>
+                            <th className="text-center">SI ID</th>
+                            <th className="text-center">Fine (₹)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {breakdownData.map((item, index) => (
                             <tr key={index}>
                               <td className="text-center">
-                                {selectedApplication.WORK_ID}
+                                {formatDate(item.DAT_CTPTWORKLOG_DATE)}
                               </td>
                               <td className="text-center">
-                                {selectedApplication.WARD_ID}
+                                {item.NUM_EMPCTPTWORK_ID}
                               </td>
                               <td className="text-center">
-                                {selectedApplication.TOILET_ID}
+                                {item.NUM_CTPTTYPE_WARDID}
                               </td>
                               <td className="text-center">
-                                {selectedApplication.TOILET_LOCATION}
+                                {item.TOILET_LOCATION}
                               </td>
                               <td className="text-center">
-                                {selectedApplication.SUPERID || "—"}
+                                {item.SUPERID || "—"}
                               </td>
                               <td className="text-center">
-                                {selectedApplication.SIID || "—"}
+                                {item.SIID || "—"}
                               </td>
-                              <td className="text-center">
-                                {formatDate(selectedApplication.WORK_DATE)}
-                              </td>
-                              <td className="text-center">
-                                ₹{item.amount.toLocaleString()}
-                              </td>
-                              <td className="text-center">
-                                <span className="badge bg-secondary">—</span>
+                              <td className="text-center fw-semibold text-danger">
+                                ₹{item.FINE_AMT?.toLocaleString() || 0}
                               </td>
                             </tr>
-                          ));
-                        })()}
-                      </tbody>
-                      <tfoot className="table-active fw-bold">
-                        <tr>
-                          <td colSpan="7" className="text-end">
-                            <i className="bi bi-calculator me-2"></i>Total Fine
-                          </td>
-                          <td className="text-center text-success">
-                            ₹
-                            {selectedApplication.TOTAL_FINE?.toLocaleString() ||
-                              0}
-                          </td>
-                          <td className="text-center"></td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                  <small className="text-muted d-block mt-2">
-                    <i className="bi bi-info-circle me-1"></i>
-                    The fine is distributed across 3 entries. The sum of
-                    individual fines equals the total fine.
-                  </small>
+                          ))}
+                        </tbody>
+                        <tfoot className="table-active fw-bold">
+                          <tr>
+                            <td colSpan="6" className="text-end">
+                              <i className="bi bi-calculator me-2"></i>Total
+                              Fine
+                            </td>
+                            <td className="text-center text-success">
+                              ₹{totalBreakdownFine.toLocaleString()}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
                 </div>
 
                 {/* Approval section (commented out – kept for future use) */}

@@ -1120,47 +1120,47 @@ async function userDetailsRepo(userId, ulbId, toiletId) {
 
     out_ErrorCode: {
       dir: oracledb.BIND_OUT,
-      type: oracledb.NUMBER
+      type: oracledb.NUMBER,
     },
 
     out_ErrorMsg: {
       dir: oracledb.BIND_OUT,
       type: oracledb.STRING,
-      maxSize: 1000
+      maxSize: 1000,
     },
 
     out_newstr: {
       dir: oracledb.BIND_OUT,
       type: oracledb.STRING,
-      maxSize: 32767
-    }
+      maxSize: 32767,
+    },
   };
 
   const result = await executeProcedure({
     statement: plsql,
     binds,
-    useTx: false
+    useTx: false,
   });
 
   const out = result.outBinds || {};
 
-  const errorCode = String(out.out_ErrorCode ?? '0');
+  const errorCode = String(out.out_ErrorCode ?? "0");
 
-  if (errorCode !== '9999') {
+  if (errorCode !== "9999") {
     return {
       success: false,
       errorCode,
-      message: out.out_ErrorMsg || 'User details failed'
+      message: out.out_ErrorMsg || "User details failed",
     };
   }
 
-  const userData = JSON.parse(out.out_newstr || '{}');
+  const userData = JSON.parse(out.out_newstr || "{}");
 
   return {
     success: true,
     errorCode,
     message: out.out_ErrorMsg,
-    data: userData 
+    data: userData,
   };
 }
 
@@ -1226,27 +1226,25 @@ WHERE a.num_empctptwork_ulbid = :ulbid
   WHERE a.num_empctptwork_ulbid = :ulbid
 `;
 
-let countBinds = {
-  ulbid: Number(ulbid),
-};
+  let countBinds = {
+    ulbid: Number(ulbid),
+  };
 
-if (fromDate && toDate) {
-  countSql += `
+  if (fromDate && toDate) {
+    countSql += `
     AND TRUNC(a.dat_empctptwork_date)
     BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
     AND TO_DATE(:toDate, 'YYYY-MM-DD')
   `;
 
-  countBinds.fromDate = fromDate;
-  countBinds.toDate = toDate;
-}
+    countBinds.fromDate = fromDate;
+    countBinds.toDate = toDate;
+  }
 
-const countResult = await executeQuery(countSql, countBinds);
+  const countResult = await executeQuery(countSql, countBinds);
 
-const total =
-  countResult.rows?.[0]?.TOTAL ??
-  countResult.rows?.[0]?.total ??
-  0;
+  const total =
+    countResult.rows?.[0]?.TOTAL ?? countResult.rows?.[0]?.total ?? 0;
 
   return {
     data: rows,
@@ -1256,6 +1254,36 @@ const total =
       total,
       totalPages: Math.ceil(total / Number(limit)),
     },
+  };
+}
+
+async function fineBreakdownRepo(ulbid, workId) {
+  let sql = `
+    select a.num_empctptwork_id,
+    c.num_ctpttype_wardid,
+    c.var_ctpttype_toiletlocation toilet_location,
+    a.var_empctptwork_supby superid,
+    a.var_empctptwork_siby as siid,
+    nvl(num_ctptworklog_updtamt,0) fine_amt,
+    b.dat_ctptworklog_date
+    from AORTS_EMPCTPTWORK_MST a 
+    inner join AORTS_EMPCTPTWORK_log b on a.num_empctptwork_id = b.num_ctptworklog_workid
+    inner join aorts_ctptlist_mas c
+    on a.num_empctptwork_toiletid = c.num_ctpttype_id
+    where a.num_empctptwork_id = :workId
+    and a.num_empctptwork_ulbid = :ulbid
+  `;
+
+  let binds = {
+    ulbid: Number(ulbid),
+    workId: Number(workId),
+  };
+
+  const result = await executeQuery(sql, binds);
+  const rows = result.rows || [];
+
+  return {
+    data: rows,
   };
 }
 
@@ -1272,7 +1300,8 @@ module.exports = {
   getReworkImages,
   complaintWorkStatusInsRepo,
   userDetailsRepo,
-  fineApplicationListRepo
+  fineApplicationListRepo,
+  fineBreakdownRepo,
 };
 
 module.exports.complaintStatusUpdateRepo = complaintStatusUpdateRepo;
