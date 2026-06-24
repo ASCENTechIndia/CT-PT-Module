@@ -24,7 +24,7 @@ const FineList = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
-  // Pagination
+  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -44,7 +44,6 @@ const FineList = () => {
     return `${year}-${month}-${day}`;
   }
 
-  // Fetch applications from API
   const fetchApplications = async (page = 1) => {
     if (!ulbId) {
       setModalMessage("UlbId is not set");
@@ -52,9 +51,10 @@ const FineList = () => {
     }
     try {
       setLoader(true);
+      const apiPage = page - 1;
       const params = new URLSearchParams();
       params.append("ulbid", ulbId);
-      params.append("page", page);
+      params.append("page", apiPage);
       params.append("limit", pageSize);
       if (dateFilter.from) params.append("fromDate", dateFilter.from);
       if (dateFilter.to) params.append("toDate", dateFilter.to);
@@ -65,8 +65,8 @@ const FineList = () => {
 
       if (response.success && response.data) {
         setApplications(response.data.data);
-        const apiPage = response.data.pagination.page;
-        setCurrentPage(apiPage === 0 ? 1 : apiPage);
+        const returnedPage = response.data.pagination.page;
+        setCurrentPage(returnedPage + 1);
         setTotalPages(response.data.pagination.totalPages);
         setTotalRecords(response.data.pagination.total);
       } else {
@@ -88,7 +88,6 @@ const FineList = () => {
     }
   };
 
-  // Fetch breakdown data for modal
   const fetchBreakdown = async (workId) => {
     if (!ulbId) return;
     try {
@@ -111,7 +110,6 @@ const FineList = () => {
     }
   };
 
-  // Initial load and when date filters change
   useEffect(() => {
     if (ulbId) {
       fetchApplications(1);
@@ -124,7 +122,6 @@ const FineList = () => {
     }
   }, [dateFilter]);
 
-  // Filter handlers
   const handleDateChangeFilter = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({ ...prev, [name]: value }));
@@ -134,7 +131,6 @@ const FineList = () => {
     setDateFilter({ from: "", to: "" });
   };
 
-  // Page change
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -142,7 +138,6 @@ const FineList = () => {
     }
   };
 
-  // Pagination pages generator
   const getPaginationPages = () => {
     const pages = [];
     const maxPagesToShow = 5;
@@ -157,7 +152,6 @@ const FineList = () => {
     return pages;
   };
 
-  // Open review modal and fetch breakdown
   const handleReviewClick = async (application) => {
     setSelectedApplication(application);
     setBreakdownData([]);
@@ -165,17 +159,14 @@ const FineList = () => {
     await fetchBreakdown(application.WORK_ID);
   };
 
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    // Extract date and time parts
     const [datePart, timePart] = dateString.split("T");
     const [year, month, day] = datePart.split("-");
-    const time = timePart.split(".")[0]; // remove milliseconds
+    const time = timePart.split(".")[0];
     return `${day}-${month}-${year} ${time}`;
   };
 
-  // Calculate total fine from breakdown
   const totalBreakdownFine = breakdownData.reduce(
     (sum, item) => sum + (item.FINE_AMT || 0),
     0,
@@ -318,7 +309,6 @@ const FineList = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
         {totalRecords > 0 && (
           <div className="d-flex align-items-center justify-content-between mt-4">
             <div className="text-muted small">
@@ -413,7 +403,6 @@ const FineList = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                {/* Breakdown Table Section */}
                 <div className="">
                   <h6 className="">
                     <i className="bi bi-list-ul me-2"></i>
@@ -487,14 +476,7 @@ const FineList = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Approval section (commented out – kept for future use) */}
-                {/* <div className="mt-4 pt-3 border-top">
-                  <label className="form-label fw-semibold">Approval Remark *</label>
-                  <textarea ... />
-                </div> */}
               </div>
-              {/* <div className="modal-footer"> ... </div> */}
             </div>
           </div>
         </div>
