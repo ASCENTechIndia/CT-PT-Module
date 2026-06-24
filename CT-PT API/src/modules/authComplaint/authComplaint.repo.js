@@ -551,18 +551,19 @@ async function getVendorListRepo(fromDate, toDate, status, userId) {
     a.dat_empctptwork_date,
     a.var_empctptwork_latitude,
     a.var_empctptwork_longitude,
+    ctpt.num_ctpttype_wardid,
     a.num_empctptwork_toiletid,
+    ctpt.var_ctpttype_toiletlocation,
     a.num_empctptwork_stageid,
     a.var_empctptwork_remark,
     a.var_empctptwork_appsource,
     a.var_empctptwork_status,
     dtls.num_stage_id,
-    dtls.bolb_empctptworkdetails_image,
-    dtls.bolb_empctptworkdetails_image2,
-    dtls.bolb_empctptworkdetails_image3,
-    dtls.var_insby
+    dtls.var_insby,
+    a.var_empctptwork_wrkflag
     From AORTS_EMPCTPTWORK_MST a
     inner join aorts_empctptworkdetails_mst dtls on a.num_empctptwork_id= dtls.num_empctptwork_id
+    inner join aorts_ctptlist_mas ctpt on a.num_empctptwork_toiletid = ctpt.num_ctpttype_id
     where var_empctptwork_userid = :userId
   `;
 
@@ -594,19 +595,6 @@ async function getVendorListRepo(fromDate, toDate, status, userId) {
   const result = await executeQuery(sql, binds);
 
   const rows = result.rows || [];
-
-  // Convert images
-  for (const row of rows) {
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE,
-    );
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE2 = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
-    );
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE3 = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
-    );
-  }
 
   return {
     data: rows,
