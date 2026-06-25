@@ -29,6 +29,18 @@ body {
   margin: 0;
 }
 
+.panel{
+  font-size: 13px;
+}
+
+.modal-body{
+  font-size: 14px;
+}
+
+.modal-body .h6{
+  font-size: 15px;
+}
+
 .filter-input,
 .filter-select {
   padding: 0.5rem 0.75rem;
