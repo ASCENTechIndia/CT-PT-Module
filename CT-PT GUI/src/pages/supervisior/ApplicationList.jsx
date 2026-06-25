@@ -650,7 +650,7 @@ const ApplicationList = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="bi bi-file-earmark-check me-2"></i>
-                  Review Application #{selectedApplication.NUM_EMPCTPTENTRY_ID}
+                  Review Application #{selectedApplication.NUM_EMPCTPTWORK_ID}
                 </h5>
                 <button
                   type="button"
@@ -706,7 +706,7 @@ const ApplicationList = () => {
                               Employee ID
                             </label>
                             <p className="h6 mb-0">
-                              {selectedApplication.USERID}
+                              {selectedApplication.VAR_EMPCTPTWORK_USERID}
                             </p>
                           </div>
                           <div className="col-md-6">
@@ -715,7 +715,7 @@ const ApplicationList = () => {
                             </label>
                             <p className="h6 mb-0">
                               {formatDate(
-                                selectedApplication.DAT_EMPCTPTENTRY_DATE,
+                                selectedApplication.DAT_EMPCTPTWORK_DATE,
                               )}
                             </p>
                           </div>
@@ -724,7 +724,7 @@ const ApplicationList = () => {
                               Remark
                             </label>
                             <p className="h6 mb-0">
-                              {selectedApplication.VAR_EMPCTPTENTRY_REMARK}
+                              {selectedApplication.VAR_EMPCTPTWORK_REMARK}
                             </p>
                           </div>
                         </div>

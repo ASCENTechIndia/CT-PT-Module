@@ -598,7 +598,7 @@ const ApplicationListSI = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="bi bi-file-earmark-check me-2"></i>
-                  Review Application #{selectedApplication.NUM_EMPCTPTENTRY_ID}
+                  Review Application #{selectedApplication.NUM_EMPCTPTWORK_ID}
                 </h5>
                 <button
                   type="button"
@@ -654,7 +654,7 @@ const ApplicationListSI = () => {
                               Employee ID
                             </label>
                             <p className="h6 mb-0">
-                              {selectedApplication.USERID}
+                              {selectedApplication.VAR_EMPCTPTWORK_USERID}
                             </p>
                           </div>
                           <div className="col-md-6">
@@ -663,7 +663,7 @@ const ApplicationListSI = () => {
                             </label>
                             <p className="h6 mb-0">
                               {formatDate(
-                                selectedApplication.DAT_EMPCTPTENTRY_DATE,
+                                selectedApplication.DAT_EMPCTPTWORK_DATE,
                               )}
                             </p>
                           </div>
@@ -672,7 +672,7 @@ const ApplicationListSI = () => {
                               Vendor Remark
                             </label>
                             <p className="h6 mb-0">
-                              {selectedApplication.VAR_EMPCTPTENTRY_REMARK}
+                              {selectedApplication.VAR_EMPCTPTWORK_REMARK}
                             </p>
                           </div>
                         </div>
@@ -687,7 +687,7 @@ const ApplicationListSI = () => {
                       <div className="card-body">
                         <label className="form-label fw-semibold">Remark</label>
                         <small className="text-muted mt-2 d-block">
-                          {selectedApplication.SUPERVISOR_REMARK}
+                          {selectedApplication.VAR_EMPCTPTWORK_SUPREMARK}
                         </small>
                       </div>
                     </div>
