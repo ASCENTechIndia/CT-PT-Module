@@ -96,9 +96,9 @@ export default function Navbar() {
             </button>
             {showProfile && (
               <ul className="dropdown-menu dropdown-menu-end show">
-                <li><Link className="dropdown-item" to="/profile" onClick={() => setShowProfile(false)}>Profile</Link></li>
-                <li><Link className="dropdown-item" to="/settings" onClick={() => setShowProfile(false)}>Account settings</Link></li>
-                <li><hr className="dropdown-divider" /></li>
+                {/* <li><Link className="dropdown-item" to="/profile" onClick={() => setShowProfile(false)}>Profile</Link></li> */}
+                {/* <li><Link className="dropdown-item" to="/settings" onClick={() => setShowProfile(false)}>Account settings</Link></li> */}
+                {/* <li><hr className="dropdown-divider" /></li> */}
                 <li><button className="dropdown-item" onClick={handleLogout}>Sign out</button></li>
               </ul>
             )}
