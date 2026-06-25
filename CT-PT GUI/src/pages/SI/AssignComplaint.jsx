@@ -4,16 +4,18 @@ import { useForm } from "react-hook-form";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
+import { useLoader } from "../../context/LoaderContext";
 
 const getToday = () => {
   const d = new Date();
-  return d.toISOString().split("T")[0]; 
+  return d.toISOString().split("T")[0];
 };
 
 const AssignComplaint = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
   const userId = user?.userId;
+  const { setLoader } = useLoader();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,7 +87,7 @@ const AssignComplaint = () => {
     }
     try {
       setLoading(true);
-
+      setLoader(true);
       const response = await apiClient.get(
         `/registerComplaint/getCitizenComplaintList?ulbid=${ulbid}&page=${dataPage}&limit=${pageSize}&fromDate=${filters.fromDate}&toDate=${filters.toDate}&si_id=${userId}&status=${filters.status}`,
       );
@@ -100,6 +102,7 @@ const AssignComplaint = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setLoader(false);
     }
   };
 
@@ -109,6 +112,7 @@ const AssignComplaint = () => {
     }
     try {
       setLoading(true);
+      setLoader(true);
       const res = await apiClient.get(
         `/registerComplaint/vendorList?ulbid=${ulbid}`,
       );
@@ -126,6 +130,7 @@ const AssignComplaint = () => {
       alert(error.message);
     } finally {
       setLoading(false);
+      setLoader(false);
     }
   };
 
@@ -333,11 +338,12 @@ const AssignComplaint = () => {
     }
     try {
       setLoading(true);
+      setLoader(true);
       const res = await apiClient.post(`/registerComplaint/assignComplaint`, {
         userId: userId,
         complaintId: selectedComplaint.COMPLAINTID,
         supervisorId: selectedComplaint.SUPERWISER_ID,
-        vendorId:supervisiorId,
+        vendorId: supervisiorId,
         wardNo: selectedComplaint.PRBHAGID,
         ulbId: ulbid,
       });
@@ -356,7 +362,7 @@ const AssignComplaint = () => {
         setModalType("error");
         setModalTitle("Error");
         setModalMessage(
-          res.message || "Failed to assign complaint. Please try again."
+          res.message || "Failed to assign complaint. Please try again.",
         );
         setIsModalOpen(true);
       }
@@ -365,217 +371,208 @@ const AssignComplaint = () => {
       setModalType("error");
       setModalTitle("Error");
       setModalMessage(
-        error.message || "Failed to assign complaint. Please try again."
+        error.message || "Failed to assign complaint. Please try again.",
       );
       setIsModalOpen(true);
     } finally {
       setLoading(false);
+      setLoader(false);
     }
   };
 
   return (
     <Layout>
-      {loading ? (
-        <div className="panel text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+      <div className="panel">
+        <div className="panel-header d-flex justify-content-between">
+          <div>
+            <h2 className="h5 mb-1 section-title">
+              <i className="bi bi-table" aria-hidden="true"></i>
+              <span>All Complaints ({complaints?.length})</span>
+            </h2>
+            <p className="text-muted mb-0">
+              View and manage complaints submitted by citizens.
+            </p>
           </div>
-          <p className="text-muted mt-3">Loading complaints...</p>
-        </div>
-      ) : (
-        <div className="panel">
-          <div className="panel-header d-flex justify-content-between">
-            <div>
-              <h2 className="h5 mb-1 section-title">
-                <i className="bi bi-table" aria-hidden="true"></i>
-                <span>All Complaints ({complaints?.length})</span>
-              </h2>
-              <p className="text-muted mb-0">
-                View and manage complaints submitted by citizens.
-              </p>
-            </div>
-            <div>
-              <div className="filter-bar">
-                <div className="filter-group">
-                  <label htmlFor="fromDate">From Date</label>
-                  <input
-                    type="date"
-                    id="fromDate"
-                    name="fromDate"
-                    className="filter-input"
-                    style={{ width: "150px" }}
-                    value={filters.fromDate}
-                    onChange={handleDateChangeFilter}
-                  />
-                </div>
+          <div>
+            <div className="filter-bar">
+              <div className="filter-group">
+                <label htmlFor="fromDate">From Date</label>
+                <input
+                  type="date"
+                  id="fromDate"
+                  name="fromDate"
+                  className="filter-input"
+                  style={{ width: "150px" }}
+                  value={filters.fromDate}
+                  onChange={handleDateChangeFilter}
+                />
+              </div>
 
-                <div className="filter-group">
-                  <label htmlFor="toDate">To Date</label>
-                  <input
-                    type="date"
-                    id="toDate"
-                    name="toDate"
-                    className="filter-input"
-                    style={{ width: "150px" }}
-                    value={filters.toDate}
-                    onChange={handleDateChangeFilter}
-                  />
-                </div>
+              <div className="filter-group">
+                <label htmlFor="toDate">To Date</label>
+                <input
+                  type="date"
+                  id="toDate"
+                  name="toDate"
+                  className="filter-input"
+                  style={{ width: "150px" }}
+                  value={filters.toDate}
+                  onChange={handleDateChangeFilter}
+                />
+              </div>
 
-                <div className="filter-group">
-                  <label htmlFor="status">Status</label>
-                  <select
-                    id="status"
-                    className="filter-select"
-                    style={{ width: "120px" }}
-                    value={filters.status}
-                    onChange={handleStatusChange}
-                  >
-                    <option value="">All</option>
-                    <option value="P">Pending</option>
-                    <option value="ASSIGN">Assigned</option>
-                  </select>
-                </div>
-
-                <div
-                  className="filter-group"
-                  style={{ justifyContent: "flex-end" }}
+              <div className="filter-group">
+                <label htmlFor="status">Status</label>
+                <select
+                  id="status"
+                  className="filter-select"
+                  style={{ width: "120px" }}
+                  value={filters.status}
+                  onChange={handleStatusChange}
                 >
-                  <button
-                    type="button"
-                    className="btn-clear-filters"
-                    onClick={handleClearFilters}
-                  >
-                    <i className="bi bi-x-lg me-1"></i> Clear
-                  </button>
-                </div>
+                  <option value="">All</option>
+                  <option value="P">Pending</option>
+                  <option value="ASSIGN">Assigned</option>
+                </select>
+              </div>
+
+              <div
+                className="filter-group"
+                style={{ justifyContent: "flex-end" }}
+              >
+                <button
+                  type="button"
+                  className="btn-clear-filters"
+                  onClick={handleClearFilters}
+                >
+                  <i className="bi bi-x-lg me-1"></i> Clear
+                </button>
               </div>
             </div>
           </div>
-          <div className="table-responsive">
-            <table className="table align-middle mb-0">
-              <thead>
-                <tr>
-                  {/* <th scope="col">Complaint ID</th> */}
-                  <th scope="col">Name</th>
-                  <th scope="col">Ward</th>
-                  <th scope="col">Supervisior Name</th>
-                  <th scope="col">Ass. Supervisior Name</th>
-                  <th scope="col">Phone</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Date</th>
-                  <th scope="col" className="text-end">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {complaints.map((complaint) => (
-                  <tr key={complaint.NUM_COMPLAINT_ID}>
-                    <td>{complaint.VAR_COMPLAINT_CITIZNAME}</td>
-                    <td>{complaint.PRBHAG}</td>
-                    <td>{complaint.SUPERWISER}</td>
-                    <td>{complaint.ASSIGN_SUPEVISOR_NAME}</td>
-                    <td>{complaint.MOBILENO}</td>
-                    <td>{getBadge(complaint.VAR_COMPLAINT_STATUS)}</td>
-                    <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
-                    <td className="text-end">
-                      <button
-                        onClick={() => handleReviewClick(complaint)}
-                        className={`btn btn-sm ${
-                          complaint.VAR_COMPLAINT_STATUS === "ASSIGN"
-                            ? "btn-outline-secondary"
-                            : "btn-outline-primary"
-                        }`}
-                        disabled={complaint.VAR_COMPLAINT_STATUS === "ASSIGN"}
-                      
-                      >
-                        <i className="bi bi-eye me-1"></i> Review
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="d-flex align-items-center justify-content-between mt-4">
-            <div className="text-muted small">
-              Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
-              <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong>{" "}
-              of <strong>{totalRecords}</strong> applications
-            </div>
-            <nav aria-label="Page navigation">
-              <ul className="pagination mb-0">
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="bi bi-chevron-double-left"></i>
-                  </button>
-                </li>
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="bi bi-chevron-left"></i>
-                  </button>
-                </li>
-
-                {getPaginationPages().map((page) => (
-                  <li
-                    key={page}
-                    className={`page-item ${currentPage === page ? "active" : ""}`}
-                  >
-                    <button
-                      className="page-link"
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </button>
-                  </li>
-                ))}
-
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <i className="bi bi-chevron-right"></i>
-                  </button>
-                </li>
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <i className="bi bi-chevron-double-right"></i>
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
         </div>
-      )}
+        <div className="table-responsive">
+          <table className="table align-middle mb-0">
+            <thead>
+              <tr>
+                {/* <th scope="col">Complaint ID</th> */}
+                <th scope="col">Name</th>
+                <th scope="col">Ward</th>
+                <th scope="col">Supervisior Name</th>
+                <th scope="col">Ass. Supervisior Name</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Status</th>
+                <th scope="col">Date</th>
+                <th scope="col" className="text-end">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {complaints.map((complaint) => (
+                <tr key={complaint.NUM_COMPLAINT_ID}>
+                  <td>{complaint.VAR_COMPLAINT_CITIZNAME}</td>
+                  <td>{complaint.PRBHAG}</td>
+                  <td>{complaint.SUPERWISER}</td>
+                  <td>{complaint.ASSIGN_SUPEVISOR_NAME}</td>
+                  <td>{complaint.MOBILENO}</td>
+                  <td>{getBadge(complaint.VAR_COMPLAINT_STATUS)}</td>
+                  <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
+                  <td className="text-end">
+                    <button
+                      onClick={() => handleReviewClick(complaint)}
+                      className={`btn btn-sm ${
+                        complaint.VAR_COMPLAINT_STATUS === "ASSIGN"
+                          ? "btn-outline-secondary"
+                          : "btn-outline-primary"
+                      }`}
+                      disabled={complaint.VAR_COMPLAINT_STATUS === "ASSIGN"}
+                    >
+                      <i className="bi bi-eye me-1"></i> Review
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="d-flex align-items-center justify-content-between mt-4">
+          <div className="text-muted small">
+            Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
+            <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong> of{" "}
+            <strong>{totalRecords}</strong> applications
+          </div>
+          <nav aria-label="Page navigation">
+            <ul className="pagination mb-0">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                >
+                  <i className="bi bi-chevron-double-left"></i>
+                </button>
+              </li>
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+              </li>
+
+              {getPaginationPages().map((page) => (
+                <li
+                  key={page}
+                  className={`page-item ${currentPage === page ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </button>
+                </li>
+              ))}
+
+              <li
+                className={`page-item ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+              </li>
+              <li
+                className={`page-item ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="bi bi-chevron-double-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
 
       {/* Review Complaint Modal */}
       {showModal && selectedComplaint && (

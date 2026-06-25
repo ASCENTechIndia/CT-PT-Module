@@ -778,18 +778,18 @@ const ApplicationList = () => {
                             height="100%"
                             frameBorder="0"
                             style={{ border: 0 }}
-                            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyAMu4Ig2LTmXqP2uIRuDWvj2eqaCpYXNao&q=${selectedApplication.VAR_EMPCTPTENTRY_LATITUDE},${selectedApplication.VAR_EMPCTPTENTRY_LONGITUDE}`}
+                            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyAMu4Ig2LTmXqP2uIRuDWvj2eqaCpYXNao&q=${selectedApplication.VAR_EMPCTPTWORK_LATITUDE},${selectedApplication.VAR_EMPCTPTWORK_LONGITUDE}`}
                             title="Location Map"
                           ></iframe>
                         </div>
                         <div className="mt-2 small text-muted">
                           <p className="mb-1">
                             <strong>Latitude:</strong>{" "}
-                            {selectedApplication.VAR_EMPCTPTENTRY_LATITUDE}
+                            {selectedApplication.VAR_EMPCTPTWORK_LATITUDE}
                           </p>
                           <p className="mb-0">
                             <strong>Longitude:</strong>{" "}
-                            {selectedApplication.VAR_EMPCTPTENTRY_LONGITUDE}
+                            {selectedApplication.VAR_EMPCTPTWORK_LONGITUDE}
                           </p>
                         </div>
                       </div>

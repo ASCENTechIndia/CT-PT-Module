@@ -83,10 +83,6 @@ const ApplicationListSI = () => {
 
   useEffect(() => {
     fetchApplications(1);
-  }, []);
-
-  useEffect(() => {
-    fetchApplications(1);
   }, [dateFilter, statusFilter]);
 
   // Fetch stage-wise images for selected application
@@ -101,7 +97,7 @@ const ApplicationListSI = () => {
       }
     } catch (err) {
       console.error("Error fetching stage-wise images:", err);
-      setStageWiseImages([])
+      setStageWiseImages([]);
     } finally {
       setLoader(false);
     }
@@ -378,212 +374,203 @@ const ApplicationListSI = () => {
 
   return (
     <Layout>
-      {loading ? (
-        <div className="panel text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+      <div className="panel">
+        <div className="panel-header d-flex justify-content-between">
+          <div>
+            <h2 className="h5 mb-1 section-title">
+              <i className="bi bi-file-earmark-text" aria-hidden="true"></i>
+              <span>All Applications ({applications.length})</span>
+            </h2>
+            <p className="text-muted mb-0">
+              View application details, images, and location.
+            </p>
           </div>
-          <p className="text-muted mt-3">Loading applications...</p>
-        </div>
-      ) : (
-        <div className="panel">
-          <div className="panel-header d-flex justify-content-between">
-            <div>
-              <h2 className="h5 mb-1 section-title">
-                <i className="bi bi-file-earmark-text" aria-hidden="true"></i>
-                <span>All Applications ({applications.length})</span>
-              </h2>
-              <p className="text-muted mb-0">
-                View application details, images, and location.
-              </p>
-            </div>
-            <div>
-              <div className="filter-bar">
-                <div className="filter-group">
-                  <label htmlFor="fromDate">From</label>
-                  <input
-                    type="date"
-                    name="from"
-                    className="filter-input"
-                    style={{ width: "150px" }}
-                    value={dateFilter.from}
-                    onChange={handleDateChangeFilter}
-                  />
-                </div>
-                <div className="filter-group">
-                  <label htmlFor="toDate">To</label>
-                  <input
-                    type="date"
-                    name="to"
-                    style={{ width: "150px" }}
-                    className="filter-input"
-                    value={dateFilter.to}
-                    onChange={handleDateChangeFilter}
-                  />
-                </div>
-                <div className="filter-group">
-                  <label htmlFor="statusSelect">Status</label>
-                  <select
-                    name="status"
-                    className="filter-select"
-                    style={{ width: "107px" }}
-                    value={statusFilter}
-                    onChange={handleStatusChange}
-                  >
-                    <option value="all">All</option>
-                    <option value="A">Approve</option>
-                    <option value="R">Reject</option>
-                    <option value="C">Pending</option>
-                  </select>
-                </div>
-                <div
-                  className="filter-group"
-                  style={{ justifyContent: "flex-end" }}
+          <div>
+            <div className="filter-bar">
+              <div className="filter-group">
+                <label htmlFor="fromDate">From</label>
+                <input
+                  type="date"
+                  name="from"
+                  className="filter-input"
+                  style={{ width: "150px" }}
+                  value={dateFilter.from}
+                  onChange={handleDateChangeFilter}
+                />
+              </div>
+              <div className="filter-group">
+                <label htmlFor="toDate">To</label>
+                <input
+                  type="date"
+                  name="to"
+                  style={{ width: "150px" }}
+                  className="filter-input"
+                  value={dateFilter.to}
+                  onChange={handleDateChangeFilter}
+                />
+              </div>
+              <div className="filter-group">
+                <label htmlFor="statusSelect">Status</label>
+                <select
+                  name="status"
+                  className="filter-select"
+                  style={{ width: "107px" }}
+                  value={statusFilter}
+                  onChange={handleStatusChange}
                 >
-                  <button
-                    type="button"
-                    className="btn-clear-filters"
-                    onClick={handleClearFilters}
-                  >
-                    <i className="bi bi-x-lg me-1"></i> Clear
-                  </button>
-                </div>
+                  <option value="all">All</option>
+                  <option value="A">Approve</option>
+                  <option value="R">Reject</option>
+                  <option value="C">Pending</option>
+                </select>
+              </div>
+              <div
+                className="filter-group"
+                style={{ justifyContent: "flex-end" }}
+              >
+                <button
+                  type="button"
+                  className="btn-clear-filters"
+                  onClick={handleClearFilters}
+                >
+                  <i className="bi bi-x-lg me-1"></i> Clear
+                </button>
               </div>
             </div>
           </div>
-          <div className="table-responsive">
-            <table className="table align-middle mb-0">
-              <thead>
-                <tr>
-                  <th scope="col">Ward</th>
-                  <th scope="col">Toilet Location</th>
-                  <th scope="col">Toilet Manager</th>
-                  <th scope="col">Employee</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">SI Status</th>
-                  <th scope="col">Remark</th>
-                  <th scope="col">Date</th>
-                  <th scope="col" className="text-end">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((app, idx) => (
-                  <tr key={app.NUM_EMPCTPTWORK_ID || idx}>
-                    <td className="fw-semibold">
-                      Ward {app.NUM_CTPTTYPE_WARDID}
-                    </td>
-                    <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
-                    <td>{app.VAR_CTPTTYPE_USERNAME}</td>
-                    <td>{app.USERNAME}</td>
-                    <td>{getBadge(app.VAR_EMPCTPTWORK_STATUS)}</td>
-                    <td>{getSIBadge(app.VAR_EMPCTPTWORK_SIFLAG)}</td>
-                    <td style={{ maxWidth: "250px" }}>
-                      <small>{app.VAR_EMPCTPTWORK_REMARK}</small>
-                    </td>
-                    <td>{formatDate(app.DAT_EMPCTPTWORK_DATE)}</td>
-                    <td className="text-end">
-                      <button
-                        className={`btn btn-sm ${
-                          app.VAR_EMPCTPTWORK_STATUS === "R"
-                            ? "btn-outline-secondary"
-                            : "btn-outline-primary"
-                        }`}
-                        onClick={() => handleReviewClick(app)}
-                        disabled={app.VAR_EMPCTPTWORK_STATUS === "R"}
-                        title={
-                          app.VAR_EMPCTPTWORK_STATUS === "A"
-                            ? "Already approved"
-                            : ""
-                        }
-                      >
-                        <i className="bi bi-eye me-1"></i> Review
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="d-flex align-items-center justify-content-between mt-4">
-            <div className="text-muted small">
-              Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
-              <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong>{" "}
-              of <strong>{totalRecords}</strong> applications
-            </div>
-            <nav aria-label="Page navigation">
-              <ul className="pagination mb-0">
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="bi bi-chevron-double-left"></i>
-                  </button>
-                </li>
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="bi bi-chevron-left"></i>
-                  </button>
-                </li>
-
-                {getPaginationPages().map((page) => (
-                  <li
-                    key={page}
-                    className={`page-item ${currentPage === page ? "active" : ""}`}
-                  >
-                    <button
-                      className="page-link"
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </button>
-                  </li>
-                ))}
-
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <i className="bi bi-chevron-right"></i>
-                  </button>
-                </li>
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <i className="bi bi-chevron-double-right"></i>
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
         </div>
-      )}
+        <div className="table-responsive">
+          <table className="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Ward</th>
+                <th scope="col">Toilet Location</th>
+                <th scope="col">Toilet Manager</th>
+                <th scope="col">Employee</th>
+                <th scope="col">Status</th>
+                <th scope="col">SI Status</th>
+                <th scope="col">Remark</th>
+                <th scope="col">Date</th>
+                <th scope="col" className="text-end">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((app, idx) => (
+                <tr key={app.NUM_EMPCTPTWORK_ID || idx}>
+                  <td className="fw-semibold">
+                    Ward {app.NUM_CTPTTYPE_WARDID}
+                  </td>
+                  <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
+                  <td>{app.VAR_CTPTTYPE_USERNAME}</td>
+                  <td>{app.USERNAME}</td>
+                  <td>{getBadge(app.VAR_EMPCTPTWORK_STATUS)}</td>
+                  <td>{getSIBadge(app.VAR_EMPCTPTWORK_SIFLAG)}</td>
+                  <td style={{ maxWidth: "250px" }}>
+                    <small>{app.VAR_EMPCTPTWORK_REMARK}</small>
+                  </td>
+                  <td>{formatDate(app.DAT_EMPCTPTWORK_DATE)}</td>
+                  <td className="text-end">
+                    <button
+                      className={`btn btn-sm ${
+                        app.VAR_EMPCTPTWORK_STATUS === "R"
+                          ? "btn-outline-secondary"
+                          : "btn-outline-primary"
+                      }`}
+                      onClick={() => handleReviewClick(app)}
+                      disabled={app.VAR_EMPCTPTWORK_STATUS === "R"}
+                      title={
+                        app.VAR_EMPCTPTWORK_STATUS === "A"
+                          ? "Already approved"
+                          : ""
+                      }
+                    >
+                      <i className="bi bi-eye me-1"></i> Review
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="d-flex align-items-center justify-content-between mt-4">
+          <div className="text-muted small">
+            Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
+            <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong> of{" "}
+            <strong>{totalRecords}</strong> applications
+          </div>
+          <nav aria-label="Page navigation">
+            <ul className="pagination mb-0">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                >
+                  <i className="bi bi-chevron-double-left"></i>
+                </button>
+              </li>
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+              </li>
+
+              {getPaginationPages().map((page) => (
+                <li
+                  key={page}
+                  className={`page-item ${currentPage === page ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </button>
+                </li>
+              ))}
+
+              <li
+                className={`page-item ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+              </li>
+              <li
+                className={`page-item ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="bi bi-chevron-double-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
 
       {/* Review Application Modal */}
       {showModal && selectedApplication && (
@@ -739,18 +726,18 @@ const ApplicationListSI = () => {
                             height="100%"
                             frameBorder="0"
                             style={{ border: 0 }}
-                            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyAMu4Ig2LTmXqP2uIRuDWvj2eqaCpYXNao&q=${selectedApplication.VAR_EMPCTPTENTRY_LATITUDE},${selectedApplication.VAR_EMPCTPTENTRY_LONGITUDE}`}
+                            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyAMu4Ig2LTmXqP2uIRuDWvj2eqaCpYXNao&q=${selectedApplication.VAR_EMPCTPTWORK_LATITUDE},${selectedApplication.VAR_EMPCTPTWORK_LONGITUDE}`}
                             title="Location Map"
                           ></iframe>
                         </div>
                         <div className="mt-2 small text-muted">
                           <p className="mb-1">
                             <strong>Latitude:</strong>{" "}
-                            {selectedApplication.VAR_EMPCTPTENTRY_LATITUDE}
+                            {selectedApplication.VAR_EMPCTPTWORK_LATITUDE}
                           </p>
                           <p className="mb-0">
                             <strong>Longitude:</strong>{" "}
-                            {selectedApplication.VAR_EMPCTPTENTRY_LONGITUDE}
+                            {selectedApplication.VAR_EMPCTPTWORK_LONGITUDE}
                           </p>
                         </div>
                       </div>
