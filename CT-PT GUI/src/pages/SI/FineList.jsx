@@ -469,7 +469,7 @@ const FineList = () => {
                               <i className="bi bi-calculator me-2"></i>Total
                               Fine
                             </td>
-                            <td className="text-center text-success">
+                            <td className="text-center text-danger">
                               ₹{totalBreakdownFine.toLocaleString()}
                             </td>
                           </tr>
