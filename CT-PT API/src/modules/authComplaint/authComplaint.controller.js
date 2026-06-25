@@ -602,10 +602,34 @@ async function complaintWorkStatusIns(req, res, next) {
   try {
     const body = req.body || {};
 
+    const formatDate = (dateStr) => {
+  if (!dateStr) return null;
+
+  let date;
+
+  // ISO format: 2026-06-21T18:30:00.000Z
+  if (dateStr.includes('T')) {
+    date = new Date(dateStr);
+  }
+  // DD-MM-YYYY HH:mm:ss
+  else {
+    const [datePart] = dateStr.split(' ');
+    const [day, month, year] = datePart.split('-');
+    date = new Date(year, month - 1, day);
+  }
+
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
+  return `${String(date.getDate()).padStart(2, '0')}-${months[date.getMonth()]}-${date.getFullYear()}`;
+};
+
     const payload = {
       userId: body.userId,
       ulbId: body.ulbId,
-      attndDate: body.attndDate,
+      attndDate: formatDate(body.attndDate),
       attndLat: body.attndLat,
       attndLong: body.attndLong,
       appSource: body.appSource,

@@ -558,11 +558,8 @@ async function getVendorListRepo(fromDate, toDate, status, userId) {
     a.var_empctptwork_remark,
     a.var_empctptwork_appsource,
     a.var_empctptwork_status,
-    dtls.num_stage_id,
-    dtls.var_insby,
     a.var_empctptwork_wrkflag
     From AORTS_EMPCTPTWORK_MST a
-    inner join aorts_empctptworkdetails_mst dtls on a.num_empctptwork_id= dtls.num_empctptwork_id
     inner join aorts_ctptlist_mas ctpt on a.num_empctptwork_toiletid = ctpt.num_ctpttype_id
     where var_empctptwork_userid = :userId
   `;

@@ -819,7 +819,7 @@ const ApplicationList = () => {
                   type="button"
                   className="btn btn-danger"
                   onClick={handleReject}
-                  disabled={!stageId}
+                  disabled={selectedApplication.NUM_EMPCTPTWORK_STAGEID !== 3}
                 >
                   <i className="bi bi-x-circle me-1"></i> Reject
                 </button>
@@ -827,7 +827,7 @@ const ApplicationList = () => {
                   type="button"
                   className="btn btn-success"
                   onClick={() => handleApprove()}
-                  disabled={!stageId}
+                  disabled={selectedApplication.NUM_EMPCTPTWORK_STAGEID !== 3}
                 >
                   <i className="bi bi-check-circle me-1"></i> Approve
                 </button>

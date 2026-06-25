@@ -307,7 +307,7 @@ const ApplicationListSI = () => {
     } else if (flag === "C") {
       return (
         <span className="badge bg-primary rounded-pill px-3 py-2">
-          <i className="bi bi-x-circle me-1"></i> Completed
+          <i className="bi bi-check-circle me-1"></i> Completed
         </span>
       );
     } else {
@@ -776,7 +776,7 @@ const ApplicationListSI = () => {
                   type="button"
                   className="btn btn-danger"
                   onClick={handleReject}
-                  disabled={applications.VAR_EMPCTPTWORK_SUPFLAG === "A"}
+                  disabled={selectedApplication.VAR_EMPCTPTWORK_SUPFLAG !== 'A' }
                 >
                   <i className="bi bi-x-circle me-1"></i> Reject
                 </button>
@@ -784,7 +784,7 @@ const ApplicationListSI = () => {
                   type="button"
                   className="btn btn-success"
                   onClick={handleApprove}
-                  disabled={applications.VAR_EMPCTPTWORK_SUPFLAG === "A"}
+                  disabled={selectedApplication.VAR_EMPCTPTWORK_SUPFLAG !== 'A'}
                 >
                   <i className="bi bi-check-circle me-1"></i> Approve
                 </button>
