@@ -361,22 +361,8 @@ async function compListforSIRepo(
 
 async function getImages(ulbid, toiletId, applid) {
   let sql = `
-  select w.num_empctptwork_id , 
-  d.dat_insdate , 
-  d.num_stage_id ,
-  d.bolb_empctptworkdetails_image , 
-  d.bolb_empctptworkdetails_image2 , 
-  d.bolb_empctptworkdetails_image3,
-  w.num_empctptwork_ulbid,
-  st.var_ctptstage_name,
-  st.var_ctptstage_status
-  from aorts.AORTS_EMPCTPTWORK_MST w
-  inner join aorts.AORTS_EMPCTPTWORKDETAILS_MST d on 
-  w.num_empctptwork_id = d.num_empctptwork_id
-  LEFT JOIN aorts_ctptstage_mas st ON st.num_ctptstage_id = d.num_stage_id
-  WHERE w.num_empctptwork_ulbid = :ulbid AND w.num_empctptwork_id = :applid
-  AND TRUNC(DAT_INSDATE)= (SELECT TRUNC(DAT_INSDATE) FROM AORTS_EMPCTPTWORK_MST WHERE num_empctptwork_id= :applid )
-  ORDER BY d.num_stage_id ASC
+  select * from vw_reworkimg_details where workid = :applid and 
+  ulbid = :ulbid
   `;
 
   const binds = {
@@ -389,16 +375,16 @@ async function getImages(ulbid, toiletId, applid) {
   const rows = result.rows || [];
 
   for (const row of rows) {
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE,
+    row.IMG1 = await lobToBase64(
+      row.IMG1,
     );
 
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE2 = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
+    row.IMG2 = await lobToBase64(
+      row.IMG2,
     );
 
-    row.BOLB_EMPCTPTWORKDETAILS_IMAGE3 = await lobToBase64(
-      row.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
+    row.IMG3 = await lobToBase64(
+      row.IMG3,
     );
   }
 

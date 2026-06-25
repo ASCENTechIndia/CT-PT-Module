@@ -3,12 +3,15 @@ import { useState, useEffect } from "react";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
+import { useLoader } from "../../context/LoaderContext";
 
 const ApplicationListSI = () => {
   const { user } = useAuth();
+  const ulbId = user?.orgId;
   const [applications, setApplications] = useState([]);
   const [stageWiseImages, setStageWiseImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { setLoader } = useLoader();
 
   const [showModal, setShowModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
@@ -44,6 +47,7 @@ const ApplicationListSI = () => {
   const fetchApplications = async (page = 1) => {
     try {
       setLoading(true);
+      setLoader(true);
       const params = new URLSearchParams();
       params.append("ulbid", 4);
       params.append("page", page);
@@ -73,6 +77,7 @@ const ApplicationListSI = () => {
       setIsModalOpen(true);
     } finally {
       setLoading(false);
+      setLoader(false);
     }
   };
 
@@ -87,14 +92,18 @@ const ApplicationListSI = () => {
   // Fetch stage-wise images for selected application
   const fetchStageWiseImages = async (application) => {
     try {
+      setLoader(true);
       const response = await apiClient.get(
-        `/authComplaint/getImages?ulbid=4&toiletId=${application.NUM_EMPCTPTWORK_TOILETID}&applid=${application.NUM_EMPCTPTWORK_ID}`,
+        `/authComplaint/getImages?ulbid=${ulbId}&toiletId=${application.NUM_EMPCTPTWORK_TOILETID}&applid=${application.NUM_EMPCTPTWORK_ID}`,
       );
       if (response.success && response.data) {
         setStageWiseImages(response.data);
       }
     } catch (err) {
       console.error("Error fetching stage-wise images:", err);
+      setStageWiseImages([])
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -124,15 +133,18 @@ const ApplicationListSI = () => {
     const stagesMap = new Map();
     if (stageWiseImages && stageWiseImages.length > 0) {
       stageWiseImages.forEach((entry) => {
-        const stageName = entry.VAR_CTPTSTAGE_NAME;
+        const date = entry.DETAILSDATE.split("T")[0]
+          .split("-")
+          .reverse()
+          .join("-");
+        const time = entry.DETAILSDATE.split("T")[1].split(".")[0];
+        const stageName = `${entry.STAGENM} (${date} ${time})`;
         if (!stagesMap.has(stageName)) {
           stagesMap.set(stageName, { stageName, images: [] });
         }
-        const images = [
-          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE,
-          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
-          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
-        ].filter((img) => img && img !== null && img.trim() !== "");
+        const images = [entry.IMG1, entry.IMG2, entry.IMG3].filter(
+          (img) => img && img !== null && img.trim() !== "",
+        );
         stagesMap.get(stageName).images.push(...images);
       });
     }
@@ -149,6 +161,7 @@ const ApplicationListSI = () => {
       return;
     }
     try {
+      setLoader(true);
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -176,6 +189,8 @@ const ApplicationListSI = () => {
       setModalTitle("Error");
       setModalMessage("Failed to approve application. Please try again.");
       setIsModalOpen(true);
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -189,6 +204,7 @@ const ApplicationListSI = () => {
       return;
     }
     try {
+      setLoader(true);
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -216,6 +232,8 @@ const ApplicationListSI = () => {
       setModalTitle("Error");
       setModalMessage("Failed to reject application. Please try again.");
       setIsModalOpen(true);
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -777,7 +795,7 @@ const ApplicationListSI = () => {
                   type="button"
                   className="btn btn-danger"
                   onClick={handleReject}
-                  disabled={selectedApplication.VAR_EMPCTPTWORK_SUPFLAG !== 'A' }
+                  disabled={selectedApplication.VAR_EMPCTPTWORK_SUPFLAG !== "A"}
                 >
                   <i className="bi bi-x-circle me-1"></i> Reject
                 </button>
@@ -785,7 +803,7 @@ const ApplicationListSI = () => {
                   type="button"
                   className="btn btn-success"
                   onClick={handleApprove}
-                  disabled={selectedApplication.VAR_EMPCTPTWORK_SUPFLAG !== 'A'}
+                  disabled={selectedApplication.VAR_EMPCTPTWORK_SUPFLAG !== "A"}
                 >
                   <i className="bi bi-check-circle me-1"></i> Approve
                 </button>

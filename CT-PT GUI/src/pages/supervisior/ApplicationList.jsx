@@ -3,12 +3,14 @@ import { useState, useEffect } from "react";
 import apiClient from "../../services/apiClient";
 import ResponseModal from "../../components/ResponseModal";
 import { useAuth } from "../../context/AuthContext";
+import { useLoader } from "../../context/LoaderContext";
 
 const ApplicationList = () => {
   const { user } = useAuth();
   const ulbid = user?.orgId;
   const [applications, setApplications] = useState([]);
   const [stageId, setStageId] = useState("");
+  const { setLoader } = useLoader();
   const [originalApplicationData, setOriginalApplicationData] = useState([]);
   const [stageWiseImages, setStageWiseImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ const ApplicationList = () => {
   const fetchApplications = async (page = 1) => {
     try {
       setLoading(true);
-
+      setLoader(true);
       const params = {
         ulbid,
         page,
@@ -69,6 +71,7 @@ const ApplicationList = () => {
       setIsModalOpen(true);
     } finally {
       setLoading(false);
+      setLoader(false);
     }
   };
 
@@ -88,6 +91,7 @@ const ApplicationList = () => {
   // Fetch stage-wise images for selected application
   const fetchStageWiseImages = async (application) => {
     try {
+      setLoader(true);
       const response = await apiClient.get(
         `/authComplaint/getImages?ulbid=${ulbid}&applid=${application.NUM_EMPCTPTWORK_ID}`,
       );
@@ -97,6 +101,9 @@ const ApplicationList = () => {
       }
     } catch (err) {
       console.error("Error fetching stage-wise images:", err);
+      setStageWiseImages([]);
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -132,11 +139,14 @@ const ApplicationList = () => {
   // Group images by stage
   const getImagesByStage = () => {
     const stagesMap = new Map();
-
-    // If stageWiseImages is populated, use it
     if (stageWiseImages && stageWiseImages.length > 0) {
       stageWiseImages.forEach((entry) => {
-        const stageName = entry.VAR_CTPTSTAGE_NAME;
+        const date = entry.DETAILSDATE.split("T")[0]
+          .split("-")
+          .reverse()
+          .join("-");
+        const time = entry.DETAILSDATE.split("T")[1].split(".")[0];
+        const stageName = `${entry.STAGENM} (${date} ${time})`;
         if (!stagesMap.has(stageName)) {
           stagesMap.set(stageName, {
             stageName: stageName,
@@ -144,11 +154,9 @@ const ApplicationList = () => {
           });
         }
 
-        const images = [
-          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE,
-          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE2,
-          entry.BOLB_EMPCTPTWORKDETAILS_IMAGE3,
-        ].filter((img) => img && img !== null && img.trim() !== "");
+        const images = [entry.IMG1, entry.IMG2, entry.IMG3].filter(
+          (img) => img && img !== null && img.trim() !== "",
+        );
 
         stagesMap.get(stageName).images.push(...images);
       });
@@ -168,6 +176,7 @@ const ApplicationList = () => {
     }
 
     try {
+      setLoader(true);
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -198,6 +207,8 @@ const ApplicationList = () => {
       setModalTitle("Error");
       setModalMessage("Failed to approve application. Please try again.");
       setIsModalOpen(true);
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -212,6 +223,7 @@ const ApplicationList = () => {
     }
 
     try {
+      setLoader(true);
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -242,6 +254,8 @@ const ApplicationList = () => {
       setModalTitle("Error");
       setModalMessage("Failed to reject application. Please try again.");
       setIsModalOpen(true);
+    } finally {
+      setLoader(false);
     }
   };
 
