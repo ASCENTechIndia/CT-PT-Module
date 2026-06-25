@@ -125,7 +125,7 @@ async function getCompListForSup(req, res, next) {
 
 async function getCompListForSI(req, res, next) {
   try {
-    const { ulbid, fromDate, toDate, status, page = 1, limit = 10 } = req.query;
+    const { ulbid, fromDate, toDate, status, page = 1, limit = 10,userId } = req.query;
     const result = await getCompListSIService(
       ulbid,
       fromDate,
@@ -133,6 +133,7 @@ async function getCompListForSI(req, res, next) {
       status,
       page,
       limit,
+      userId
     );
 
     // Sanitize the result to avoid circular references

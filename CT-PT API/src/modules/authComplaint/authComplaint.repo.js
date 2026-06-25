@@ -227,6 +227,7 @@ async function compListforSIRepo(
   status,
   page = 1,
   limit = 10,
+  userId
 ) {
   const safePage = Number.isFinite(Number(page)) ? Number(page) : 1;
   const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 10;
@@ -234,7 +235,7 @@ async function compListforSIRepo(
 
   // ─── MAIN QUERY ──────────────────────────────────────────────
   let sql = `
-    SELECT 
+     SELECT 
       e.num_empctptwork_id,
       e.dat_empctptwork_date,
       e.num_empctptwork_id AS unique_id,
@@ -257,7 +258,8 @@ async function compListforSIRepo(
       e.var_empctptwork_supflag,
       e.var_empctptwork_siflag,
       e.var_empctptwork_siremark,
-      e.var_empctptwork_status
+      e.var_empctptwork_status,
+      ctpt.var_ctpttype_sanitinspctorid as sanitary_inspector
     FROM AORTS_EMPCTPTWORK_MST e
     LEFT JOIN aorts_ctptlist_mas ctpt
       ON ctpt.num_ctpttype_id = e.num_empctptwork_toiletid
@@ -265,10 +267,10 @@ async function compListforSIRepo(
       ON st.num_ctptstage_id = e.num_empctptwork_stageid
     INNER JOIN admins.aoma_user_def u
       ON u.num_user_userid = e.var_empctptwork_userid
-    WHERE 1=1
+    WHERE 1=1 and var_ctpttype_sanitinspctorid = :userId
   `;
 
-  const binds = {};
+  const binds = {userId: userId};
 
   // ULBID
   sql += ` AND e.num_empctptwork_ulbid = :ulbid`;
@@ -314,11 +316,10 @@ async function compListforSIRepo(
       ON st.num_ctptstage_id = e.num_empctptwork_stageid
     INNER JOIN admins.aoma_user_def u
       ON u.num_user_userid = e.var_empctptwork_userid
-    WHERE 1=1
-      AND e.num_empctptwork_ulbid = :ulbid
+    WHERE 1=1 and var_ctpttype_sanitinspctorid = :userId AND e.num_empctptwork_ulbid = :ulbid
   `;
 
-  const countBinds = { ulbid: Number(ulbid) };
+  const countBinds = { ulbid: Number(ulbid), userId: userId };
 
   if (fromDate && toDate) {
     countSql += `

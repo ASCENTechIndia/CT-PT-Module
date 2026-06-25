@@ -128,8 +128,10 @@ async function fineApplicationListService(
   toDate,
   page,
   limit,
+  designation,
+  userId  
 ) {
-  return fineApplicationListRepo(ulbid, fromDate, toDate, page, limit);
+  return fineApplicationListRepo(ulbid, fromDate, toDate, page, limit, designation, userId);
 }
 
 async function fineBreakdownService(ulbid, workId) {

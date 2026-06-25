@@ -58,6 +58,8 @@ const FineList = () => {
       params.append("limit", pageSize);
       if (dateFilter.from) params.append("fromDate", dateFilter.from);
       if (dateFilter.to) params.append("toDate", dateFilter.to);
+      params.append("designation", user?.designation);
+      params.append("userId", user?.userId);
 
       const response = await apiClient.get(
         `/report/get-fine-application-list?${params.toString()}`,

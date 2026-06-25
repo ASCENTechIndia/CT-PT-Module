@@ -39,8 +39,9 @@ async function getCompListSIService(
   status,
   page,
   limit,
+  userId
 ) {
-  return compListforSIRepo(ulbid, fromDate, toDate, status, page, limit);
+  return compListforSIRepo(ulbid, fromDate, toDate, status, page, limit, userId);
 }
 
 async function getImagesService(ulbid, toiletId, applid) {

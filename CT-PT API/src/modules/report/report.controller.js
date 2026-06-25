@@ -671,13 +671,15 @@ async function getUserDetailsController(req, res, next) {
 
 async function fineApplicationListController(req, res, next) {
   try {
-    const { ulbid, fromDate, toDate, page = 0, limit = 10 } = req.query;
+    const { ulbid, fromDate, toDate, page = 0, limit = 10 , designation , userId } = req.query;
     const result = await fineApplicationListService(
       ulbid,
       fromDate,
       toDate,
       page,
       limit,
+      designation,
+      userId
     );
 
     // Sanitize the result to avoid circular references
@@ -686,8 +688,8 @@ async function fineApplicationListController(req, res, next) {
       WARD_ID: row.WARD_ID,
       TOILET_ID: row.TOILET_ID,
       TOILET_LOCATION: row.TOILET_LOCATION,
-      SUPERID: row.SUPERID,
-      SIID: row.SIID,
+      SUPERID: row.VAR_CTPTTYPE_SUPPID,
+      SIID: row.VAR_CTPTTYPE_SANITINSPCTORID,
       WORK_DATE: row.WORK_DATE,
       TOTAL_FINE: row.TOTAL_FINE,
       ULBID: row.ULBID,

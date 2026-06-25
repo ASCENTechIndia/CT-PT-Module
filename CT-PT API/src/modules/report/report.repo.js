@@ -1170,7 +1170,10 @@ async function fineApplicationListRepo(
   toDate,
   page = 1,
   limit = 10,
-) {
+  designation,
+  userId
+) 
+{
   const offset = (Number(page) - 1) * Number(limit);
 
   let sql = `
@@ -1182,7 +1185,9 @@ async function fineApplicationListRepo(
     siid,
     work_date,
     total_fine,
-    ulbid from
+    ulbid,
+    var_ctpttype_suppid , 
+    var_ctpttype_sanitinspctorid from
      vw_ctptfine_list where ulbid = :ulbid
   `;
 
@@ -1200,6 +1205,20 @@ async function fineApplicationListRepo(
 
     binds.fromDate = fromDate;
     binds.toDate = toDate;
+  }
+
+  if (designation === 'Supervisor' && userId) {
+    sql += `
+      AND var_ctpttype_suppid =:userId
+    `;
+    binds.userId = userId;
+  }
+
+  if (designation === 'Sanitary Inspector' && userId) {
+    sql += `
+      AND var_ctpttype_sanitinspctorid =:userId
+    `;
+    binds.userId = userId;
   }
 
   sql += `
@@ -1235,6 +1254,20 @@ async function fineApplicationListRepo(
     countBinds.toDate = toDate;
   }
 
+  if (designation === 'Supervisor' && userId) {
+    countSql += `
+      AND var_ctpttype_suppid =:userId
+    `;
+    countBinds.userId = userId;
+  }
+
+  if (designation === 'Sanitary Inspector' && userId) {
+    countSql += `
+      AND var_ctpttype_sanitinspctorid =:userId
+    `;
+    countBinds.userId = userId;
+  }
+
   const countResult = await executeQuery(countSql, countBinds);
 
   const total =
@@ -1250,6 +1283,9 @@ async function fineApplicationListRepo(
     },
   };
 }
+
+
+
 
 async function fineBreakdownRepo(ulbid, workId) {
   let sql = `

@@ -12,13 +12,14 @@ export default function Sidebar() {
     const allLinks = {
       supervisor: [
         { path: "/supervisor-complaint-list", icon: 'bi-envelope-paper', label: 'Complaints' },
-        { path: "/application-list", icon: "bi-file-earmark-text", label: 'Applications'}
+        { path: "/application-list", icon: "bi-file-earmark-text", label: 'Applications'},
+        { path: "/fine-list", icon: "bi-file-earmark-text", label: 'Fine Report'},
       ],
       sanitary: [
         { path: "/all-complaint", icon: "bi-file-earmark-text", label: 'Pending Complaint'},
         { path: "/resolved-complaint", icon: "bi-file-earmark-text", label: 'Resolved Complaint'},
         { path: "/application-list-sanitary", icon: "bi-file-earmark-text", label: 'Applications'},
-        { path: "/fine-list", icon: "bi-file-earmark-text", label: 'Fine'},
+        { path: "/fine-list", icon: "bi-file-earmark-text", label: 'Fine Report'},
       ]
     };
 
