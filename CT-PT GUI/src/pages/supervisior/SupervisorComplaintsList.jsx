@@ -253,6 +253,7 @@ const SupervisorComplaintsList = () => {
     const reworkImages = getReworkImages(complaint.COMPLAINTID);
 
     setSelectedComplaint(complaint);
+    console.log(complaint);
     setSelectedImageIndex(0);
     setSupervisorRemark("");
     setSupervisorStatus("");
@@ -892,7 +893,9 @@ const SupervisorComplaintsList = () => {
                     Submit
                   </button>
                 )} */}
-                <button
+
+      {selectedComplaint?.VAR_COMPLAINT_STATUS === "COMPLETED" && 
+      <button
                   type="button"
                   className="btn btn-primary"
                   disabled={
@@ -902,6 +905,8 @@ const SupervisorComplaintsList = () => {
                 >
                   Submit
                 </button>
+      }
+                
               </div>
             </div>
           </div>

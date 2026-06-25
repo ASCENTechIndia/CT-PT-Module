@@ -543,7 +543,7 @@ async function rslvdListbyVendorRepo(
 async function getVendorListRepo(fromDate, toDate, status, userId) {
   let sql = `
     select a.num_empctptwork_id,
-    a.dat_empctptwork_date,
+    CAST(a.dat_empctptwork_date + 1 AS TIMESTAMP) AS dat_empctptwork_date,
     a.var_empctptwork_latitude,
     a.var_empctptwork_longitude,
     ctpt.num_ctpttype_wardid,
