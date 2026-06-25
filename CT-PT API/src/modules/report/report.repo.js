@@ -1174,18 +1174,16 @@ async function fineApplicationListRepo(
   const offset = (Number(page) - 1) * Number(limit);
 
   let sql = `
-    select a.num_empctptwork_id work_id,
-b.num_ctpttype_wardid ward_Id,
-b.num_ctpttype_id toilet_Id,
-b.var_ctpttype_toiletlocation toilet_location,
-a.var_empctptwork_supby superid,
-a.var_empctptwork_siby as siid,
-a.dat_empctptwork_date work_Date,
-nvl(num_empctptwork_fine,0) total_fine,
-a.num_empctptwork_ulbid ulbId
-from AORTS_EMPCTPTWORK_MST a inner join aorts_ctptlist_mas b
-on a.num_empctptwork_toiletid = b.num_ctpttype_id
-WHERE a.num_empctptwork_ulbid = :ulbid
+    select work_id,
+    ward_id,
+    toilet_id,
+    toilet_location,
+    superid,
+    siid,
+    work_date,
+    total_fine,
+    ulbid from
+     vw_ctptfine_list where ulbid = :ulbid
   `;
 
   let binds = {
@@ -1195,7 +1193,7 @@ WHERE a.num_empctptwork_ulbid = :ulbid
   // Date Filter
   if (fromDate && toDate) {
     sql += `
-      AND TRUNC(a.dat_empctptwork_date)
+      AND TRUNC(work_date)
       BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
       AND TO_DATE(:toDate, 'YYYY-MM-DD')
     `;
@@ -1205,7 +1203,7 @@ WHERE a.num_empctptwork_ulbid = :ulbid
   }
 
   sql += `
-    order by num_empctptwork_id
+    order by work_id
     OFFSET :offset ROWS
     FETCH NEXT :limit ROWS ONLY
   `;
@@ -1219,11 +1217,7 @@ WHERE a.num_empctptwork_ulbid = :ulbid
   // ================= COUNT QUERY =================
 
   let countSql = `
-  SELECT COUNT(*) AS TOTAL
-  FROM AORTS_EMPCTPTWORK_MST a
-  INNER JOIN aorts_ctptlist_mas b
-    ON a.num_empctptwork_toiletid = b.num_ctpttype_id
-  WHERE a.num_empctptwork_ulbid = :ulbid
+  SELECT COUNT(*) AS TOTAL from vw_ctptfine_list where ulbid = :ulbid
 `;
 
   let countBinds = {
@@ -1232,7 +1226,7 @@ WHERE a.num_empctptwork_ulbid = :ulbid
 
   if (fromDate && toDate) {
     countSql += `
-    AND TRUNC(a.dat_empctptwork_date)
+    AND TRUNC(work_date)
     BETWEEN TO_DATE(:fromDate, 'YYYY-MM-DD')
     AND TO_DATE(:toDate, 'YYYY-MM-DD')
   `;

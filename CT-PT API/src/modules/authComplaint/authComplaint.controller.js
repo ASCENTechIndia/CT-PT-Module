@@ -58,7 +58,7 @@ async function authComplaint(req, res, next) {
 
 async function getCompListForSup(req, res, next) {
   try {
-    const { ulbid, fromDate, toDate, status, page = 0, limit = 10 } = req.query;
+    const { ulbid, fromDate, toDate, status, page = 0, limit = 10, userId } = req.query;
     const result = await getCompListForSupService(
       ulbid,
       fromDate,
@@ -66,6 +66,7 @@ async function getCompListForSup(req, res, next) {
       status,
       page,
       limit,
+      userId
     );
 
     // Sanitize the result to avoid circular references
@@ -94,6 +95,7 @@ async function getCompListForSup(req, res, next) {
       VAR_CTPTSTAGE_STATUS: row.VAR_CTPTSTAGE_STATUS,
       VAR_CTPTSTAGE_NAME: row.VAR_CTPTSTAGE_NAME,
       VAR_EMPCTPTWORK_STATUS: row.VAR_EMPCTPTWORK_STATUS,
+      SUPERWISER: row.SUPERWISER,
     }));
 
     const pagination = {

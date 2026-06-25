@@ -27,8 +27,9 @@ async function getCompListForSupService(
   status,
   page,
   limit,
+  userId
 ) {
-  return compListforSupRepo(ulbid, fromDate, toDate, status, page, limit);
+  return compListforSupRepo(ulbid, fromDate, toDate, status, page, limit, userId);
 }
 
 async function getCompListSIService(

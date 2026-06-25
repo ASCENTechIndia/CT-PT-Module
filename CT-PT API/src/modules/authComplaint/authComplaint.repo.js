@@ -74,6 +74,7 @@ async function compListforSupRepo(
   status,
   page = 1,
   limit = 10,
+  userId
 ) {
   const offset = (Number(page) - 1) * Number(limit);
 
@@ -101,7 +102,8 @@ async function compListforSupRepo(
       c.var_ctpttype_username,
       st.var_ctptstage_status,
       st.var_ctptstage_name,
-      w.var_empctptwork_status
+      w.var_empctptwork_status,
+      c.var_ctpttype_suppid as superwiser
     FROM aorts.AORTS_EMPCTPTWORK_MST w
     LEFT JOIN aorts_ctptlist_mas c
       ON c.num_ctpttype_id = w.num_empctptwork_toiletid
@@ -110,10 +112,12 @@ async function compListforSupRepo(
     INNER JOIN admins.aoma_user_def u
       ON u.num_user_userid = w.var_empctptwork_userid
     WHERE w.num_empctptwork_ulbid = :ulbid
+     and c.var_ctpttype_suppid = :userId
   `;
 
   let binds = {
     ulbid: Number(ulbid),
+    userId: userId,
   };
 
   // Date Filter
@@ -166,10 +170,13 @@ async function compListforSupRepo(
     INNER JOIN admins.aoma_user_def u
       ON u.num_user_userid = w.var_empctptwork_userid
     WHERE w.num_empctptwork_ulbid = :ulbid
+     and c.var_ctpttype_suppid = :userId
   `;
 
   let countBinds = {
     ulbid: Number(ulbid),
+    userId: userId,
+
   };
 
   // Date Filter

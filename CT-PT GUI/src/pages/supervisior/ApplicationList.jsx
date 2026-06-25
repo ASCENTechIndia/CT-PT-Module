@@ -45,6 +45,7 @@ const ApplicationList = () => {
         ulbid,
         page,
         limit: pageSize,
+        userId: user.userId,
         ...(dateFilter.from && { fromDate: dateFilter.from }),
         ...(dateFilter.to && { toDate: dateFilter.to }),
         ...(statusFilter !== "" && { status: statusFilter }),

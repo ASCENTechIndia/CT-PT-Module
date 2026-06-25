@@ -48,6 +48,7 @@ const ApplicationListSI = () => {
       params.append("ulbid", 4);
       params.append("page", page);
       params.append("limit", pageSize);
+      params.append("userId", user.userId);
 
       if (dateFilter.from) params.append("fromDate", dateFilter.from);
       if (dateFilter.to) params.append("toDate", dateFilter.to);
