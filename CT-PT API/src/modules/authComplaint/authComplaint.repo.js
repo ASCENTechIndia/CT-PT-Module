@@ -256,6 +256,7 @@ async function compListforSIRepo(
       st.var_ctptstage_name,
       st.var_ctptstage_status,
       e.var_empctptwork_supflag,
+      e.var_empctptwork_supremark,
       e.var_empctptwork_siflag,
       e.var_empctptwork_siremark,
       e.var_empctptwork_status,
