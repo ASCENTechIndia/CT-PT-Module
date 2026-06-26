@@ -19,6 +19,10 @@ const ApplicationListSI = () => {
   // Supervisor action states
   const [supervisorRemark, setSupervisorRemark] = useState("");
 
+  // ----- NEW: Image upload states for review -----
+  const [reviewImages, setReviewImages] = useState([]);
+  const [reviewPreviewUrls, setReviewPreviewUrls] = useState([]);
+
   // Response Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState("info");
@@ -147,6 +151,19 @@ const ApplicationListSI = () => {
     return Array.from(stagesMap.values());
   };
 
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // Extract the base64 part (remove data:image/...;base64,)
+        const result = reader.result.split(",")[1];
+        resolve(result);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   // Handle Approve action
   const handleApprove = async () => {
     if (!supervisorRemark.trim()) {
@@ -158,6 +175,15 @@ const ApplicationListSI = () => {
     }
     try {
       setLoader(true);
+      // Convert review images to Base64
+      const base64Images = await Promise.all(
+        reviewImages.map((file) => fileToBase64(file)),
+      );
+      // Prepare image fields (max 3)
+      const inspectionImg1 = base64Images[0] || null;
+      const inspectionImg2 = base64Images[1] || null;
+      const inspectionImg3 = base64Images[2] || null;
+
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -165,6 +191,10 @@ const ApplicationListSI = () => {
         mode: 2,
         status: "A",
         remark: supervisorRemark,
+        inspectionImg1,
+        inspectionImg2,
+        inspectionImg3,
+        userType: "SI",
       };
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
@@ -201,6 +231,14 @@ const ApplicationListSI = () => {
     }
     try {
       setLoader(true);
+      // Convert review images to Base64
+      const base64Images = await Promise.all(
+        reviewImages.map((file) => fileToBase64(file)),
+      );
+      // Prepare image fields (max 3)
+      const inspectionImg1 = base64Images[0] || null;
+      const inspectionImg2 = base64Images[1] || null;
+      const inspectionImg3 = base64Images[2] || null;
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -208,6 +246,10 @@ const ApplicationListSI = () => {
         mode: 2,
         status: "R",
         remark: supervisorRemark,
+        inspectionImg1,
+        inspectionImg2,
+        inspectionImg3,
+        userType: "SI",
       };
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
@@ -372,6 +414,39 @@ const ApplicationListSI = () => {
     setStatusFilter("all");
   };
 
+  const handleReviewImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    // Allow only up to 3 total images
+    if (files.length + reviewImages.length > 3) {
+      setModalType("warning");
+      setModalTitle("Warning");
+      setModalMessage("You can upload a maximum of 3 images.");
+      setIsModalOpen(true);
+      e.target.value = ""; // reset input
+      return;
+    }
+
+    setReviewImages((prev) => [...prev, ...files]);
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setReviewPreviewUrls((prev) => [...prev, ...newPreviews]);
+    e.target.value = ""; // reset input to allow re-selection
+  };
+
+  // ----- Remove an image by index -----
+  const removeReviewImage = (index) => {
+    setReviewImages((prev) => prev.filter((_, i) => i !== index));
+    // Revoke the object URL to avoid memory leaks
+    URL.revokeObjectURL(reviewPreviewUrls[index]);
+    setReviewPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ----- Cleanup preview URLs on unmount -----
+  useEffect(() => {
+    return () => {
+      reviewPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [reviewPreviewUrls]);
+
   return (
     <Layout>
       <div className="panel">
@@ -474,12 +549,16 @@ const ApplicationListSI = () => {
                   <td className="text-end">
                     <button
                       className={`btn btn-sm ${
-                        app.VAR_EMPCTPTWORK_STATUS === "R" || app.VAR_EMPCTPTWORK_STATUS === "A"
+                        app.VAR_EMPCTPTWORK_STATUS === "R" ||
+                        app.VAR_EMPCTPTWORK_STATUS === "A"
                           ? "btn-outline-secondary"
                           : "btn-outline-primary"
                       }`}
                       onClick={() => handleReviewClick(app)}
-                      disabled={app.VAR_EMPCTPTWORK_STATUS === "R" || app.VAR_EMPCTPTWORK_STATUS === "A"}
+                      disabled={
+                        app.VAR_EMPCTPTWORK_STATUS === "R" ||
+                        app.VAR_EMPCTPTWORK_STATUS === "A"
+                      }
                       title={
                         app.VAR_EMPCTPTWORK_STATUS === "A"
                           ? "Already approved"
@@ -691,6 +770,125 @@ const ApplicationListSI = () => {
                           Remark is required to approve or reject this
                           application.
                         </small>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <label className="form-label fw-semibold mb-0 small">
+                          <i className="bi bi-images me-1 text-primary"></i>{" "}
+                          Upload Supporting Images
+                        </label>
+                        <span
+                          className={`badge rounded-pill px-2 py-1 small ${
+                            reviewImages.length >= 3
+                              ? "bg-danger"
+                              : "bg-secondary"
+                          }`}
+                        >
+                          {reviewImages.length} / 3
+                        </span>
+                      </div>
+
+                      <div
+                        className="border rounded-3 p-2"
+                        style={{
+                          borderStyle: "dashed",
+                          borderColor:
+                            reviewImages.length >= 3 ? "#dc3545" : "#ced4da",
+                          backgroundColor: "#f8f9fa",
+                        }}
+                      >
+                        <div className="d-flex align-items-center gap-2">
+                          <i
+                            className="bi bi-cloud-arrow-up flex-shrink-0"
+                            style={{ fontSize: "1.8rem", color: "#0d6efd" }}
+                          ></i>
+
+                          <div className="flex-grow-1 min-w-0">
+                            <p className="mb-0 fw-semibold small">
+                              {reviewImages.length >= 3
+                                ? "Maximum images reached"
+                                : "Drop images here or click to browse"}
+                            </p>
+                            <p
+                              className="text-muted mb-0"
+                              style={{ fontSize: "11px" }}
+                            >
+                              JPG, PNG · max 3 images
+                            </p>
+                          </div>
+
+                          <label
+                            className={`btn btn-sm flex-shrink-0 ${
+                              reviewImages.length >= 3
+                                ? "btn-secondary"
+                                : "btn-outline-primary"
+                            }`}
+                            style={{
+                              cursor:
+                                reviewImages.length >= 3
+                                  ? "not-allowed"
+                                  : "pointer",
+                              fontSize: "12px",
+                            }}
+                          >
+                            <i className="bi bi-folder2-open me-1"></i> Browse
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={handleReviewImageChange}
+                              disabled={reviewImages.length >= 3}
+                              style={{ display: "none" }}
+                            />
+                          </label>
+                        </div>
+
+                        {reviewPreviewUrls.length > 0 ? (
+                          <div className="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
+                            {reviewPreviewUrls.map((url, idx) => (
+                              <div
+                                key={idx}
+                                className="position-relative flex-shrink-0"
+                                style={{ width: "60px", height: "60px" }}
+                              >
+                                <img
+                                  src={url}
+                                  alt={`review-${idx}`}
+                                  className="w-100 h-100 rounded-2 border"
+                                  style={{ objectFit: "cover" }}
+                                />
+                                <button
+                                  type="button"
+                                  className="btn-close position-absolute"
+                                  onClick={() => removeReviewImage(idx)}
+                                  aria-label="Remove image"
+                                  style={{
+                                    top: "-5px",
+                                    right: "-5px",
+                                    width: "16px",
+                                    height: "16px",
+                                    fontSize: "8px",
+                                    backgroundColor: "white",
+                                    borderRadius: "50%",
+                                    padding: "3px",
+                                    boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                                    border: "1px solid #dee2e6",
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p
+                            className="text-muted text-center mb-0 mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
+                            <i className="bi bi-info-circle me-1"></i> No images
+                            selected yet
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

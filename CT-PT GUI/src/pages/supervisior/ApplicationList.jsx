@@ -169,7 +169,7 @@ const ApplicationList = () => {
     return Array.from(stagesMap.values());
   };
 
-    const fileToBase64 = (file) => {
+  const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -182,7 +182,7 @@ const ApplicationList = () => {
     });
   };
   // Handle Approve action
-const handleApprove = async () => {
+  const handleApprove = async () => {
     if (!supervisorRemark.trim()) {
       setModalType("warning");
       setModalTitle("Warning");
@@ -196,7 +196,7 @@ const handleApprove = async () => {
 
       // Convert review images to Base64
       const base64Images = await Promise.all(
-        reviewImages.map((file) => fileToBase64(file))
+        reviewImages.map((file) => fileToBase64(file)),
       );
       // Prepare image fields (max 3)
       const inspectionImg1 = base64Images[0] || null;
@@ -214,13 +214,13 @@ const handleApprove = async () => {
         inspectionImg1,
         inspectionImg2,
         inspectionImg3,
-        userType: 'SUPERVISOR', // Add userType field
+        userType: "SUPERVISOR", // Add userType field
         // ------------------------------------
       };
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
-        payload
+        payload,
       );
 
       if (response.success) {
@@ -260,7 +260,7 @@ const handleApprove = async () => {
       setLoader(true);
 
       const base64Images = await Promise.all(
-        reviewImages.map((file) => fileToBase64(file))
+        reviewImages.map((file) => fileToBase64(file)),
       );
       const inspectionImg1 = base64Images[0] || null;
       const inspectionImg2 = base64Images[1] || null;
@@ -276,12 +276,12 @@ const handleApprove = async () => {
         inspectionImg1,
         inspectionImg2,
         inspectionImg3,
-        userType: 'SUPERVISOR', // Add userType field
+        userType: "SUPERVISOR", // Add userType field
       };
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
-        payload
+        payload,
       );
 
       if (response.success) {
@@ -475,7 +475,7 @@ const handleApprove = async () => {
     setCurrentPage(1);
   };
 
-   const handleReviewImageChange = (e) => {
+  const handleReviewImageChange = (e) => {
     const files = Array.from(e.target.files);
     // Allow only up to 3 total images
     if (files.length + reviewImages.length > 3) {
@@ -619,12 +619,16 @@ const handleApprove = async () => {
                     <td className="text-end">
                       <button
                         className={`btn btn-sm ${
-                          app.VAR_EMPCTPTWORK_SUPFLAG === "A" || app.VAR_EMPCTPTWORK_STATUS === "R"
+                          app.VAR_EMPCTPTWORK_SUPFLAG === "A" ||
+                          app.VAR_EMPCTPTWORK_STATUS === "R"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
                         onClick={() => handleReviewClick(app)}
-                        disabled={app.VAR_EMPCTPTWORK_SUPFLAG === "A" || app.VAR_EMPCTPTWORK_STATUS === "R"}
+                        disabled={
+                          app.VAR_EMPCTPTWORK_SUPFLAG === "A" ||
+                          app.VAR_EMPCTPTWORK_STATUS === "R"
+                        }
                         title={
                           app.VAR_EMPCTPTWORK_SUPFLAG === "A"
                             ? "Already approved"
@@ -813,127 +817,150 @@ const handleApprove = async () => {
                     </div>
 
                     {/* Supervisor Action */}
-                     <div className="card">
-              <div className="card-header">
-                <h6 className="mb-0">Supervisor Action</h6>
-              </div>
-              <div className="card-body">
-                {/* Remark textarea */}
-                <label className="form-label fw-semibold">
-                  Remark *
-                </label>
-                <textarea
-                  className="form-control"
-                  rows="3"
-                  placeholder="Add your remarks about this application before approving or rejecting..."
-                  value={supervisorRemark}
-                  onChange={(e) => setSupervisorRemark(e.target.value)}
-                ></textarea>
-                <small className="text-muted mt-2 d-block">
-                  Remark is required to approve or reject this application.
-                </small>
-
-                {/* ----- IMAGE UPLOAD SECTION (NOW UNDER REMARK) ----- */}
-                <div className="mt-3">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <label className="form-label fw-semibold mb-0">
-                      <i className="bi bi-images me-1"></i> Upload Supporting Images
-                    </label>
-                    <span className="badge bg-secondary rounded-pill px-3 py-2">
-                      {reviewImages.length} / 3
-                    </span>
-                  </div>
-
-                  <div
-                    className="upload-box p-3 border border-2 border-dashed rounded-4 bg-light-hover"
-                    style={{
-                      borderColor: reviewImages.length >= 3 ? "#dc3545" : "#6c757d",
-                      transition: "all 0.2s",
-                      backgroundColor: "#f8f9fa",
-                      cursor: reviewImages.length >= 3 ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    <div className="d-flex flex-column flex-sm-row align-items-center gap-3">
-                      <div className="flex-shrink-0">
-                        <i
-                          className="bi bi-cloud-arrow-up"
-                          style={{ fontSize: "2.5rem", color: "#0d6efd" }}
-                        ></i>
+                    <div className="card">
+                      <div className="card-header">
+                        <h6 className="mb-0">Supervisor Action</h6>
                       </div>
-                      <div className="text-center text-sm-start flex-grow-1">
-                        <p className="mb-1 fw-semibold">
-                          {reviewImages.length >= 3
-                            ? "Maximum images selected"
-                            : "Drop images here or click to browse"}
-                        </p>
-                        <p className="text-muted small mb-2">
-                          Supports JPG, PNG – up to 3 images
-                        </p>
-                        <label
-                          className={`btn ${reviewImages.length >= 3 ? "btn-secondary" : "btn-primary"} btn-sm`}
-                          style={{ cursor: reviewImages.length >= 3 ? "not-allowed" : "pointer" }}
-                        >
-                          <i className="bi bi-folder2-open me-1"></i> Choose Photos
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleReviewImageChange}
-                            disabled={reviewImages.length >= 3}
-                            style={{ display: "none" }}
-                          />
+                      <div className="card-body">
+                        {/* Remark textarea */}
+                        <label className="form-label fw-semibold">
+                          Remark *
                         </label>
+                        <textarea
+                          className="form-control"
+                          rows="3"
+                          placeholder="Add your remarks about this application before approving or rejecting..."
+                          value={supervisorRemark}
+                          onChange={(e) => setSupervisorRemark(e.target.value)}
+                        ></textarea>
+                        <small className="text-muted mt-2 d-block">
+                          Remark is required to approve or reject this
+                          application.
+                        </small>
+
+                        <div className="mt-3">
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <label className="form-label fw-semibold mb-0 small">
+                              <i className="bi bi-images me-1 text-primary"></i>{" "}
+                              Upload Supporting Images
+                            </label>
+                            <span
+                              className={`badge rounded-pill px-2 py-1 small ${
+                                reviewImages.length >= 3
+                                  ? "bg-danger"
+                                  : "bg-secondary"
+                              }`}
+                            >
+                              {reviewImages.length} / 3
+                            </span>
+                          </div>
+
+                          <div
+                            className="border rounded-3 p-2"
+                            style={{
+                              borderStyle: "dashed",
+                              borderColor:
+                                reviewImages.length >= 3
+                                  ? "#dc3545"
+                                  : "#ced4da",
+                              backgroundColor: "#f8f9fa",
+                            }}
+                          >
+                            <div className="d-flex align-items-center gap-2">
+                              <i
+                                className="bi bi-cloud-arrow-up flex-shrink-0"
+                                style={{ fontSize: "1.8rem", color: "#0d6efd" }}
+                              ></i>
+
+                              <div className="flex-grow-1 min-w-0">
+                                <p className="mb-0 fw-semibold small">
+                                  {reviewImages.length >= 3
+                                    ? "Maximum images reached"
+                                    : "Drop images here or click to browse"}
+                                </p>
+                                <p
+                                  className="text-muted mb-0"
+                                  style={{ fontSize: "11px" }}
+                                >
+                                  JPG, PNG · max 3 images
+                                </p>
+                              </div>
+
+                              <label
+                                className={`btn btn-sm flex-shrink-0 ${
+                                  reviewImages.length >= 3
+                                    ? "btn-secondary"
+                                    : "btn-outline-primary"
+                                }`}
+                                style={{
+                                  cursor:
+                                    reviewImages.length >= 3
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  fontSize: "12px",
+                                }}
+                              >
+                                <i className="bi bi-folder2-open me-1"></i>{" "}
+                                Browse
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  onChange={handleReviewImageChange}
+                                  disabled={reviewImages.length >= 3}
+                                  style={{ display: "none" }}
+                                />
+                              </label>
+                            </div>
+
+                            {reviewPreviewUrls.length > 0 ? (
+                              <div className="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
+                                {reviewPreviewUrls.map((url, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="position-relative flex-shrink-0"
+                                    style={{ width: "60px", height: "60px" }}
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`review-${idx}`}
+                                      className="w-100 h-100 rounded-2 border"
+                                      style={{ objectFit: "cover" }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="btn-close position-absolute"
+                                      onClick={() => removeReviewImage(idx)}
+                                      aria-label="Remove image"
+                                      style={{
+                                        top: "-5px",
+                                        right: "-5px",
+                                        width: "16px",
+                                        height: "16px",
+                                        fontSize: "8px",
+                                        backgroundColor: "white",
+                                        borderRadius: "50%",
+                                        padding: "3px",
+                                        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                                        border: "1px solid #dee2e6",
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p
+                                className="text-muted text-center mb-0 mt-1"
+                                style={{ fontSize: "11px" }}
+                              >
+                                <i className="bi bi-info-circle me-1"></i> No
+                                images selected yet
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Preview thumbnails */}
-                    {reviewPreviewUrls.length > 0 && (
-                      <div className="d-flex flex-wrap gap-2 mt-3 pt-2 border-top">
-                        {reviewPreviewUrls.map((url, idx) => (
-                          <div
-                            key={idx}
-                            className="position-relative"
-                            style={{ width: "70px", height: "70px" }}
-                          >
-                            <img
-                              src={url}
-                              alt={`review-${idx}`}
-                              className="w-100 h-100 rounded-3 border"
-                              style={{ objectFit: "cover" }}
-                            />
-                            <button
-                              type="button"
-                              className="btn-close btn-close-sm position-absolute"
-                              style={{
-                                top: "-6px",
-                                right: "-6px",
-                                backgroundColor: "white",
-                                borderRadius: "50%",
-                                padding: "4px",
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-                                border: "1px solid #dee2e6",
-                              }}
-                              onClick={() => removeReviewImage(idx)}
-                              aria-label="Remove image"
-                            ></button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {reviewImages.length === 0 && (
-                      <p className="text-muted small text-center mt-2 mb-0">
-                        <i className="bi bi-info-circle me-1"></i> No images selected yet
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {/* ----- END IMAGE UPLOAD ----- */}
-
-              </div>
-            </div>
-
-
                   </div>
 
                   {/* Right Column - Location Map and Stage Wise Images */}
@@ -999,77 +1026,6 @@ const handleApprove = async () => {
                         )}
                       </div>
                     </div>
-
-                    {/* ----- NEW: Image Upload Section ----- */}
-                        <div className="mt-3">
-                          <label className="form-label fw-semibold">
-                            Upload Supporting Images (Max 3)
-                          </label>
-                          <div className="upload-box p-3 border rounded-3 bg-light">
-                            <div className="d-flex align-items-center gap-2">
-                              <i className="bi bi-cloud-arrow-up fs-4 text-primary"></i>
-                              <div>
-                                <p className="mb-0 small">
-                                  Select up to 3 images (JPG, PNG)
-                                </p>
-                                <label
-                                  className={`btn btn-outline-primary btn-sm ${
-                                    reviewImages.length >= 3 ? "disabled" : ""
-                                  }`}
-                                >
-                                  Choose Photos
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleReviewImageChange}
-                                    disabled={reviewImages.length >= 3}
-                                    style={{ display: "none" }}
-                                  />
-                                </label>
-                              </div>
-                            </div>
-                            {/* Preview thumbnails */}
-                            {reviewPreviewUrls.length > 0 && (
-                              <div className="d-flex flex-wrap gap-2 mt-2">
-                                {reviewPreviewUrls.map((url, idx) => (
-                                  <div key={idx} style={{ position: "relative" }}>
-                                    <img
-                                      src={url}
-                                      alt={`review-${idx}`}
-                                      style={{
-                                        width: "60px",
-                                        height: "60px",
-                                        objectFit: "cover",
-                                        borderRadius: "8px",
-                                        border: "1px solid #ced4da",
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      className="btn-close btn-close-sm"
-                                      style={{
-                                        position: "absolute",
-                                        top: "-6px",
-                                        right: "-6px",
-                                        background: "rgba(255,255,255,0.9)",
-                                        borderRadius: "50%",
-                                        padding: "2px",
-                                      }}
-                                      onClick={() => removeReviewImage(idx)}
-                                      aria-label="Remove"
-                                    ></button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {reviewImages.length === 0 && (
-                              <p className="text-muted small mt-2 mb-0">
-                                No images selected
-                              </p>
-                            )}
-                          </div>
-                        </div>
                   </div>
                 </div>
               </div>
