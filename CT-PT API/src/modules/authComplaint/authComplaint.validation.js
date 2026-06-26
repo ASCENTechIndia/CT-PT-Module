@@ -7,6 +7,10 @@ const authComplaintSchema = z.object({
   mode: z.coerce.number().int().min(1),
   status: z.string().trim().min(1),
   remark: z.string().trim().min(1),
+  userType: z.string().trim().min(1),
+  inspectionImg1: z.string().nullable().optional(),
+  inspectionImg2: z.string().nullable().optional(),
+  inspectionImg3: z.string().nullable().optional(),
 });
 
 const complaintStatusSchema = z.object({

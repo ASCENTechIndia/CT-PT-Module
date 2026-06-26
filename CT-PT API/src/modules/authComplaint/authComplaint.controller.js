@@ -3,6 +3,7 @@ const {
   getCompListForSupService,
   getCompListSIService,
   getImagesService,
+  getInspectionImagesService,
   getrslvdListbyVendorService,
   getrslvdListbySupService,
   getSolvedComplaintImagesService,
@@ -210,6 +211,23 @@ async function getImagesCon(req, res, next) {
     return res.ok(rows);
   } catch (error) {
     logApiError(req, 500, error.message, "Error retrieving images");
+    return next(error);
+  }
+}
+
+async function getInspectionImagesCon(req, res, next) {
+  try {
+    const { ulbid, toiletId, applid } = req.query;
+    const rows = await getInspectionImagesService(ulbid, toiletId, applid);
+    logApiSuccess(
+      req,
+      200,
+      { count: rows?.length || 0 },
+      "Inspection Images retrieved successfully",
+    );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, "Error retrieving inspection images");
     return next(error);
   }
 }
@@ -717,7 +735,8 @@ module.exports = {
   getReworkComplaintImages,
   complaintWorkStatusIns,
   getVendorList,
-  getUserDetailsController
+  getUserDetailsController,
+  getInspectionImagesCon
 };
 
 module.exports.complaintStatusUpdate = complaintStatusUpdate;

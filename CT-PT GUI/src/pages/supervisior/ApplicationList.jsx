@@ -27,6 +27,10 @@ const ApplicationList = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
+  // ----- NEW: Image upload states for review -----
+  const [reviewImages, setReviewImages] = useState([]);
+  const [reviewPreviewUrls, setReviewPreviewUrls] = useState([]);
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -165,8 +169,20 @@ const ApplicationList = () => {
     return Array.from(stagesMap.values());
   };
 
+    const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // Extract the base64 part (remove data:image/...;base64,)
+        const result = reader.result.split(",")[1];
+        resolve(result);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
   // Handle Approve action
-  const handleApprove = async () => {
+const handleApprove = async () => {
     if (!supervisorRemark.trim()) {
       setModalType("warning");
       setModalTitle("Warning");
@@ -177,6 +193,16 @@ const ApplicationList = () => {
 
     try {
       setLoader(true);
+
+      // Convert review images to Base64
+      const base64Images = await Promise.all(
+        reviewImages.map((file) => fileToBase64(file))
+      );
+      // Prepare image fields (max 3)
+      const inspectionImg1 = base64Images[0] || null;
+      const inspectionImg2 = base64Images[1] || null;
+      const inspectionImg3 = base64Images[2] || null;
+
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -184,11 +210,17 @@ const ApplicationList = () => {
         mode: 1,
         status: "A",
         remark: supervisorRemark,
+        // ----- Include images if present -----
+        inspectionImg1,
+        inspectionImg2,
+        inspectionImg3,
+        userType: 'SUPERVISOR', // Add userType field
+        // ------------------------------------
       };
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
-        payload,
+        payload
       );
 
       if (response.success) {
@@ -199,7 +231,9 @@ const ApplicationList = () => {
 
         setShowModal(false);
         setSupervisorRemark("");
-        fetchApplications(currentPage); // Refresh the list with current page
+        setReviewImages([]);
+        setReviewPreviewUrls([]);
+        fetchApplications(currentPage);
       }
     } catch (err) {
       console.error("Error approving application:", err);
@@ -212,7 +246,7 @@ const ApplicationList = () => {
     }
   };
 
-  // Handle Reject action
+  // ----- Handle Reject with images -----
   const handleReject = async () => {
     if (!supervisorRemark.trim()) {
       setModalType("warning");
@@ -224,6 +258,14 @@ const ApplicationList = () => {
 
     try {
       setLoader(true);
+
+      const base64Images = await Promise.all(
+        reviewImages.map((file) => fileToBase64(file))
+      );
+      const inspectionImg1 = base64Images[0] || null;
+      const inspectionImg2 = base64Images[1] || null;
+      const inspectionImg3 = base64Images[2] || null;
+
       const payload = {
         userId: user.userId,
         applId: selectedApplication.NUM_EMPCTPTWORK_ID,
@@ -231,11 +273,15 @@ const ApplicationList = () => {
         mode: 1,
         status: "R",
         remark: supervisorRemark,
+        inspectionImg1,
+        inspectionImg2,
+        inspectionImg3,
+        userType: 'SUPERVISOR', // Add userType field
       };
 
       const response = await apiClient.post(
         "/authComplaint/authComplaint",
-        payload,
+        payload
       );
 
       if (response.success) {
@@ -246,7 +292,9 @@ const ApplicationList = () => {
 
         setShowModal(false);
         setSupervisorRemark("");
-        fetchApplications(currentPage); // Refresh the list with current page
+        setReviewImages([]);
+        setReviewPreviewUrls([]);
+        fetchApplications(currentPage);
       }
     } catch (err) {
       console.error("Error rejecting application:", err);
@@ -427,6 +475,39 @@ const ApplicationList = () => {
     setCurrentPage(1);
   };
 
+   const handleReviewImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    // Allow only up to 3 total images
+    if (files.length + reviewImages.length > 3) {
+      setModalType("warning");
+      setModalTitle("Warning");
+      setModalMessage("You can upload a maximum of 3 images.");
+      setIsModalOpen(true);
+      e.target.value = ""; // reset input
+      return;
+    }
+
+    setReviewImages((prev) => [...prev, ...files]);
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setReviewPreviewUrls((prev) => [...prev, ...newPreviews]);
+    e.target.value = ""; // reset input to allow re-selection
+  };
+
+  // ----- Remove an image by index -----
+  const removeReviewImage = (index) => {
+    setReviewImages((prev) => prev.filter((_, i) => i !== index));
+    // Revoke the object URL to avoid memory leaks
+    URL.revokeObjectURL(reviewPreviewUrls[index]);
+    setReviewPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ----- Cleanup preview URLs on unmount -----
+  useEffect(() => {
+    return () => {
+      reviewPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [reviewPreviewUrls]);
+
   return (
     <Layout>
       {loading ? (
@@ -509,10 +590,10 @@ const ApplicationList = () => {
                   <th scope="col">Ward</th>
                   <th scope="col">Toilet Location</th>
                   <th scope="col">Toilet Manager</th>
-                  <th scope="col">Employee</th>
+                  {/* <th scope="col">Employee</th> */}
                   <th scope="col">Status</th>
                   <th scope="col">Super Status</th>
-                  <th scope="col">Remark</th>
+                  {/* <th scope="col">Remark</th> */}
                   <th scope="col">Date</th>
                   <th scope="col" className="text-end">
                     Action
@@ -528,22 +609,22 @@ const ApplicationList = () => {
 
                     <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
                     <td>{app.VAR_CTPTTYPE_USERNAME}</td>
-                    <td>{app.USERNAME}</td>
+                    {/* <td>{app.USERNAME}</td> */}
                     <td>{getBadge(app.VAR_EMPCTPTWORK_STATUS)}</td>
                     <td>{getSupBadge(app.VAR_EMPCTPTWORK_SUPFLAG)}</td>
-                    <td style={{ maxWidth: "250px" }}>
+                    {/* <td style={{ maxWidth: "250px" }}>
                       <small>{app.VAR_EMPCTPTWORK_REMARK}</small>
-                    </td>
+                    </td> */}
                     <td>{formatDate(app.DAT_EMPCTPTWORK_DATE)}</td>
                     <td className="text-end">
                       <button
                         className={`btn btn-sm ${
-                          app.VAR_EMPCTPTWORK_SUPFLAG === "A"
+                          app.VAR_EMPCTPTWORK_SUPFLAG === "A" || app.VAR_EMPCTPTWORK_STATUS === "R"
                             ? "btn-outline-secondary"
                             : "btn-outline-primary"
                         }`}
                         onClick={() => handleReviewClick(app)}
-                        disabled={app.VAR_EMPCTPTWORK_SUPFLAG === "A"}
+                        disabled={app.VAR_EMPCTPTWORK_SUPFLAG === "A" || app.VAR_EMPCTPTWORK_STATUS === "R"}
                         title={
                           app.VAR_EMPCTPTWORK_SUPFLAG === "A"
                             ? "Already approved"
@@ -732,27 +813,127 @@ const ApplicationList = () => {
                     </div>
 
                     {/* Supervisor Action */}
-                    <div className="card">
-                      <div className="card-header">
-                        <h6 className="mb-0">Supervisor Action</h6>
+                     <div className="card">
+              <div className="card-header">
+                <h6 className="mb-0">Supervisor Action</h6>
+              </div>
+              <div className="card-body">
+                {/* Remark textarea */}
+                <label className="form-label fw-semibold">
+                  Remark *
+                </label>
+                <textarea
+                  className="form-control"
+                  rows="3"
+                  placeholder="Add your remarks about this application before approving or rejecting..."
+                  value={supervisorRemark}
+                  onChange={(e) => setSupervisorRemark(e.target.value)}
+                ></textarea>
+                <small className="text-muted mt-2 d-block">
+                  Remark is required to approve or reject this application.
+                </small>
+
+                {/* ----- IMAGE UPLOAD SECTION (NOW UNDER REMARK) ----- */}
+                <div className="mt-3">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label className="form-label fw-semibold mb-0">
+                      <i className="bi bi-images me-1"></i> Upload Supporting Images
+                    </label>
+                    <span className="badge bg-secondary rounded-pill px-3 py-2">
+                      {reviewImages.length} / 3
+                    </span>
+                  </div>
+
+                  <div
+                    className="upload-box p-3 border border-2 border-dashed rounded-4 bg-light-hover"
+                    style={{
+                      borderColor: reviewImages.length >= 3 ? "#dc3545" : "#6c757d",
+                      transition: "all 0.2s",
+                      backgroundColor: "#f8f9fa",
+                      cursor: reviewImages.length >= 3 ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    <div className="d-flex flex-column flex-sm-row align-items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <i
+                          className="bi bi-cloud-arrow-up"
+                          style={{ fontSize: "2.5rem", color: "#0d6efd" }}
+                        ></i>
                       </div>
-                      <div className="card-body">
-                        <label className="form-label fw-semibold">
-                          Remark *
+                      <div className="text-center text-sm-start flex-grow-1">
+                        <p className="mb-1 fw-semibold">
+                          {reviewImages.length >= 3
+                            ? "Maximum images selected"
+                            : "Drop images here or click to browse"}
+                        </p>
+                        <p className="text-muted small mb-2">
+                          Supports JPG, PNG – up to 3 images
+                        </p>
+                        <label
+                          className={`btn ${reviewImages.length >= 3 ? "btn-secondary" : "btn-primary"} btn-sm`}
+                          style={{ cursor: reviewImages.length >= 3 ? "not-allowed" : "pointer" }}
+                        >
+                          <i className="bi bi-folder2-open me-1"></i> Choose Photos
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleReviewImageChange}
+                            disabled={reviewImages.length >= 3}
+                            style={{ display: "none" }}
+                          />
                         </label>
-                        <textarea
-                          className="form-control"
-                          rows="3"
-                          placeholder="Add your remarks about this application before approving or rejecting..."
-                          value={supervisorRemark}
-                          onChange={(e) => setSupervisorRemark(e.target.value)}
-                        ></textarea>
-                        <small className="text-muted mt-2 d-block">
-                          Remark is required to approve or reject this
-                          application.
-                        </small>
                       </div>
                     </div>
+
+                    {/* Preview thumbnails */}
+                    {reviewPreviewUrls.length > 0 && (
+                      <div className="d-flex flex-wrap gap-2 mt-3 pt-2 border-top">
+                        {reviewPreviewUrls.map((url, idx) => (
+                          <div
+                            key={idx}
+                            className="position-relative"
+                            style={{ width: "70px", height: "70px" }}
+                          >
+                            <img
+                              src={url}
+                              alt={`review-${idx}`}
+                              className="w-100 h-100 rounded-3 border"
+                              style={{ objectFit: "cover" }}
+                            />
+                            <button
+                              type="button"
+                              className="btn-close btn-close-sm position-absolute"
+                              style={{
+                                top: "-6px",
+                                right: "-6px",
+                                backgroundColor: "white",
+                                borderRadius: "50%",
+                                padding: "4px",
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                                border: "1px solid #dee2e6",
+                              }}
+                              onClick={() => removeReviewImage(idx)}
+                              aria-label="Remove image"
+                            ></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {reviewImages.length === 0 && (
+                      <p className="text-muted small text-center mt-2 mb-0">
+                        <i className="bi bi-info-circle me-1"></i> No images selected yet
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {/* ----- END IMAGE UPLOAD ----- */}
+
+              </div>
+            </div>
+
+
                   </div>
 
                   {/* Right Column - Location Map and Stage Wise Images */}
@@ -818,6 +999,77 @@ const ApplicationList = () => {
                         )}
                       </div>
                     </div>
+
+                    {/* ----- NEW: Image Upload Section ----- */}
+                        <div className="mt-3">
+                          <label className="form-label fw-semibold">
+                            Upload Supporting Images (Max 3)
+                          </label>
+                          <div className="upload-box p-3 border rounded-3 bg-light">
+                            <div className="d-flex align-items-center gap-2">
+                              <i className="bi bi-cloud-arrow-up fs-4 text-primary"></i>
+                              <div>
+                                <p className="mb-0 small">
+                                  Select up to 3 images (JPG, PNG)
+                                </p>
+                                <label
+                                  className={`btn btn-outline-primary btn-sm ${
+                                    reviewImages.length >= 3 ? "disabled" : ""
+                                  }`}
+                                >
+                                  Choose Photos
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleReviewImageChange}
+                                    disabled={reviewImages.length >= 3}
+                                    style={{ display: "none" }}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                            {/* Preview thumbnails */}
+                            {reviewPreviewUrls.length > 0 && (
+                              <div className="d-flex flex-wrap gap-2 mt-2">
+                                {reviewPreviewUrls.map((url, idx) => (
+                                  <div key={idx} style={{ position: "relative" }}>
+                                    <img
+                                      src={url}
+                                      alt={`review-${idx}`}
+                                      style={{
+                                        width: "60px",
+                                        height: "60px",
+                                        objectFit: "cover",
+                                        borderRadius: "8px",
+                                        border: "1px solid #ced4da",
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="btn-close btn-close-sm"
+                                      style={{
+                                        position: "absolute",
+                                        top: "-6px",
+                                        right: "-6px",
+                                        background: "rgba(255,255,255,0.9)",
+                                        borderRadius: "50%",
+                                        padding: "2px",
+                                      }}
+                                      onClick={() => removeReviewImage(idx)}
+                                      aria-label="Remove"
+                                    ></button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {reviewImages.length === 0 && (
+                              <p className="text-muted small mt-2 mb-0">
+                                No images selected
+                              </p>
+                            )}
+                          </div>
+                        </div>
                   </div>
                 </div>
               </div>

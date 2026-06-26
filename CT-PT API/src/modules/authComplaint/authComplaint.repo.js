@@ -12,6 +12,10 @@ async function authComplaintRepo(payload) {
         :in_mode,
         :in_status,
         :in_Remark,
+        :in_inspectionimg1,
+        :in_inspectionimg2,
+        :in_inspectionimg3,
+        :in_usertype,
         :Out_ErrorCode,
         :Out_ErrorMsg
       );
@@ -25,6 +29,25 @@ async function authComplaintRepo(payload) {
     in_mode: Number(payload.mode),
     in_status: payload.status,
     in_Remark: payload.remark,
+    in_inspectionimg1: {
+          val: payload.inspectionImg1
+            ? Buffer.from(payload.inspectionImg1, "base64")
+            : null,
+          type: oracledb.BLOB,
+        },
+        in_inspectionimg2: {
+          val: payload.inspectionImg2
+            ? Buffer.from(payload.inspectionImg2, "base64")
+            : null,
+          type: oracledb.BLOB,
+        },
+        in_inspectionimg3: {
+          val: payload.inspectionImg3
+            ? Buffer.from(payload.inspectionImg3, "base64")
+            : null,
+          type: oracledb.BLOB,
+        },
+    in_usertype: payload.userType,
     Out_ErrorCode: {
       dir: oracledb.BIND_OUT,
       type: oracledb.NUMBER,
@@ -364,6 +387,38 @@ async function compListforSIRepo(
 async function getImages(ulbid, toiletId, applid) {
   let sql = `
   select * from vw_reworkimg_details where workid = :applid and 
+  ulbid = :ulbid
+  `;
+
+  const binds = {
+    ulbid: Number(ulbid),
+    applid: Number(applid),
+  };
+
+  const result = await executeQuery(sql, binds);
+
+  const rows = result.rows || [];
+
+  for (const row of rows) {
+    row.IMG1 = await lobToBase64(
+      row.IMG1,
+    );
+
+    row.IMG2 = await lobToBase64(
+      row.IMG2,
+    );
+
+    row.IMG3 = await lobToBase64(
+      row.IMG3,
+    );
+  }
+
+  return rows;
+}
+
+async function getInspectionImages(ulbid, toiletId, applid) {
+  let sql = `
+  select * from vw_ctptinspectionimg_details where workid = :applid and 
   ulbid = :ulbid
   `;
 
@@ -1031,7 +1086,11 @@ async function complaintStatusUpdateRepo(payload) {
 async function complaintWorkStatusInsRepo(payload) {
   const statement = `
     BEGIN
-      aorts.aorts_ctptworkstatus_ins(
+      
+    
+    
+    
+    (
         :in_UserId,
         :in_ULBId,
         :in_attnd_date,
@@ -1187,7 +1246,8 @@ module.exports = {
   getReworkImages,
   complaintWorkStatusInsRepo,
   getVendorListRepo,
-  userDetailsRepo
+  userDetailsRepo,
+  getInspectionImages
 };
 
 module.exports.complaintStatusUpdateRepo = complaintStatusUpdateRepo;

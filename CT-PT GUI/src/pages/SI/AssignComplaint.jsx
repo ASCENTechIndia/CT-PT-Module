@@ -459,7 +459,7 @@ const AssignComplaint = () => {
                 <th scope="col">Name</th>
                 <th scope="col">Ward</th>
                 <th scope="col">Supervisior Name</th>
-                <th scope="col">Ass. Supervisior Name</th>
+                {/* <th scope="col">Ass. Supervisior Name</th> */}
                 <th scope="col">Phone</th>
                 <th scope="col">Status</th>
                 <th scope="col">Date</th>
@@ -474,7 +474,7 @@ const AssignComplaint = () => {
                   <td>{complaint.VAR_COMPLAINT_CITIZNAME}</td>
                   <td>{complaint.PRBHAG}</td>
                   <td>{complaint.SUPERWISER}</td>
-                  <td>{complaint.ASSIGN_SUPEVISOR_NAME}</td>
+                  {/* <td>{complaint.ASSIGN_SUPEVISOR_NAME}</td> */}
                   <td>{complaint.MOBILENO}</td>
                   <td>{getBadge(complaint.VAR_COMPLAINT_STATUS)}</td>
                   <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
