@@ -92,7 +92,9 @@ export default function Navbar() {
               aria-expanded={showProfile}
             >
               <img className="avatar-img avatar-sm" src={profileImage} alt="User Profile Image" />
-              <span className="profile-name d-none d-sm-inline">{user?.userFullName}</span>
+              <span className="profile-name d-none d-sm-inline" style={{ fontSize: "0.80rem" }}>
+                {user?.userFullName}
+              </span>
             </button>
             {showProfile && (
               <ul className="dropdown-menu dropdown-menu-end show">

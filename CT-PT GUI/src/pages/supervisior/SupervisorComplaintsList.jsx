@@ -642,10 +642,9 @@ const SupervisorComplaintsList = () => {
                           : "btn-outline-primary"
                       }`}
                       disabled={
-                        complaint &&
-                        complaint.superstatus &&
-                        (complaint.superstatus === "APPROVE" ||
-                          complaint.superstatus === "REJECT")
+                        complaint.VAR_COMPLAINT_STATUS === "CLOSED" ||
+                        complaint.superstatus === "APPROVE" ||
+                        complaint.superstatus === "REJECT"
                       }
                     >
                       <i className="bi bi-eye me-1"></i> Review

@@ -446,10 +446,10 @@ const ApplicationListSI = () => {
                 <th scope="col">Ward</th>
                 <th scope="col">Toilet Location</th>
                 <th scope="col">Toilet Manager</th>
-                <th scope="col">Employee</th>
+                {/* <th scope="col">Employee</th> */}
                 <th scope="col">Status</th>
                 <th scope="col">SI Status</th>
-                <th scope="col">Remark</th>
+                {/* <th scope="col">Remark</th> */}
                 <th scope="col">Date</th>
                 <th scope="col" className="text-end">
                   Action
@@ -464,22 +464,22 @@ const ApplicationListSI = () => {
                   </td>
                   <td>{app.VAR_CTPTTYPE_TOILETLOCATION}</td>
                   <td>{app.VAR_CTPTTYPE_USERNAME}</td>
-                  <td>{app.USERNAME}</td>
+                  {/* <td>{app.USERNAME}</td> */}
                   <td>{getBadge(app.VAR_EMPCTPTWORK_STATUS)}</td>
                   <td>{getSIBadge(app.VAR_EMPCTPTWORK_SIFLAG)}</td>
-                  <td style={{ maxWidth: "250px" }}>
+                  {/* <td style={{ maxWidth: "250px" }}>
                     <small>{app.VAR_EMPCTPTWORK_REMARK}</small>
-                  </td>
+                  </td> */}
                   <td>{formatDate(app.DAT_EMPCTPTWORK_DATE)}</td>
                   <td className="text-end">
                     <button
                       className={`btn btn-sm ${
-                        app.VAR_EMPCTPTWORK_STATUS === "R"
+                        app.VAR_EMPCTPTWORK_STATUS === "R" || app.VAR_EMPCTPTWORK_STATUS === "A"
                           ? "btn-outline-secondary"
                           : "btn-outline-primary"
                       }`}
                       onClick={() => handleReviewClick(app)}
-                      disabled={app.VAR_EMPCTPTWORK_STATUS === "R"}
+                      disabled={app.VAR_EMPCTPTWORK_STATUS === "R" || app.VAR_EMPCTPTWORK_STATUS === "A"}
                       title={
                         app.VAR_EMPCTPTWORK_STATUS === "A"
                           ? "Already approved"
@@ -634,14 +634,6 @@ const ApplicationListSI = () => {
                             </label>
                             <p className="h6 mb-0">
                               {selectedApplication.USERNAME}
-                            </p>
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold text-muted">
-                              Employee ID
-                            </label>
-                            <p className="h6 mb-0">
-                              {selectedApplication.VAR_EMPCTPTWORK_USERID}
                             </p>
                           </div>
                           <div className="col-md-6">
