@@ -41,6 +41,9 @@ import ResolvedComplaint from './pages/SI/ResolvedComplaint';
 import HomeRedirect from './pages/HomeRedirect';
 import FineList from './pages/SI/FineList';
 
+// Dashboard
+import Dashboard2 from './pages/dashboard/Dashboard';
+
 function App() {
   return (
     <AuthProvider>
@@ -142,6 +145,15 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <SupervisorComplaintsList />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard2/>
                     </ProtectedRoute>
                   }
                 />
