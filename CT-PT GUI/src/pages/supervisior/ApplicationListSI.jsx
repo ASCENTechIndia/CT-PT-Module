@@ -28,6 +28,7 @@ const ApplicationListSI = () => {
   const [modalType, setModalType] = useState("info");
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
+  const [inspectionImages, setInspectionImages] = useState([]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,14 +94,35 @@ const ApplicationListSI = () => {
   const fetchStageWiseImages = async (application) => {
     try {
       setLoader(true);
-      const response = await apiClient.get(
-        `/authComplaint/getImages?ulbid=${ulbId}&toiletId=${application.NUM_EMPCTPTWORK_TOILETID}&applid=${application.NUM_EMPCTPTWORK_ID}`,
-      );
-      if (response.success && response.data) {
-        setStageWiseImages(response.data);
+      const result = await Promise.allSettled([
+        apiClient.get(
+          `/authComplaint/getImages?ulbid=${ulbId}&toiletId=${application.NUM_EMPCTPTWORK_TOILETID}&applid=${application.NUM_EMPCTPTWORK_ID}`,
+        ),
+
+        apiClient.get(
+          `/authComplaint/getInspectionImages?ulbid=${ulbId}&applid=${application.NUM_EMPCTPTWORK_ID}`,
+        ),
+      ]);
+      if (result[0].status === "fulfilled") {
+        const response = result[0].value;
+        if (response.success && response.data) {
+          setStageWiseImages(response.data);
+        } else {
+          setStageWiseImages([]);
+        }
+      }
+
+      if (result[1].status === "fulfilled") {
+        const response = result[1].value;
+        if (response.success && response?.data?.length > 0) {
+          setInspectionImages(response.data);
+        } else {
+          setInspectionImages([]);
+        }
       }
     } catch (err) {
       console.error("Error fetching stage-wise images:", err);
+      setInspectionImages([]);
       setStageWiseImages([]);
     } finally {
       setLoader(false);
@@ -139,6 +161,29 @@ const ApplicationListSI = () => {
           .join("-");
         const time = entry.DETAILSDATE.split("T")[1].split(".")[0];
         const stageName = `${entry.STAGENM} (${date} ${time})`;
+        if (!stagesMap.has(stageName)) {
+          stagesMap.set(stageName, { stageName, images: [] });
+        }
+        const images = [entry.IMG1, entry.IMG2, entry.IMG3].filter(
+          (img) => img && img !== null && img.trim() !== "",
+        );
+        stagesMap.get(stageName).images.push(...images);
+      });
+    }
+    return Array.from(stagesMap.values());
+  };
+
+  const getInspectionImages = () => {
+    const stagesMap = new Map();
+    if (inspectionImages && inspectionImages.length > 0) {
+      inspectionImages.forEach((entry) => {
+        const date = entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[0]
+          .split("-")
+          .reverse()
+          .join("-");
+        const time =
+          entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[1].split(".")[0];
+        const stageName = `${entry.VAR_CTPTWORKINSPECTION_USERTYPE} (${date} ${time})`;
         if (!stagesMap.has(stageName)) {
           stagesMap.set(stageName, { stageName, images: [] });
         }
@@ -749,6 +794,30 @@ const ApplicationListSI = () => {
                         </small>
                       </div>
                     </div>
+
+                    {getInspectionImages().length > 0 ? (
+                      <div className="card mb-3">
+                        <div className="card-header">
+                          <h6 className="mb-0">Inspection Images</h6>
+                        </div>
+                        <div
+                          className="card-body"
+                          style={{ maxHeight: "300px", overflowY: "auto" }}
+                        >
+                          {getInspectionImages().map((stage, idx) => (
+                            <div key={idx} className="mb-4">
+                              <div className="mb-3">
+                                <i className="bi bi-images me-2"></i>
+                                <strong>{stage.stageName}</strong>
+                              </div>
+                              {renderImageGallery(stage.images)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      ""
+                    )}
 
                     {/* Sanitary Inspector Action */}
                     <div className="card">
