@@ -402,7 +402,7 @@ const SupervisorComplaintsList = () => {
     const images = getComplaintImages(complaint);
 
     return (
-      <div className="d-flex gap-2 flex-wrap mt-2">
+      <div className="d-flex gap-2 flex-wrap">
         {images.length > 0 ? (
           images.map((img, idx) => (
             <img
@@ -889,7 +889,12 @@ const SupervisorComplaintsList = () => {
                   <label className="form-label fw-semibold">
                     <i className="bi bi-images me-2"></i>Complaint Images
                   </label>
-                  {renderThumbnails(selectedComplaint)}
+                  <div
+                    className="border border-2 p-3"
+                    style={{ borderRadius: "5px" }}
+                  >
+                    {renderThumbnails(selectedComplaint)}
+                  </div>
                 </div>
 
                 <div className="mt-4 pt-3 border-top">
