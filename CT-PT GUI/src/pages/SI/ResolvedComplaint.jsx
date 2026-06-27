@@ -643,11 +643,11 @@ const ResolvedComplaint = () => {
                           ? "btn-outline-secondary"
                           : "btn-outline-primary"
                       }`}
-                      // disabled={
-                      //   complaint.SUPERSTATUS === "REJECT" ||
-                      //   complaint.SISTATUS === "APPROVE" ||
-                      //   complaint.SISTATUS === "REJECT"
-                      // }
+                      disabled={
+                        complaint.SUPERSTATUS === "REJECT" ||
+                        complaint.SISTATUS === "APPROVE" ||
+                        complaint.SISTATUS === "REJECT"
+                      }
                     >
                       <i className="bi bi-eye me-1"></i> Review
                     </button>
