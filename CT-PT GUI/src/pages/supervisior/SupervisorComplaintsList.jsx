@@ -33,6 +33,7 @@ const SupervisorComplaintsList = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
   const [reworkImages, setReworkImages] = useState([]);
+  const [inspectionImages, setInspectionImages] = useState([]);
 
   // ----- NEW: Image upload states for review -----
   const [reviewImages, setReviewImages] = useState([]);
@@ -131,9 +132,9 @@ const SupervisorComplaintsList = () => {
       const reviewBase64Images = await Promise.all(
         reviewImages.map((file) => fileToBase64(file)),
       );
-      const reviewImg1 = reviewBase64Images[0] || null;
-      const reviewImg2 = reviewBase64Images[1] || null;
-      const reviewImg3 = reviewBase64Images[2] || null;
+      const inspectionimg1 = reviewBase64Images[0] || null;
+      const inspectionimg2 = reviewBase64Images[1] || null;
+      const inspectionimg3 = reviewBase64Images[2] || null;
 
       const payload = {
         userId: userId,
@@ -144,10 +145,10 @@ const SupervisorComplaintsList = () => {
         superremark: supervisorRemark,
         wardno: selectedComplaint.PRBHAGID,
         ulbid: ulbid,
-        reviewImg1,
-        reviewImg2,
-        reviewImg3,
-        userType: "SUPERVISOR",
+        inspectionimg1,
+        inspectionimg2,
+        inspectionimg3,
+        usertype: "SUPERVISOR",
       };
 
       const response = await apiClient.post(
@@ -242,22 +243,56 @@ const SupervisorComplaintsList = () => {
 
   const getReworkImages = async (complaintId) => {
     try {
-      setLoader(true);
-      const res = await apiClient.get(
-        `/authComplaint/getReworkImages?complaintid=${complaintId}`,
-      );
-      if (res?.success && res?.data?.length > 0) {
-        const data = res.data.map((item) => ({
-          date: item.IMAGE_DATE,
-          imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
-        }));
-        const formatedData = sortAndFormatByDate(data);
-        setReworkImages(formatedData);
-      } else {
-        setReworkImages([]);
+      // Old fetch rework images
+      // setLoader(true);
+      // const res = await apiClient.get(
+      //   `/authComplaint/getReworkImages?complaintid=${complaintId}`,
+      // );
+      // if (res?.success && res?.data?.length > 0) {
+      //   const data = res.data.map((item) => ({
+      //     date: item.IMAGE_DATE,
+      //     imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
+      //   }));
+      //   const formatedData = sortAndFormatByDate(data);
+      //   setReworkImages(formatedData);
+      // } else {
+      //   setReworkImages([]);
+      // }
+
+      const result = await Promise.allSettled([
+        apiClient.get(
+          `/authComplaint/getReworkImages?complaintid=${complaintId}`,
+        ),
+        apiClient.get(`/authComplaint/getInspectionImages`),
+      ]);
+
+      // Rework image
+      if (result[0].status === "fulfilled") {
+        const res = result[0].value;
+        if (res?.success && res?.data?.length > 0) {
+          const data = res.data.map((item) => ({
+            date: item.IMAGE_DATE,
+            imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
+          }));
+          const formatedData = sortAndFormatByDate(data);
+          setReworkImages(formatedData);
+        } else {
+          setReworkImages([]);
+        }
+      }
+
+      // Inspection Image
+      if (result[1].status === "fulfilled") {
+        const res = result[1].value;
+        if (res?.success && res?.data?.length > 0) {
+          inspectionImages(res?.data);
+        } else {
+          setInspectionImages([]);
+        }
       }
     } catch (error) {
       console.error(error);
+      setInspectionImages([]);
       setReworkImages([]);
     } finally {
       setLoader(false);
@@ -344,6 +379,29 @@ const SupervisorComplaintsList = () => {
       complaint?.BLOB_COMPLAINT_UNITIMG4,
       complaint?.BLOB_COMPLAINT_UNITIMG5,
     ].filter((img) => img && img.trim() !== "");
+  };
+
+  const getInspectionImages = () => {
+    const stagesMap = new Map();
+    if (inspectionImages && inspectionImages.length > 0) {
+      inspectionImages.forEach((entry) => {
+        const date = entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[0]
+          .split("-")
+          .reverse()
+          .join("-");
+        const time =
+          entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[1].split(".")[0];
+        const stageName = `${entry.VAR_CTPTWORKINSPECTION_USERTYPE} (${date} ${time})`;
+        if (!stagesMap.has(stageName)) {
+          stagesMap.set(stageName, { stageName, images: [] });
+        }
+        const images = [entry.IMG1, entry.IMG2, entry.IMG3].filter(
+          (img) => img && img !== null && img.trim() !== "",
+        );
+        stagesMap.get(stageName).images.push(...images);
+      });
+    }
+    return Array.from(stagesMap.values());
   };
 
   const getComplaintImages2 = (complaint) => {
@@ -872,6 +930,30 @@ const SupervisorComplaintsList = () => {
                     </div>
                   </div>
                 </div>
+
+                {getInspectionImages().length > 0 ? (
+                  <div className="card mb-3">
+                    <div className="card-header">
+                      <h6 className="mb-0">Inspection Images</h6>
+                    </div>
+                    <div
+                      className="card-body"
+                      style={{ maxHeight: "300px", overflowY: "auto" }}
+                    >
+                      {getInspectionImages().map((stage, idx) => (
+                        <div key={idx} className="mb-4">
+                          <div className="mb-3">
+                            <i className="bi bi-images me-2"></i>
+                            <strong>{stage.stageName}</strong>
+                          </div>
+                          {renderImageGallery(stage.images)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  ""
+                )}
 
                 {/* Supervisor Actions */}
                 <div className="mt-4 pt-3 border-top">
