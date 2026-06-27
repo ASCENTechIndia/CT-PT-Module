@@ -668,10 +668,10 @@ const ApplicationList = () => {
                             : "btn-outline-primary"
                         }`}
                         onClick={() => handleReviewClick(app)}
-                        // disabled={
-                        //   app.VAR_EMPCTPTWORK_SUPFLAG === "A" ||
-                        //   app.VAR_EMPCTPTWORK_STATUS === "R"
-                        // }
+                        disabled={
+                          app.VAR_EMPCTPTWORK_SUPFLAG === "A" ||
+                          app.VAR_EMPCTPTWORK_STATUS === "R"
+                        }
                         title={
                           app.VAR_EMPCTPTWORK_SUPFLAG === "A"
                             ? "Already approved"

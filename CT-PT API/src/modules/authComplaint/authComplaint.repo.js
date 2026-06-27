@@ -1086,10 +1086,7 @@ async function complaintStatusUpdateRepo(payload) {
 async function complaintWorkStatusInsRepo(payload) {
   const statement = `
     BEGIN
-      
-    
-    
-    
+      aorts.aorts_ctptworkstatus_ins
     (
         :in_UserId,
         :in_ULBId,

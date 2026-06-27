@@ -839,10 +839,8 @@ const ApplicationListSI = () => {
                           Remark is required to approve or reject this
                           application.
                         </small>
-                      </div>
-                    </div>
 
-                    <div className="mt-3">
+                        <div className="mt-3">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <label className="form-label fw-semibold mb-0 small">
                           <i className="bi bi-images me-1 text-primary"></i>{" "}
@@ -960,6 +958,12 @@ const ApplicationListSI = () => {
                         )}
                       </div>
                     </div>
+                      </div>
+
+                      
+                    </div>
+
+                    
                   </div>
 
                   {/* Right Column - Location Map and Stage Wise Images */}
