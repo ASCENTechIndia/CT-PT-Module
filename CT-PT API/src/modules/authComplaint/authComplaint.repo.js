@@ -448,6 +448,38 @@ async function getInspectionImages(ulbid, toiletId, applid) {
   return rows;
 }
 
+async function getComplaintInspectionImages(ulbid, toiletId, applid) {
+  let sql = `
+  select * from vw_ctptcomplaint_inspectionimg_details where workid = :applid and 
+  ulbid = :ulbid
+  `;
+
+  const binds = {
+    ulbid: Number(ulbid),
+    applid: Number(applid),
+  };
+
+  const result = await executeQuery(sql, binds);
+
+  const rows = result.rows || [];
+
+  for (const row of rows) {
+    row.IMG1 = await lobToBase64(
+      row.IMG1,
+    );
+
+    row.IMG2 = await lobToBase64(
+      row.IMG2,
+    );
+
+    row.IMG3 = await lobToBase64(
+      row.IMG3,
+    );
+  }
+
+  return rows;
+}
+
 async function rslvdListbyVendorRepo(
   ulbid,
   supervisorId,
@@ -1016,6 +1048,10 @@ async function complaintStatusUpdateRepo(payload) {
         :in_Venderremark,
         :in_reworkflag,
         :in_reworkid,
+        :in_inspectionimg1,
+        :in_inspectionimg2,
+        :in_inspectionimg3,
+        :in_usertype,
         :out_errcode,
         :out_ErrMsg
       );
@@ -1063,6 +1099,27 @@ async function complaintStatusUpdateRepo(payload) {
     in_Venderremark: payload.vendorRemark || null,
     in_reworkflag: payload.reworkflag,
     in_reworkid: payload.reworkId || null,
+    in_inspectionimg1: {
+      val: payload.inspectionimg1
+        ? Buffer.from(payload.inspectionimg1, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+
+    in_inspectionimg2: {
+      val: payload.inspectionimg2
+        ? Buffer.from(payload.inspectionimg2, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+
+    in_inspectionimg3: {
+      val: payload.inspectionimg3
+        ? Buffer.from(payload.inspectionimg3, "base64")
+        : null,
+      type: oracledb.BLOB,
+    },
+    in_usertype: payload.usertype || null,
     out_errcode: {
       dir: oracledb.BIND_OUT,
       type: oracledb.NUMBER,
@@ -1244,7 +1301,8 @@ module.exports = {
   complaintWorkStatusInsRepo,
   getVendorListRepo,
   userDetailsRepo,
-  getInspectionImages
+  getInspectionImages,
+  getComplaintInspectionImages
 };
 
 module.exports.complaintStatusUpdateRepo = complaintStatusUpdateRepo;

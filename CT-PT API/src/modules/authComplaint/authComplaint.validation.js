@@ -31,6 +31,10 @@ const complaintStatusSchema = z.object({
   solvedImg2: z.string().nullable().optional(),
   solvedImg3: z.string().nullable().optional(),
   reworkflag: z.string().optional(),
+  usertype: z.string().trim().min(1),
+  inspectionimg1: z.string().nullable().optional(),
+  inspectionimg2: z.string().nullable().optional(),
+  inspectionimg3: z.string().nullable().optional(),
 });
 
 const complaintWorkStatusSchema = z.object({

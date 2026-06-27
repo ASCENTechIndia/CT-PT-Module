@@ -4,6 +4,7 @@ const {
   compListforSIRepo,
   getImages,
   getInspectionImages,
+  getComplaintInspectionImages,
   rslvdListbyVendorRepo,
   rslvdListbySupRepo,
   getSolvedComplaintImagesRepo,
@@ -52,7 +53,10 @@ async function getImagesService(ulbid, toiletId, applid) {
 async function getInspectionImagesService(ulbid, toiletId, applid) {
   return getInspectionImages(ulbid, toiletId, applid);
 }
-getInspectionImages
+
+async function getComplaintInspectionImagesService(ulbid, toiletId, applid) {
+  return getComplaintInspectionImages(ulbid, toiletId, applid);
+}
 
 async function getrslvdListbyVendorService(
   ulbid,
@@ -152,7 +156,8 @@ module.exports = {
   complaintWorkStatusInsService,
   vendorListService,
   userDetailsService,
-  getInspectionImagesService
+  getInspectionImagesService,
+  getComplaintInspectionImagesService
 };
 
 module.exports.complaintStatusUpdateService = complaintStatusUpdateService;
