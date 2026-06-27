@@ -837,18 +837,22 @@ const ResolvedComplaint = () => {
                 </div>
 
                 {getInspectionImages().length > 0 ? (
-                  <div className="card my-3">
-                    <div className="card-header">
+                  <div className="card my-3 border border-0">
+                    <div className="d-flex ">
+                      <i className="bi bi-images me-2"></i>
                       <h6 className="mb-0">Inspection Images</h6>
                     </div>
                     <div
-                      className="card-body"
+                      className="card-body p-0 mt-2"
                       style={{ maxHeight: "300px", overflowY: "auto" }}
                     >
                       {getInspectionImages().map((stage, idx) => (
-                        <div key={idx} className="mb-4">
+                        <div
+                          key={idx}
+                          className="mb-4 border border-2 p-3"
+                          style={{ borderRadius: "5px" }}
+                        >
                           <div className="mb-3">
-                            <i className="bi bi-images me-2"></i>
                             <strong>{stage.stageName}</strong>
                           </div>
                           {renderImageGallery(stage.images)}
