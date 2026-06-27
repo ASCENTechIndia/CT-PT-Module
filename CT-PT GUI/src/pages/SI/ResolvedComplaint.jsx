@@ -235,6 +235,18 @@ const ResolvedComplaint = () => {
     }
   };
 
+   const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result.split(",")[1]; // Extract base64 part
+        resolve(result);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   // Handle SI remark and status submission
   const handleSubmitSIRemark = async () => {
     if (!siRemark.trim() || !sanitaryinspectorstatus) {
@@ -247,7 +259,7 @@ const ResolvedComplaint = () => {
       return;
     }
 
-    if (reviewImages?.length <= 0) {
+    if (reviewImages?.length <= 0 && sanitaryinspectorstatus === "REJECT") {
       setModalType("Warning");
       setModalTitle("Warning");
       setModalMessage("Please select atleast one inspection image");

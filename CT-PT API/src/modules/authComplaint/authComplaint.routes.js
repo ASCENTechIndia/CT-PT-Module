@@ -17,7 +17,7 @@ const {
   getSupervisorStatusCon,
   resolvedListbyVendorList,
   getReworkComplaintImages,
-  getVendorList,complaintWorkStatusIns,getUserDetailsController,getComplaintInspectionImagesCon
+  getVendorList,complaintWorkStatusIns,getUserDetailsController,getComplaintInspectionImagesCon,getInspectionImagesCon
 } = require("./authComplaint.controller");
 const { complaintStatusSchema } = require("./authComplaint.validation");
 
@@ -34,6 +34,7 @@ router.post("/complaintWorkStatusIns", complaintWorkStatusIns);
 router.get("/getCompListForSup", getCompListForSup);
 router.get("/getCompListForSI", getCompListForSI);
 router.get("/getImages", getImagesCon);
+router.get('/getInspectionImages', getInspectionImagesCon);
 router.get('/getComplaintInspectionImages', getComplaintInspectionImagesCon);
 router.get("/getSolvedComplaintImages", getSolvedComplaintImagesCon);
 router.get("/supervisorStatus", getSupervisorStatusCon);

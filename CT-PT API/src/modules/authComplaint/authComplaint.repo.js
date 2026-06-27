@@ -104,7 +104,7 @@ async function compListforSupRepo(
   let sql = `
     SELECT
       w.num_empctptwork_id,
-      w.dat_empctptwork_date,
+      CAST(w.dat_empctptwork_date + 1 AS TIMESTAMP) AS dat_empctptwork_date,
       w.var_empctptwork_latitude,
       w.var_empctptwork_longitude,
       w.num_empctptwork_id AS unique_id,
@@ -673,6 +673,10 @@ async function getVendorListRepo(fromDate, toDate, status, userId) {
 
     binds.status = status;
   }
+
+  sql += `
+    order by dat_empctptwork_date desc
+  `;
 
   const result = await executeQuery(sql, binds);
 
