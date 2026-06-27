@@ -610,6 +610,10 @@ async function complaintStatusUpdate(req, res, next) {
       solvedImg3: body.solvedImg3,
       reworkflag: body.reworkflag,
       reworkId: body.reworkId,
+      inspectionimg1: body.inspectionimg1,
+      inspectionimg2: body.inspectionimg2,
+      inspectionimg3: body.inspectionimg3,
+      usertype: body.usertype,
     };
 
     const out = await complaintStatusUpdateService(payload);

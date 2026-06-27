@@ -724,7 +724,7 @@ const SupervisorComplaintsList = () => {
                   <td>{complaint.SUPERWISER}</td>
                   <td>{complaint.MOBILENO}</td>
                   <td>{getBadge(complaint.VAR_COMPLAINT_STATUS)}</td>
-                  <td>{getAppRej(complaint.superstatus)}</td>
+                  <td>{getAppRej(complaint.SUPERSTATUS)}</td>
                   <td>{formatDate(complaint.COMPLAINT_DATE)}</td>
                   <td className="text-end">
                     <button
@@ -732,15 +732,15 @@ const SupervisorComplaintsList = () => {
                       onClick={() => handleReviewClick(complaint)}
                       className={`btn btn-sm ${
                         complaint.VAR_COMPLAINT_STATUS === "CLOSED" ||
-                        complaint.superstatus === "APPROVE" ||
-                        complaint.superstatus === "REJECT"
+                        complaint.SUPERSTATUS === "APPROVE" ||
+                        complaint.SUPERSTATUS === "REJECT"
                           ? "btn-outline-secondary"
                           : "btn-outline-primary"
                       }`}
                       disabled={
                         complaint.VAR_COMPLAINT_STATUS === "CLOSED" ||
-                        complaint.superstatus === "APPROVE" ||
-                        complaint.superstatus === "REJECT"
+                        complaint.SUPERSTATUS === "APPROVE" ||
+                        complaint.SUPERSTATUS === "REJECT"
                       }
                     >
                       <i className="bi bi-eye me-1"></i> Review
