@@ -724,11 +724,11 @@ const SupervisorComplaintsList = () => {
                           ? "btn-outline-secondary"
                           : "btn-outline-primary"
                       }`}
-                      disabled={
-                        complaint.VAR_COMPLAINT_STATUS === "CLOSED" ||
-                        complaint.SUPERSTATUS === "APPROVE" ||
-                        complaint.SUPERSTATUS === "REJECT"
-                      }
+                      // disabled={
+                      //   complaint.VAR_COMPLAINT_STATUS === "CLOSED" ||
+                      //   complaint.SUPERSTATUS === "APPROVE" ||
+                      //   complaint.SUPERSTATUS === "REJECT"
+                      // }
                     >
                       <i className="bi bi-eye me-1"></i> Review
                     </button>
