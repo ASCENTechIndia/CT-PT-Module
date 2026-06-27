@@ -450,7 +450,7 @@ async function getInspectionImages(ulbid, toiletId, applid) {
 
 async function getComplaintInspectionImages(ulbid, toiletId, applid) {
   let sql = `
-  select * from vw_ctptcomplaint_inspectionimg_details where workid = :applid and 
+  select * from vw_ctptcomplaint_inspectionimg_details where complaintid = :applid and 
   ulbid = :ulbid
   `;
 
