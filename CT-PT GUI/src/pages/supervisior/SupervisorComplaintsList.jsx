@@ -243,27 +243,14 @@ const SupervisorComplaintsList = () => {
 
   const getReworkImages = async (complaintId) => {
     try {
-      // Old fetch rework images
-      // setLoader(true);
-      // const res = await apiClient.get(
-      //   `/authComplaint/getReworkImages?complaintid=${complaintId}`,
-      // );
-      // if (res?.success && res?.data?.length > 0) {
-      //   const data = res.data.map((item) => ({
-      //     date: item.IMAGE_DATE,
-      //     imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
-      //   }));
-      //   const formatedData = sortAndFormatByDate(data);
-      //   setReworkImages(formatedData);
-      // } else {
-      //   setReworkImages([]);
-      // }
-
+      setLoader(true);
       const result = await Promise.allSettled([
         apiClient.get(
           `/authComplaint/getReworkImages?complaintid=${complaintId}`,
         ),
-        apiClient.get(`/authComplaint/getInspectionImages`),
+        apiClient.get(
+          `/authComplaint/getComplaintInspectionImages?ulbid=${ulbid}&applid=${complaintId}`,
+        ),
       ]);
 
       // Rework image
@@ -285,7 +272,7 @@ const SupervisorComplaintsList = () => {
       if (result[1].status === "fulfilled") {
         const res = result[1].value;
         if (res?.success && res?.data?.length > 0) {
-          inspectionImages(res?.data);
+          setInspectionImages(res?.data);
         } else {
           setInspectionImages([]);
         }
@@ -299,9 +286,9 @@ const SupervisorComplaintsList = () => {
     }
   };
 
-  const handleReviewClick = (complaint) => {
+  const handleReviewClick = async (complaint) => {
     // fetching rework images
-    const reworkImages = getReworkImages(complaint.COMPLAINTID);
+    await getReworkImages(complaint.COMPLAINTID);
 
     setSelectedComplaint(complaint);
     setSelectedImageIndex(0);
@@ -385,13 +372,13 @@ const SupervisorComplaintsList = () => {
     const stagesMap = new Map();
     if (inspectionImages && inspectionImages.length > 0) {
       inspectionImages.forEach((entry) => {
-        const date = entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[0]
+        const date = entry.DAT_CTPTCMPLTINSPECTN_INSDATE.split("T")[0]
           .split("-")
           .reverse()
           .join("-");
         const time =
-          entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[1].split(".")[0];
-        const stageName = `${entry.VAR_CTPTWORKINSPECTION_USERTYPE} (${date} ${time})`;
+          entry.DAT_CTPTCMPLTINSPECTN_INSDATE.split("T")[1].split(".")[0];
+        const stageName = `${entry.VAR_CTPTCMPLTINSPECTN_USERTYPE} (${date} ${time})`;
         if (!stagesMap.has(stageName)) {
           stagesMap.set(stageName, { stageName, images: [] });
         }
@@ -932,7 +919,7 @@ const SupervisorComplaintsList = () => {
                 </div>
 
                 {getInspectionImages().length > 0 ? (
-                  <div className="card mb-3">
+                  <div className="card my-3">
                     <div className="card-header">
                       <h6 className="mb-0">Inspection Images</h6>
                     </div>
