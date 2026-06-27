@@ -253,12 +253,10 @@ const ApplicationList = () => {
         mode: 1,
         status: "A",
         remark: supervisorRemark,
-        // ----- Include images if present -----
         inspectionImg1,
         inspectionImg2,
         inspectionImg3,
-        userType: "SUPERVISOR", // Add userType field
-        // ------------------------------------
+        userType: "SUPERVISOR",
       };
 
       const response = await apiClient.post(
@@ -295,6 +293,14 @@ const ApplicationList = () => {
       setModalType("warning");
       setModalTitle("Warning");
       setModalMessage("Please add a remark before rejecting this application.");
+      setIsModalOpen(true);
+      return;
+    }
+
+    if (reviewImages?.length <= 0) {
+      setModalType("warning");
+      setModalTitle("Warning");
+      setModalMessage("Please select atleast one inspection image");
       setIsModalOpen(true);
       return;
     }
@@ -909,7 +915,7 @@ const ApplicationList = () => {
                           <div className="d-flex justify-content-between align-items-center mb-2">
                             <label className="form-label fw-semibold mb-0 small">
                               <i className="bi bi-images me-1 text-primary"></i>{" "}
-                              Upload Supporting Images
+                              Upload Inspection Images
                             </label>
                             <span
                               className={`badge rounded-pill px-2 py-1 small ${

@@ -247,6 +247,14 @@ const ResolvedComplaint = () => {
       return;
     }
 
+    if (reviewImages?.length <= 0) {
+      setModalType("Warning");
+      setModalTitle("Warning");
+      setModalMessage("Please select atleast one inspection image");
+      setIsModalOpen(true);
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       // Convert review images to Base64
@@ -886,7 +894,7 @@ const ResolvedComplaint = () => {
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <label className="form-label fw-semibold mb-0 small">
                       <i className="bi bi-images me-1 text-primary"></i> Upload
-                      Supporting Images
+                      Inspection Images
                     </label>
                     <span
                       className={`badge rounded-pill px-2 py-1 small ${

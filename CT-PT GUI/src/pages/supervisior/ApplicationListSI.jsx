@@ -274,6 +274,13 @@ const ApplicationListSI = () => {
       setIsModalOpen(true);
       return;
     }
+    if (reviewImages.length <= 0) {
+      setModalType("warning");
+      setModalTitle("Warning");
+      setModalMessage("Please select atleast one image before rejecting");
+      setIsModalOpen(true);
+      return;
+    }
     try {
       setLoader(true);
       // Convert review images to Base64
@@ -845,7 +852,7 @@ const ApplicationListSI = () => {
                           <div className="d-flex justify-content-between align-items-center mb-2">
                             <label className="form-label fw-semibold mb-0 small">
                               <i className="bi bi-images me-1 text-primary"></i>{" "}
-                              Upload Supporting Images
+                              Upload Inspection Images
                             </label>
                             <span
                               className={`badge rounded-pill px-2 py-1 small ${
