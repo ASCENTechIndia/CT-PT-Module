@@ -643,11 +643,11 @@ const ResolvedComplaint = () => {
                           ? "btn-outline-secondary"
                           : "btn-outline-primary"
                       }`}
-                      disabled={
-                        complaint.SUPERSTATUS === "REJECT" ||
-                        complaint.SISTATUS === "APPROVE" ||
-                        complaint.SISTATUS === "REJECT"
-                      }
+                      // disabled={
+                      //   complaint.SUPERSTATUS === "REJECT" ||
+                      //   complaint.SISTATUS === "APPROVE" ||
+                      //   complaint.SISTATUS === "REJECT"
+                      // }
                     >
                       <i className="bi bi-eye me-1"></i> Review
                     </button>
@@ -824,7 +824,7 @@ const ResolvedComplaint = () => {
                         reworkImages.map((item, i) => (
                           <div key={i} className="mb-2">
                             <div className="">
-                              <p className="mb-1">{item.date}</p>
+                              <strong className="mb-1">{item.date}</strong>
                             </div>
                             {renderImageGallery(item.imgArr)}
                           </div>

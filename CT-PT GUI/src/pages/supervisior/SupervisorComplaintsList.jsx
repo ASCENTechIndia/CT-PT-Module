@@ -911,7 +911,7 @@ const SupervisorComplaintsList = () => {
                         reworkImages.map((item, i) => (
                           <div key={i} className="mb-2">
                             <div className="">
-                              <p className="mb-1">{item.date}</p>
+                              <strong className="mb-1">{item.date}</strong>
                             </div>
                             {renderImageGallery(item.imgArr)}
                           </div>
