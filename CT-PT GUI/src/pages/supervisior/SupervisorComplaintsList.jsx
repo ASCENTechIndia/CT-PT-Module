@@ -119,6 +119,14 @@ const SupervisorComplaintsList = () => {
       return;
     }
 
+    if (reviewImages?.length <= 0) {
+      setModalType("Warning");
+      setModalTitle("Warning");
+      setModalMessage("Please select atleast one inspection image");
+      setIsModalOpen(true);
+      return;
+    }
+
     try {
       setLoader(true);
 
@@ -973,7 +981,7 @@ const SupervisorComplaintsList = () => {
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <label className="form-label fw-semibold mb-0 small">
                       <i className="bi bi-images me-1 text-primary"></i> Upload
-                      Supporting Images
+                      Inspection Images
                     </label>
                     <span
                       className={`badge rounded-pill px-2 py-1 small ${
@@ -1114,18 +1122,6 @@ const SupervisorComplaintsList = () => {
                 >
                   Close
                 </button>
-                {/* {selectedComplaint?.SOLVED1 && (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={
-                      !(supervisorRemark.trim() && supervisorStatus.trim())
-                    }
-                    onClick={handleSubmitComplaintStatus}
-                  >
-                    Submit
-                  </button>
-                )} */}
 
                 {selectedComplaint?.VAR_COMPLAINT_STATUS === "COMPLETED" && (
                   <button
