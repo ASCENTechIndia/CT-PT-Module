@@ -31,6 +31,11 @@ const ResolvedComplaint = () => {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
   const [reworkImages, setReworkImages] = useState([]);
+  const [inspectionImages, setInspectionImages] = useState([]);
+
+  // ----- NEW: Image upload states for review -----
+  const [reviewImages, setReviewImages] = useState([]);
+  const [reviewPreviewUrls, setReviewPreviewUrls] = useState([]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,41 +97,6 @@ const ResolvedComplaint = () => {
     setFilters(clearedFilters);
   };
 
-  // const sortAndFormatByDate = (arr) => {
-  //   const validItems = arr.filter(
-  //     (item) =>
-  //       item && typeof item.date === "string" && item.date.trim() !== "",
-  //   );
-  //   const sorted = [...validItems].sort((a, b) => a.date.localeCompare(b.date));
-  //   return sorted.map((item) => ({
-  //     ...item,
-  //     date: item.date.replace("T", " "),
-  //   }));
-  // };
-  // const getReworkImages = async (complaintId) => {
-  //   try {
-  //     setLoading(true);
-  //     const res = await apiClient.get(
-  //       `/authComplaint/getReworkImages?complaintid=${complaintId}`,
-  //     );
-  //     if (res?.success && res?.data?.length > 0) {
-  //       const data = res.data.map((item) => ({
-  //         date: item.IMAGE_DATE.split(".")[0] || "",
-  //         imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
-  //       }));
-  //       const formatedData = sortAndFormatByDate(data);
-  //       setReworkImages(formatedData);
-  //     } else {
-  //       setReworkImages([]);
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     setReworkImages([]);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const sortAndFormatByDate = (arr) => {
     const validItems = arr.filter(
       (item) =>
@@ -153,21 +123,55 @@ const ResolvedComplaint = () => {
   const getReworkImages = async (complaintId) => {
     try {
       setLoader(true);
-      const res = await apiClient.get(
-        `/authComplaint/getReworkImages?complaintid=${complaintId}`,
-      );
-      if (res?.success && res?.data?.length > 0) {
-        const data = res.data.map((item) => ({
-          date: item.IMAGE_DATE,
-          imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
-        }));
-        const formatedData = sortAndFormatByDate(data);
-        setReworkImages(formatedData);
-      } else {
-        setReworkImages([]);
+      // Old rework fetch image code
+      // const res = await apiClient.get(
+      //   `/authComplaint/getReworkImages?complaintid=${complaintId}`,
+      // );
+      // if (res?.success && res?.data?.length > 0) {
+      //   const data = res.data.map((item) => ({
+      //     date: item.IMAGE_DATE,
+      //     imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
+      //   }));
+      //   const formatedData = sortAndFormatByDate(data);
+      //   setReworkImages(formatedData);
+      // } else {
+      //   setReworkImages([]);
+      // }
+
+      const result = await Promise.allSettled([
+        apiClient.get(
+          `/authComplaint/getReworkImages?complaintid=${complaintId}`,
+        ),
+        apiClient.get(`/authComplaint/getInspectionImages`),
+      ]);
+
+      // Rework Images
+      if (result[0].status === "fulfilled") {
+        const res = result[0].value;
+        if (res?.success && res?.data?.length > 0) {
+          const data = res.data.map((item) => ({
+            date: item.IMAGE_DATE,
+            imgArr: [item.IMAGE1, item.IMAGE2, item.IMAGE3],
+          }));
+          const formatedData = sortAndFormatByDate(data);
+          setReworkImages(formatedData);
+        } else {
+          setReworkImages([]);
+        }
+      }
+
+      // Inspection Images
+      if (result[1].status === "fulfilled") {
+        const res = result[1].value;
+        if (res?.success && res?.data?.length > 0) {
+          inspectionImages(res?.data);
+        } else {
+          setInspectionImages([]);
+        }
       }
     } catch (error) {
       console.error(error);
+      setInspectionImages([]);
       setReworkImages([]);
     } finally {
       setLoader(false);
@@ -176,7 +180,7 @@ const ResolvedComplaint = () => {
 
   const handleReviewClick = (complaint) => {
     // fetching rework images
-    const reworkImages = getReworkImages(complaint.COMPLAINTID);
+    getReworkImages(complaint.COMPLAINTID);
 
     setSelectedComplaint(complaint);
     setSelectedImageIndex(0);
@@ -258,6 +262,14 @@ const ResolvedComplaint = () => {
 
     try {
       setIsSubmitting(true);
+      // Convert review images to Base64
+      const reviewBase64Images = await Promise.all(
+        reviewImages.map((file) => fileToBase64(file)),
+      );
+      const inspectionimg1 = reviewBase64Images[0] || null;
+      const inspectionimg2 = reviewBase64Images[1] || null;
+      const inspectionimg3 = reviewBase64Images[2] || null;
+
       const response = await apiClient.post(
         "/authComplaint/complaintStatusUpdate",
         {
@@ -272,6 +284,10 @@ const ResolvedComplaint = () => {
           superstatus: selectedComplaint?.SUPERSTATUS,
           superremark: selectedComplaint?.VAR_COMPAINT_SUPERREMARK,
           ulbid: ulbid,
+          inspectionimg1,
+          inspectionimg2,
+          inspectionimg3,
+          usertype: "SI",
         },
       );
 
@@ -383,6 +399,29 @@ const ResolvedComplaint = () => {
     );
   };
 
+  const getInspectionImages = () => {
+    const stagesMap = new Map();
+    if (inspectionImages && inspectionImages.length > 0) {
+      inspectionImages.forEach((entry) => {
+        const date = entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[0]
+          .split("-")
+          .reverse()
+          .join("-");
+        const time =
+          entry.DAT_CTPTWORKINSPECTION_INSDATE.split("T")[1].split(".")[0];
+        const stageName = `${entry.VAR_CTPTWORKINSPECTION_USERTYPE} (${date} ${time})`;
+        if (!stagesMap.has(stageName)) {
+          stagesMap.set(stageName, { stageName, images: [] });
+        }
+        const images = [entry.IMG1, entry.IMG2, entry.IMG3].filter(
+          (img) => img && img !== null && img.trim() !== "",
+        );
+        stagesMap.get(stageName).images.push(...images);
+      });
+    }
+    return Array.from(stagesMap.values());
+  };
+
   const getBadge = (flag) => {
     switch (flag) {
       case "P":
@@ -483,6 +522,29 @@ const ResolvedComplaint = () => {
           </span>
         );
     }
+  };
+
+  const handleReviewImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + reviewImages.length > 3) {
+      setModalType("warning");
+      setModalTitle("Warning");
+      setModalMessage("You can upload maximum of 3 images.");
+      setIsModalOpen(true);
+      e.target.value = ""; // reset input
+      return;
+    }
+
+    setReviewImages((prev) => [...prev, ...files]);
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setReviewPreviewUrls((prev) => [...prev, ...newPreviews]);
+    e.target.value = "";
+  };
+
+  const removeReviewImage = (index) => {
+    setReviewImages((prev) => prev.filter((_, i) => i !== index));
+    URL.revokeObjectURL(reviewPreviewUrls[index]);
+    setReviewPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -787,6 +849,30 @@ const ResolvedComplaint = () => {
                   </div>
                 </div>
 
+                {getInspectionImages().length > 0 ? (
+                  <div className="card mb-3">
+                    <div className="card-header">
+                      <h6 className="mb-0">Inspection Images</h6>
+                    </div>
+                    <div
+                      className="card-body"
+                      style={{ maxHeight: "300px", overflowY: "auto" }}
+                    >
+                      {getInspectionImages().map((stage, idx) => (
+                        <div key={idx} className="mb-4">
+                          <div className="mb-3">
+                            <i className="bi bi-images me-2"></i>
+                            <strong>{stage.stageName}</strong>
+                          </div>
+                          {renderImageGallery(stage.images)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  ""
+                )}
+
                 <div className="mt-4 pt-3 border-top">
                   <label className="form-label fw-semibold">
                     Sanitary Inspector Remark{" "}
@@ -802,6 +888,124 @@ const ResolvedComplaint = () => {
                   <small className="text-muted mt-2 d-block">
                     Remark is required to submit this complaint.
                   </small>
+                </div>
+
+                {/* Image upload */}
+                <div className="mt-3">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label className="form-label fw-semibold mb-0 small">
+                      <i className="bi bi-images me-1 text-primary"></i> Upload
+                      Supporting Images
+                    </label>
+                    <span
+                      className={`badge rounded-pill px-2 py-1 small ${
+                        reviewImages.length >= 3 ? "bg-danger" : "bg-secondary"
+                      }`}
+                    >
+                      {reviewImages.length} / 3
+                    </span>
+                  </div>
+
+                  <div
+                    className="border rounded-3 p-2"
+                    style={{
+                      borderStyle: "dashed",
+                      borderColor:
+                        reviewImages.length >= 3 ? "#dc3545" : "#ced4da",
+                      backgroundColor: "#f8f9fa",
+                    }}
+                  >
+                    <div className="d-flex align-items-center gap-2">
+                      <i
+                        className="bi bi-cloud-arrow-up flex-shrink-0"
+                        style={{ fontSize: "1.8rem", color: "#0d6efd" }}
+                      ></i>
+
+                      <div className="flex-grow-1 min-w-0">
+                        <p className="mb-0 fw-semibold small">
+                          {reviewImages.length >= 3
+                            ? "Maximum images reached"
+                            : "Drop images here or click to browse"}
+                        </p>
+                        <p
+                          className="text-muted mb-0"
+                          style={{ fontSize: "11px" }}
+                        >
+                          JPG, PNG · max 3 images
+                        </p>
+                      </div>
+
+                      <label
+                        className={`btn btn-sm flex-shrink-0 ${
+                          reviewImages.length >= 3
+                            ? "btn-secondary"
+                            : "btn-outline-primary"
+                        }`}
+                        style={{
+                          cursor:
+                            reviewImages.length >= 3
+                              ? "not-allowed"
+                              : "pointer",
+                          fontSize: "12px",
+                        }}
+                      >
+                        <i className="bi bi-folder2-open me-1"></i> Browse
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleReviewImageChange}
+                          disabled={reviewImages.length >= 3}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+                    </div>
+
+                    {reviewPreviewUrls.length > 0 ? (
+                      <div className="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
+                        {reviewPreviewUrls.map((url, idx) => (
+                          <div
+                            key={idx}
+                            className="position-relative flex-shrink-0"
+                            style={{ width: "60px", height: "60px" }}
+                          >
+                            <img
+                              src={url}
+                              alt={`review-${idx}`}
+                              className="w-100 h-100 rounded-2 border"
+                              style={{ objectFit: "cover" }}
+                            />
+                            <button
+                              type="button"
+                              className="btn-close position-absolute"
+                              onClick={() => removeReviewImage(idx)}
+                              aria-label="Remove image"
+                              style={{
+                                top: "-5px",
+                                right: "-5px",
+                                width: "16px",
+                                height: "16px",
+                                fontSize: "8px",
+                                backgroundColor: "white",
+                                borderRadius: "50%",
+                                padding: "3px",
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                                border: "1px solid #dee2e6",
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p
+                        className="text-muted text-center mb-0 mt-1"
+                        style={{ fontSize: "11px" }}
+                      >
+                        <i className="bi bi-info-circle me-1"></i> No images
+                        selected yet
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-4 pt-3 border-top">

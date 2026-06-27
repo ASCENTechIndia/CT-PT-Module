@@ -840,130 +840,130 @@ const ApplicationListSI = () => {
                           application.
                         </small>
 
+                        {/* Image upload */}
                         <div className="mt-3">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <label className="form-label fw-semibold mb-0 small">
-                          <i className="bi bi-images me-1 text-primary"></i>{" "}
-                          Upload Supporting Images
-                        </label>
-                        <span
-                          className={`badge rounded-pill px-2 py-1 small ${
-                            reviewImages.length >= 3
-                              ? "bg-danger"
-                              : "bg-secondary"
-                          }`}
-                        >
-                          {reviewImages.length} / 3
-                        </span>
-                      </div>
-
-                      <div
-                        className="border rounded-3 p-2"
-                        style={{
-                          borderStyle: "dashed",
-                          borderColor:
-                            reviewImages.length >= 3 ? "#dc3545" : "#ced4da",
-                          backgroundColor: "#f8f9fa",
-                        }}
-                      >
-                        <div className="d-flex align-items-center gap-2">
-                          <i
-                            className="bi bi-cloud-arrow-up flex-shrink-0"
-                            style={{ fontSize: "1.8rem", color: "#0d6efd" }}
-                          ></i>
-
-                          <div className="flex-grow-1 min-w-0">
-                            <p className="mb-0 fw-semibold small">
-                              {reviewImages.length >= 3
-                                ? "Maximum images reached"
-                                : "Drop images here or click to browse"}
-                            </p>
-                            <p
-                              className="text-muted mb-0"
-                              style={{ fontSize: "11px" }}
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <label className="form-label fw-semibold mb-0 small">
+                              <i className="bi bi-images me-1 text-primary"></i>{" "}
+                              Upload Supporting Images
+                            </label>
+                            <span
+                              className={`badge rounded-pill px-2 py-1 small ${
+                                reviewImages.length >= 3
+                                  ? "bg-danger"
+                                  : "bg-secondary"
+                              }`}
                             >
-                              JPG, PNG · max 3 images
-                            </p>
+                              {reviewImages.length} / 3
+                            </span>
                           </div>
 
-                          <label
-                            className={`btn btn-sm flex-shrink-0 ${
-                              reviewImages.length >= 3
-                                ? "btn-secondary"
-                                : "btn-outline-primary"
-                            }`}
+                          <div
+                            className="border rounded-3 p-2"
                             style={{
-                              cursor:
+                              borderStyle: "dashed",
+                              borderColor:
                                 reviewImages.length >= 3
-                                  ? "not-allowed"
-                                  : "pointer",
-                              fontSize: "12px",
+                                  ? "#dc3545"
+                                  : "#ced4da",
+                              backgroundColor: "#f8f9fa",
                             }}
                           >
-                            <i className="bi bi-folder2-open me-1"></i> Browse
-                            <input
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              onChange={handleReviewImageChange}
-                              disabled={reviewImages.length >= 3}
-                              style={{ display: "none" }}
-                            />
-                          </label>
-                        </div>
+                            <div className="d-flex align-items-center gap-2">
+                              <i
+                                className="bi bi-cloud-arrow-up flex-shrink-0"
+                                style={{ fontSize: "1.8rem", color: "#0d6efd" }}
+                              ></i>
 
-                        {reviewPreviewUrls.length > 0 ? (
-                          <div className="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
-                            {reviewPreviewUrls.map((url, idx) => (
-                              <div
-                                key={idx}
-                                className="position-relative flex-shrink-0"
-                                style={{ width: "60px", height: "60px" }}
-                              >
-                                <img
-                                  src={url}
-                                  alt={`review-${idx}`}
-                                  className="w-100 h-100 rounded-2 border"
-                                  style={{ objectFit: "cover" }}
-                                />
-                                <button
-                                  type="button"
-                                  className="btn-close position-absolute"
-                                  onClick={() => removeReviewImage(idx)}
-                                  aria-label="Remove image"
-                                  style={{
-                                    top: "-5px",
-                                    right: "-5px",
-                                    width: "16px",
-                                    height: "16px",
-                                    fontSize: "8px",
-                                    backgroundColor: "white",
-                                    borderRadius: "50%",
-                                    padding: "3px",
-                                    boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-                                    border: "1px solid #dee2e6",
-                                  }}
-                                />
+                              <div className="flex-grow-1 min-w-0">
+                                <p className="mb-0 fw-semibold small">
+                                  {reviewImages.length >= 3
+                                    ? "Maximum images reached"
+                                    : "Drop images here or click to browse"}
+                                </p>
+                                <p
+                                  className="text-muted mb-0"
+                                  style={{ fontSize: "11px" }}
+                                >
+                                  JPG, PNG · max 3 images
+                                </p>
                               </div>
-                            ))}
+
+                              <label
+                                className={`btn btn-sm flex-shrink-0 ${
+                                  reviewImages.length >= 3
+                                    ? "btn-secondary"
+                                    : "btn-outline-primary"
+                                }`}
+                                style={{
+                                  cursor:
+                                    reviewImages.length >= 3
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  fontSize: "12px",
+                                }}
+                              >
+                                <i className="bi bi-folder2-open me-1"></i>{" "}
+                                Browse
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  onChange={handleReviewImageChange}
+                                  disabled={reviewImages.length >= 3}
+                                  style={{ display: "none" }}
+                                />
+                              </label>
+                            </div>
+
+                            {reviewPreviewUrls.length > 0 ? (
+                              <div className="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
+                                {reviewPreviewUrls.map((url, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="position-relative flex-shrink-0"
+                                    style={{ width: "60px", height: "60px" }}
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`review-${idx}`}
+                                      className="w-100 h-100 rounded-2 border"
+                                      style={{ objectFit: "cover" }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="btn-close position-absolute"
+                                      onClick={() => removeReviewImage(idx)}
+                                      aria-label="Remove image"
+                                      style={{
+                                        top: "-5px",
+                                        right: "-5px",
+                                        width: "16px",
+                                        height: "16px",
+                                        fontSize: "8px",
+                                        backgroundColor: "white",
+                                        borderRadius: "50%",
+                                        padding: "3px",
+                                        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                                        border: "1px solid #dee2e6",
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p
+                                className="text-muted text-center mb-0 mt-1"
+                                style={{ fontSize: "11px" }}
+                              >
+                                <i className="bi bi-info-circle me-1"></i> No
+                                images selected yet
+                              </p>
+                            )}
                           </div>
-                        ) : (
-                          <p
-                            className="text-muted text-center mb-0 mt-1"
-                            style={{ fontSize: "11px" }}
-                          >
-                            <i className="bi bi-info-circle me-1"></i> No images
-                            selected yet
-                          </p>
-                        )}
+                        </div>
                       </div>
                     </div>
-                      </div>
-
-                      
-                    </div>
-
-                    
                   </div>
 
                   {/* Right Column - Location Map and Stage Wise Images */}
