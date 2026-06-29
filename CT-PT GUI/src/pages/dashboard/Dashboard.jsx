@@ -26,22 +26,22 @@ const Dashboard = () => {
         </div>
 
         <div className="row mt-3">
-          <div className="col-md-5 col-12">
+          <div className="col-lg-5 col-12">
             <TopComplaintCategories />
           </div>
-          <div className="col-md-7 col-12 mt-lg-0 mt-3">
+          <div className="col-lg-7 col-12 mt-lg-0 mt-3">
             <RecentInspections />
           </div>
         </div>
 
         <div className="row mt-3">
-          <div className="col-md-4 col-12">
+          <div className="col-lg-4 col-12">
             <CleaningCompliance />
           </div>
-          <div className="col-md-4 col-12 mt-lg-0 mt-3">
+          <div className="col-lg-4 col-12 mt-lg-0 mt-3">
             <CitizenComplaintStatus />
           </div>
-          <div className="col-md-4 col-12 mt-lg-0 mt-3">
+          <div className="col-lg-4 col-12 mt-lg-0 mt-3">
             <BillsOverview />
           </div>
         </div>

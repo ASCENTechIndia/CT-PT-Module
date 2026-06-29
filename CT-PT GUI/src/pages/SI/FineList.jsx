@@ -165,7 +165,7 @@ const FineList = () => {
     if (!dateString) return "";
     const [datePart, timePart] = dateString.split("T");
     const [year, month, day] = datePart.split("-");
-    const time = timePart.split(".")[0];
+    const time = timePart ? timePart.split(".")[0] : "";
     return `${day}-${month}-${year} ${time}`;
   };
 
@@ -177,7 +177,7 @@ const FineList = () => {
   return (
     <Layout>
       <div className="panel">
-        <div className="panel-header d-flex justify-content-between">
+        <div className="panel-header d-flex justify-content-between flex-wrap gap-3">
           <div>
             <h2 className="h5 mb-1 section-title">
               <i className="bi bi-file-earmark-text" aria-hidden="true"></i>
@@ -190,7 +190,7 @@ const FineList = () => {
           <div>
             <div className="filter-bar">
               <div className="filter-group">
-                <label htmlFor="fromDate">From</label>
+                <label>From</label>
                 <input
                   type="date"
                   name="from"
@@ -201,20 +201,17 @@ const FineList = () => {
                 />
               </div>
               <div className="filter-group">
-                <label htmlFor="toDate">To</label>
+                <label>To</label>
                 <input
                   type="date"
                   name="to"
-                  style={{ width: "150px" }}
                   className="filter-input"
+                  style={{ width: "150px" }}
                   value={dateFilter.to}
                   onChange={handleDateChangeFilter}
                 />
               </div>
-              <div
-                className="filter-group"
-                style={{ justifyContent: "flex-end" }}
-              >
+              <div className="filter-group" style={{ justifyContent: "flex-end" }}>
                 <button
                   type="button"
                   className="btn-clear-filters"
@@ -227,102 +224,89 @@ const FineList = () => {
           </div>
         </div>
 
-        <div className="table-responsive" style={{height: "auto", maxHeight: "500px"}}>
-          <table
-            className="table align-middle mb-0"
-            style={{ tableLayout: "fixed", width: "100%" }}
-          >
-            <thead>
+        {/* Main table */}
+        <div
+          className="table-responsive"
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+        >
+          <table className="table align-middle mb-0">
+            <thead
+              style={{ position: "sticky", top: 0, zIndex: 1, background: "#fff" }}
+            >
               <tr>
-                <th scope="col" style={{ width: "8%" }} className="text-center">
+                <th scope="col" className="text-center" style={{ minWidth: "90px" }}>
                   Work ID
                 </th>
-                <th scope="col" style={{ width: "8%" }} className="text-center">
+                <th scope="col" className="text-center" style={{ minWidth: "90px" }}>
                   Ward ID
                 </th>
-                <th
-                  scope="col"
-                  style={{ width: "15%" }}
-                  className="text-center"
-                >
+                <th scope="col" className="text-center" style={{ minWidth: "160px" }}>
                   Toilet Location
                 </th>
-                <th
-                  scope="col"
-                  style={{ width: "10%" }}
-                  className="text-center"
-                >
+                <th scope="col" className="text-center" style={{ minWidth: "120px" }}>
                   Supervisor ID
                 </th>
-                <th
-                  scope="col"
-                  style={{ width: "10%" }}
-                  className="text-center"
-                >
+                <th scope="col" className="text-center" style={{ minWidth: "90px" }}>
                   SI ID
                 </th>
-                <th
-                  scope="col"
-                  style={{ width: "12%" }}
-                  className="text-center"
-                >
+                <th scope="col" className="text-center" style={{ minWidth: "150px" }}>
                   Work Date
                 </th>
-                <th
-                  scope="col"
-                  style={{ width: "12%" }}
-                  className="text-center"
-                >
+                <th scope="col" className="text-center" style={{ minWidth: "130px" }}>
                   Total Fine (₹)
                 </th>
-                <th
-                  scope="col"
-                  style={{ width: "17%" }}
-                  className="text-center"
-                >
+                <th scope="col" className="text-center" style={{ minWidth: "130px" }}>
                   Action
                 </th>
               </tr>
             </thead>
             <tbody>
-              {applications.map((app) => (
-                <tr key={app.WORK_ID}>
-                  <td className="fw-semibold text-center">{app.WORK_ID}</td>
-                  <td className="text-center">{app.WARD_ID}</td>
-                  <td className="text-center">{app.TOILET_LOCATION}</td>
-                  <td className="text-center">{app.SUPERID || "—"}</td>
-                  <td className="text-center">{app.SIID || "—"}</td>
-                  <td className="text-center">{formatDate(app.WORK_DATE)}</td>
-                  <td className="text-center fw-semibold text-danger">
-                    ₹{app.TOTAL_FINE?.toLocaleString() || 0}
-                  </td>
-                  <td className="text-center" style={{ whiteSpace: "nowrap" }}>
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => handleReviewClick(app)}
-                      style={{ whiteSpace: "nowrap" }}
-                    >
-                      <i className="bi bi-eye me-1"></i> View Details
-                    </button>
+              {applications.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center text-muted py-4">
+                    No records found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                applications.map((app) => (
+                  <tr key={app.WORK_ID}>
+                    <td className="fw-semibold text-center">{app.WORK_ID}</td>
+                    <td className="text-center">{app.WARD_ID}</td>
+                    <td className="text-center">{app.TOILET_LOCATION}</td>
+                    <td className="text-center">{app.SUPERID || "—"}</td>
+                    <td className="text-center">{app.SIID || "—"}</td>
+                    <td className="text-center">{formatDate(app.WORK_DATE)}</td>
+                    <td className="text-center fw-semibold text-danger">
+                      ₹{app.TOTAL_FINE?.toLocaleString() || 0}
+                    </td>
+                    <td className="text-center">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => handleReviewClick(app)}
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        <i className="bi bi-eye me-1"></i> View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
+        {/* Pagination */}
         {totalRecords > 0 && (
-          <div className="d-flex align-items-center justify-content-between mt-4">
+          <div className="d-flex align-items-center justify-content-between mt-4 flex-wrap gap-2">
             <div className="text-muted small">
-              Showing <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
+              Showing{" "}
+              <strong>{(currentPage - 1) * pageSize + 1}</strong> to{" "}
               <strong>{Math.min(currentPage * pageSize, totalRecords)}</strong>{" "}
               of <strong>{totalRecords}</strong> applications
             </div>
             <nav aria-label="Page navigation">
               <ul className="pagination mb-0">
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
+                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                   <button
                     className="page-link"
                     onClick={() => handlePageChange(1)}
@@ -331,9 +315,7 @@ const FineList = () => {
                     <i className="bi bi-chevron-double-left"></i>
                   </button>
                 </li>
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
+                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                   <button
                     className="page-link"
                     onClick={() => handlePageChange(currentPage - 1)}
@@ -405,79 +387,100 @@ const FineList = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="">
-                  <h6 className="">
-                    <i className="bi bi-list-ul me-2"></i>
-                    Fine Breakdown
-                  </h6>
-                  {breakdownLoading ? (
-                    <div className="text-center">
-                      <div
-                        className="spinner-border spinner-border-sm text-primary"
-                        role="status"
+                <h6 className="mb-3">
+                  <i className="bi bi-list-ul me-2"></i>Fine Breakdown
+                </h6>
+
+                {breakdownLoading ? (
+                  <div className="text-center py-4">
+                    <div
+                      className="spinner-border spinner-border-sm text-primary"
+                      role="status"
+                    >
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="text-muted mt-2">Loading breakdown...</p>
+                  </div>
+                ) : breakdownData.length === 0 ? (
+                  <p className="text-muted">No breakdown records found.</p>
+                ) : (
+                  <div
+                    className="table-responsive"
+                    style={{ maxHeight: "350px", overflowY: "auto" }}
+                  >
+                    <table className="table table-bordered table-striped table-hover align-middle mb-0">
+                      <thead
+                        style={{
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 1,
+                          background: "#f8f9fa",
+                        }}
                       >
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                      <p className="text-muted mt-2">Loading breakdown...</p>
-                    </div>
-                  ) : breakdownData.length === 0 ? (
-                    <p className="text-muted">No breakdown records found.</p>
-                  ) : (
-                    <div className="table-responsive" style={{height: "auto", maxHeight: "350px"}}>
-                      <table className="table table-bordered table-striped table-hover align-middle mb-0">
-                        <thead className="table-light">
-                          <tr>
-                            <th className="text-center">Date</th>
-                            <th className="text-center">Work ID</th>
-                            <th className="text-center">Ward ID</th>
-                            <th className="text-center">Toilet Location</th>
-                            <th className="text-center">Supervisor ID</th>
-                            <th className="text-center">SI ID</th>
-                            <th className="text-center">Fine (₹)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {breakdownData.map((item, index) => (
-                            <tr key={index}>
-                              <td className="text-center">
-                                {formatDate(item.DAT_CTPTWORKLOG_DATE)}
-                              </td>
-                              <td className="text-center">
-                                {item.NUM_EMPCTPTWORK_ID}
-                              </td>
-                              <td className="text-center">
-                                {item.NUM_CTPTTYPE_WARDID}
-                              </td>
-                              <td className="text-center">
-                                {item.TOILET_LOCATION}
-                              </td>
-                              <td className="text-center">
-                                {item.SUPERID || "—"}
-                              </td>
-                              <td className="text-center">
-                                {item.SIID || "—"}
-                              </td>
-                              <td className="text-center fw-semibold text-danger">
-                                ₹{item.FINE_AMT?.toLocaleString() || 0}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot className="table-active fw-bold">
-                          <tr>
-                            <td colSpan="6" className="text-end">
-                              <i className="bi bi-calculator me-2"></i>Total
-                              Fine
+                        <tr>
+                          <th className="text-center" style={{ minWidth: "150px" }}>
+                            Date
+                          </th>
+                          <th className="text-center" style={{ minWidth: "90px" }}>
+                            Work ID
+                          </th>
+                          <th className="text-center" style={{ minWidth: "90px" }}>
+                            Ward ID
+                          </th>
+                          <th className="text-center" style={{ minWidth: "160px" }}>
+                            Toilet Location
+                          </th>
+                          <th className="text-center" style={{ minWidth: "120px" }}>
+                            Supervisor ID
+                          </th>
+                          <th className="text-center" style={{ minWidth: "80px" }}>
+                            SI ID
+                          </th>
+                          <th className="text-center" style={{ minWidth: "110px" }}>
+                            Fine (₹)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {breakdownData.map((item, index) => (
+                          <tr key={index}>
+                            <td className="text-center">
+                              {formatDate(item.DAT_CTPTWORKLOG_DATE)}
                             </td>
-                            <td className="text-center text-danger">
-                              ₹{totalBreakdownFine.toLocaleString()}
+                            <td className="text-center">
+                              {item.NUM_EMPCTPTWORK_ID}
+                            </td>
+                            <td className="text-center">
+                              {item.NUM_CTPTTYPE_WARDID}
+                            </td>
+                            <td className="text-center">
+                              {item.TOILET_LOCATION}
+                            </td>
+                            <td className="text-center">
+                              {item.SUPERID || "—"}
+                            </td>
+                            <td className="text-center">
+                              {item.SIID || "—"}
+                            </td>
+                            <td className="text-center fw-semibold text-danger">
+                              ₹{item.FINE_AMT?.toLocaleString() || 0}
                             </td>
                           </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                        ))}
+                      </tbody>
+                      <tfoot className="table-active fw-bold">
+                        <tr>
+                          <td colSpan="6" className="text-end">
+                            <i className="bi bi-calculator me-2"></i>Total Fine
+                          </td>
+                          <td className="text-center text-danger">
+                            ₹{totalBreakdownFine.toLocaleString()}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           </div>

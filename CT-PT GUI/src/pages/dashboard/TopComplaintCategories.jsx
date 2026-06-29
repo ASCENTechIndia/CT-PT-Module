@@ -19,9 +19,9 @@ const TopComplaintCategories = () => {
         <thead>
           <tr>
             <th>#</th>
-            <th>Category</th>
-            <th>Total Complaints</th>
-            <th>Percentage</th>
+            <th className="text-left">Category</th>
+            <th className="text-center">Total Complaints</th>
+            <th className="text-center">Percentage</th>
           </tr>
         </thead>
         <tbody>
