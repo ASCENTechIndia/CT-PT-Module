@@ -1,6 +1,72 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import apiClient from "../../services/apiClient";
+import { useAuth } from "../../context/AuthContext";
+import { useLoader } from "../../context/LoaderContext";
 
 const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
+  const { user } = useAuth();
+  const { setLoader } = useLoader();
+  const ulbId = user?.orgId;
+
+  const [wardOptions, setWardOptions] = useState([]);
+  const [vendorOptions, setVendorOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const statusOptions = [
+    { label: "All", value: "all" },
+    { label: "Pending", value: "P" },
+    { label: "Assign", value: "ASSIGN" },
+    { label: "Completed", value: "COMPLETED" },
+    { label: "Approved", value: "APPROVED" },
+    { label: "Rejected", value: "REJECTED" },
+  ];
+
+  useEffect(() => {
+    if (!ulbId) {
+      return;
+    }
+
+    const fetchOptions = async () => {
+      try {
+        setLoader(true);
+        const [wardRes, vendorRes] = await Promise.allSettled([
+          apiClient.get(`/registerComplaint/wardList?ulbid=${ulbId}`),
+          apiClient.get(`/registerComplaint/vendorList?ulbid=${ulbId}`),
+        ]);
+
+        // Ward options
+        if (wardRes.status === "fulfilled" && wardRes.value?.success) {
+          const wards = wardRes.value.data.map((item) => ({
+            label: `Ward ${item.NUM_CTPTTYPE_WARDID}`,
+            value: String(item.NUM_CTPTTYPE_WARDID),
+          }));
+          setWardOptions(wards);
+        } else {
+          setWardOptions([]);
+        }
+
+        // Vendor options
+        if (vendorRes.status === "fulfilled" && vendorRes.value?.success) {
+          const vendors = vendorRes.value.data.map((item) => ({
+            label: item.VAR_VENDOR_FORMNM,
+            value: String(item.NUM_VENDOR_ID),
+          }));
+          setVendorOptions(vendors);
+        } else {
+          setVendorOptions([]);
+        }
+      } catch (err) {
+        console.error("Error fetching filter options:", err);
+        setWardOptions([]);
+        setVendorOptions([]);
+      } finally {
+        setLoader(false);
+      }
+    };
+
+    fetchOptions();
+  }, [ulbId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     onFilterChange(name, value);
@@ -42,11 +108,11 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
           onChange={handleChange}
         >
           <option value="all">All</option>
-          <option value="1">Ward 1</option>
-          <option value="2">Ward 2</option>
-          <option value="3">Ward 3</option>
-          <option value="4">Ward 4</option>
-          <option value="5">Ward 5</option>
+          {wardOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -60,9 +126,11 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
           onChange={handleChange}
         >
           <option value="all">All</option>
-          <option value="vendor1">Vendor A</option>
-          <option value="vendor2">Vendor B</option>
-          <option value="vendor3">Vendor C</option>
+          {vendorOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -75,11 +143,11 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
           value={filters.complaintStatus}
           onChange={handleChange}
         >
-          <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="inprogress">In Progress</option>
-          <option value="resolved">Resolved</option>
-          <option value="rejected">Rejected</option>
+          {statusOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 

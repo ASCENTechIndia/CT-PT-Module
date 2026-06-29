@@ -8,8 +8,12 @@ import RecentInspections from "./RecentInspections";
 import BillsOverview from "./BillsOverview";
 import CitizenComplaintStatus from "./CitizenComplaintStatus";
 import TopComplaintCategories from "./TopComplaintCategories";
+import { useAuth } from "../../context/AuthContext";
 
 const Dashboard = () => {
+  const {user} = useAuth()
+  const ulbId = user?.orgId;
+
   const [filters, setFilters] = useState({
     fromDate: getTodayDate(),
     toDate: getTodayDate(),
@@ -43,7 +47,6 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="dashboard-wrapper">
-        {/* Filter Bar */}
         <DashboardFilter
           filters={filters}
           onFilterChange={handleFilterChange}
