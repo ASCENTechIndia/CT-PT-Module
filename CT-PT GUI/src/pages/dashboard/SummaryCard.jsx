@@ -68,7 +68,7 @@ const summaryData = [
   },
 ];
 
-const SummaryCards = () => {
+const SummaryCards = ({filters}) => {
   return (
     <div className="row g-2">
       {summaryData.map(({ id, label, value, sub, icon: Icon, colorClass }) => (

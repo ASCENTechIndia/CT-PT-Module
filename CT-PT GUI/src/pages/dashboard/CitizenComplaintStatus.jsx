@@ -28,7 +28,7 @@ const complaintData = {
   ],
 };
 
-const CitizenComplaintStatus = () => {
+const CitizenComplaintStatus = ({filters}) => {
   return (
     <div className="complaint-card">
       <h6 className="complaint-title">Citizen Complaint Status</h6>

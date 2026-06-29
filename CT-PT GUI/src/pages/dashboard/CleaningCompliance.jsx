@@ -8,7 +8,7 @@ const complianceData = {
   pending:    { count: 269,  pct: 10.88 },
 }
 
-const CleaningCompliance = () => {
+const CleaningCompliance = ({filters}) => {
   const chartRef = useRef(null)
 
   useEffect(() => {

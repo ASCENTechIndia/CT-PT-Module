@@ -23,7 +23,7 @@ const wardData = [
   { ward: "Ward 19", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
 ];
 
-const WardWiseStatus = () => {
+const WardWiseStatus = ({filters}) => {
   const chartRef = useRef(null);
 
   useEffect(() => {

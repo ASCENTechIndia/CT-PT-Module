@@ -7,7 +7,7 @@ const billsData = {
   rejected: { count: 64, pct: 20.51 },
 };
 
-const BillsOverview = () => {
+const BillsOverview = ({ filters }) => {
   const chartRef = useRef(null);
 
   useEffect(() => {

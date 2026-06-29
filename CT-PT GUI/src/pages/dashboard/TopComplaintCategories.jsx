@@ -11,7 +11,7 @@ const categories = [
 const total = categories.reduce((s, c) => s + c.count, 0);
 const maxPct = Math.max(...categories.map((c) => c.pct));
 
-const TopComplaintCategories = () => {
+const TopComplaintCategories = ({filters}) => {
   return (
     <div className="tcc-card">
       <h6 className="tcc-title">Top Complaint Categories</h6>

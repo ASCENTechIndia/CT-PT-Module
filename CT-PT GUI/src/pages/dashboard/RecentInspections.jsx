@@ -62,7 +62,7 @@ const statusBadge = (status) => {
   return <span className={`status-badge ${map[status] || ""}`}>{status}</span>;
 };
 
-const RecentInspections = () => {
+const RecentInspections = ({filters}) => {
   return (
     <div className="inspections-card">
       <h6 className="inspections-title">Recent Inspections</h6>
