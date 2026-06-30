@@ -8,20 +8,20 @@ const {
   getBillOverviewRepo,
 } = require("./dashboard.repo");
 
-async function getSummaryCardsValueService() {
-  return getSummaryCardsValuesRepo();
+async function getSummaryCardsValueService(payload) {
+  return getSummaryCardsValuesRepo(payload);
 }
 
 async function getWardWiseCleaningStatusService() {
   return getWardWiseCleaningStatusRepo();
 }
 
-async function getTopComplaintCategoryService() {
-  return getTopComplaintCategoryRepo();
+async function getTopComplaintCategoryService(payload) {
+  return getTopComplaintCategoryRepo(payload);
 }
 
-async function getRecentInspectionService() {
-  return getRecentInspectionRepo();
+async function getRecentInspectionService(payload) {
+  return getRecentInspectionRepo(payload);
 }
 
 async function getCleaningComplienceService() {

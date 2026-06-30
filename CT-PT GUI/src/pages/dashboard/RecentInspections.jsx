@@ -1,72 +1,145 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import apiClient from "../../services/apiClient";
+import { useLoader } from "../../context/LoaderContext";
+import { useAuth } from "../../context/AuthContext";
 
-const inspections = [
-  {
-    date: "26 May 2025",
-    ward: "Ward 1",
-    toiletId: "CT-101",
-    toiletName: "Shivaji Chowk",
-    vendor: "CleanCare Services",
-    mukadamStatus: "Approved",
-    siStatus: "Approved",
-    remarks: "Good",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 2",
-    toiletId: "PT-205",
-    toiletName: "Market Road",
-    vendor: "Sai Swachh Seva",
-    mukadamStatus: "Approved",
-    siStatus: "Pending",
-    remarks: "Pending Verification",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 3",
-    toiletId: "CT-312",
-    toiletName: "School Road",
-    vendor: "City Clean Solutions",
-    mukadamStatus: "Rejected",
-    siStatus: "Pending",
-    remarks: "Not Clean",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 4",
-    toiletId: "PT-410",
-    toiletName: "Bus Stand",
-    vendor: "Green Planet Enterprises",
-    mukadamStatus: "Approved",
-    siStatus: "Approved",
-    remarks: "Good",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 5",
-    toiletId: "CT-501",
-    toiletName: "Municipal Office",
-    vendor: "CleanCare Services",
-    mukadamStatus: "Approved",
-    siStatus: "Approved",
-    remarks: "Good",
-  },
-];
+const RecentInspections = ({ filters }) => {
+  const { user } = useAuth();
+  const ulbId = user?.orgId || "";
+  const userId = user?.userId || "";
+  const { setLoader } = useLoader();
 
-const statusBadge = (status) => {
-  const map = {
-    Approved: "badge-approved",
-    Pending: "badge-pending",
-    Rejected: "badge-rejected",
+  const [inspections, setInspections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Format date from ISO to DD MMM YYYY (e.g., "26 Jun 2026")
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
   };
-  return <span className={`status-badge ${map[status] || ""}`}>{status}</span>;
-};
 
-const RecentInspections = ({filters}) => {
+  const formatDateForApi = (dateStr) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  };
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      A: { label: "Approved", className: "badge-approved" },
+      R: { label: "Rejected", className: "badge-rejected" },
+      P: { label: "Pending", className: "badge-pending" },
+    };
+    const s = statusMap[status] || {
+      label: status || "Pending",
+      className: "badge-pending",
+    };
+    return <span className={`status-badge ${s.className}`}>{s.label}</span>;
+  };
+
+  const fetchInspections = async () => {
+    if (!ulbId || !userId) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoader(true);
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.append("userId", userId);
+      params.append("fromDate", formatDateForApi(filters.fromDate) || "");
+      params.append("toDate", formatDateForApi(filters.toDate) || "");
+      params.append("ward", filters.ward);
+      params.append("vendor", "");
+      
+
+      const response = await apiClient.get(
+        `/dashboard/recent-inspection?${params.toString()}`,
+      );
+
+      if (response.success && Array.isArray(response.data?.data)) {
+        const mapped = response.data.data.map((item) => ({
+          date: formatDate(item.WORKDATE),
+          ward: `Ward ${item.WARDID}`,
+          toiletId: item.TOILETID,
+          toiletName: item.TOILETNAME,
+          vendor: item.VENDORID,
+          mukadamStatus: item.SUPERSTATUS,
+          siStatus: item.SISTATUS,
+          remarks: "",
+        }));
+        setInspections(mapped);
+      } else {
+        setInspections([]);
+      }
+    } catch (err) {
+      console.error("Error fetching inspections:", err);
+      setInspections([]);
+    } finally {
+      setLoader(false);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInspections();
+  }, [
+    ulbId,
+    userId,
+    filters.fromDate,
+    filters.toDate,
+    filters.ward,
+    filters.vendor,
+  ]);
+
+  if (loading) {
+    return (
+      <div className="inspections-card">
+        <h6 className="inspections-title">Recent Inspections</h6>
+        <div className="d-flex justify-content-center py-4">
+          <div
+            className="spinner-border spinner-border-sm text-primary"
+            role="status"
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (inspections.length === 0) {
+    return (
+      <div className="inspections-card">
+        <h6 className="inspections-title">Recent Inspections</h6>
+        <p className="text-muted text-center py-3">No inspections found</p>
+      </div>
+    );
+  }
+
   return (
     <div className="inspections-card">
       <h6 className="inspections-title">Recent Inspections</h6>
-      <div className="inspections-table-wrapper">
+      <div className="inspections-table-wrapper" style={{height: "auto", maxHeight: "350px", overflowY: "auto"}}>
         <table className="inspections-table">
           <thead>
             <tr>
@@ -90,9 +163,9 @@ const RecentInspections = ({filters}) => {
                   <div className="toilet-name">{row.toiletName}</div>
                 </td>
                 <td>{row.vendor}</td>
-                <td>{statusBadge(row.mukadamStatus)}</td>
-                <td>{statusBadge(row.siStatus)}</td>
-                <td className="remarks-cell">{row.remarks}</td>
+                <td>{getStatusBadge(row.mukadamStatus)}</td>
+                <td>{getStatusBadge(row.siStatus)}</td>
+                <td className="remarks-cell">{row.remarks || "—"}</td>
                 <td>
                   <button className="view-btn">View &raquo;</button>
                 </td>

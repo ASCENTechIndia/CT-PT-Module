@@ -1,38 +1,102 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as echarts from "echarts";
-// import './WardWiseStatus.css'
+import apiClient from "../../services/apiClient";
+import { useLoader } from "../../context/LoaderContext";
+import { useAuth } from "../../context/AuthContext";
 
-const wardData = [
-  { ward: "Ward 1", total: 456, cleaned: 368, pending: 52, notCleaned: 36 },
-  { ward: "Ward 2", total: 392, cleaned: 311, pending: 41, notCleaned: 40 },
-  { ward: "Ward 3", total: 578, cleaned: 452, pending: 63, notCleaned: 63 },
-  { ward: "Ward 4", total: 287, cleaned: 214, pending: 38, notCleaned: 35 },
-  { ward: "Ward 5", total: 355, cleaned: 276, pending: 41, notCleaned: 38 },
-  { ward: "Ward 6", total: 218, cleaned: 165, pending: 23, notCleaned: 30 },
-  { ward: "Ward 8", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 9", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 10", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 11", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 12", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 13", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 14", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 15", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 16", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 17", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 18", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-  { ward: "Ward 19", total: 172, cleaned: 141, pending: 11, notCleaned: 20 },
-];
-
-const WardWiseStatus = ({filters}) => {
+const WardWiseStatus = ({ filters }) => {
+  const { user } = useAuth();
+  const ulbId = user?.orgId || "";
+  const userId = user?.userId || "";
+  const { setLoader } = useLoader();
   const chartRef = useRef(null);
+  const chartInstance = useRef(null);
+
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const formatDateForApi = (dateStr) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  };
+
+  const buildParams = () => {
+    const params = new URLSearchParams();
+    params.append("ulbId", ulbId);
+    params.append("userId", userId);
+    params.append("fromDate", formatDateForApi(filters.fromDate) || "");
+    params.append("toDate", formatDateForApi(filters.toDate) || "");
+    if (filters.ward) params.append("ward", filters.ward);
+    params.append("vendor", filters.vendor);
+    params.append("complaintStatus", filters.complaintStatus);
+    params.append("userType", "SI")
+    return params;
+  };
+
+  const fetchData = async () => {
+    if (!ulbId || !userId) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoader(true);
+      setLoading(true);
+      const params = buildParams();
+      const response = await apiClient.get(
+        `/dashboard/ward-wise-cleaning-status?${params.toString()}`,
+      );
+
+      if (response.success && Array.isArray(response.data?.data)) {
+        setChartData(response.data.data);
+      } else {
+        setChartData([]);
+      }
+    } catch (err) {
+      console.error("Error fetching ward wise status:", err);
+      setChartData([]);
+    } finally {
+      setLoader(false);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const chart = echarts.init(chartRef.current);
+    fetchData();
+  }, [ulbId, userId, filters.fromDate, filters.toDate, filters.ward]);
 
-    chart.setOption({
+  // Cleanup chart instance on unmount only
+  useEffect(() => {
+    return () => {
+      chartInstance.current?.dispose();
+      chartInstance.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    if (!chartRef.current || chartData.length === 0) return;
+
+    if (!chartInstance.current) {
+      chartInstance.current = echarts.init(chartRef.current);
+
+      const ro = new ResizeObserver(() => {
+        chartInstance.current?.resize();
+      });
+      ro.observe(chartRef.current);
+
+      chartInstance.current.__resizeObserver = ro;
+    }
+
+    const wards = chartData.map((item) => `Ward ${item.WARDS}`);
+    const cleaned = chartData.map((item) => item.CLEANED || 0);
+    const notCleaned = chartData.map((item) => item.NOT_CLEANED || 0);
+    const pending = chartData.map((item) => item.PENDING || 0);
+    const rejected = chartData.map((item) => item.REJECTED || 0);
+
+    chartInstance.current.setOption({
       tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
       legend: {
-        data: ["Cleaned", "Not Cleaned", "Pending"],
+        data: ["Cleaned", "Not Cleaned", "Pending", "Rejected"],
         top: 4,
         left: 0,
         itemWidth: 10,
@@ -42,13 +106,8 @@ const WardWiseStatus = ({filters}) => {
       grid: { top: 36, left: 10, right: 10, bottom: 10, containLabel: true },
       xAxis: {
         type: "category",
-        data: wardData.map((w) => w.ward),
-        axisLabel: {
-          fontSize: 9,
-          color: "#6B7280",
-          interval: 0,
-          rotate: 40,
-        },
+        data: wards,
+        axisLabel: { fontSize: 9, color: "#6B7280", interval: 0, rotate: 40 },
         axisLine: { lineStyle: { color: "#E5E7EB" } },
         axisTick: { show: false },
       },
@@ -61,34 +120,45 @@ const WardWiseStatus = ({filters}) => {
         {
           name: "Cleaned",
           type: "bar",
-          data: wardData.map((w) => w.cleaned),
+          data: cleaned,
           itemStyle: { color: "#16A34A", borderRadius: [2, 2, 0, 0] },
           barMaxWidth: 10,
         },
         {
           name: "Not Cleaned",
           type: "bar",
-          data: wardData.map((w) => w.notCleaned),
+          data: notCleaned,
           itemStyle: { color: "#DC2626", borderRadius: [2, 2, 0, 0] },
           barMaxWidth: 10,
         },
         {
           name: "Pending",
           type: "bar",
-          data: wardData.map((w) => w.pending),
+          data: pending,
           itemStyle: { color: "#F59E0B", borderRadius: [2, 2, 0, 0] },
+          barMaxWidth: 10,
+        },
+        {
+          name: "Rejected",
+          type: "bar",
+          data: rejected,
+          itemStyle: { color: "#8B5CF6", borderRadius: [2, 2, 0, 0] },
           barMaxWidth: 10,
         },
       ],
     });
 
-    const ro = new ResizeObserver(() => chart.resize());
-    ro.observe(chartRef.current);
-    return () => {
-      ro.disconnect();
-      chart.dispose();
-    };
-  }, []);
+    chartInstance.current.resize();
+  }, [chartData]);
+
+  if (chartData.length === 0) {
+    return (
+      <div className="ward-card">
+        <h6 className="ward-title">Ward Wise Cleaning Status</h6>
+        <p className="text-muted text-center py-3">No data available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="ward-card">

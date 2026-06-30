@@ -11,7 +11,8 @@ const {
 
 async function getSummaryCardValuesController(req, res, next) {
   try {
-    const result = await getSummaryCardsValueService();
+    const payload = req.query;
+    const result = await getSummaryCardsValueService(payload);
 
     logApiSuccess(
       req,
@@ -27,7 +28,7 @@ async function getSummaryCardValuesController(req, res, next) {
   }
 }
 
-async function getWardWiseCleaningStatusController(req, res) {
+async function getWardWiseCleaningStatusController(req, res, next) {
   try {
     const result = await getWardWiseCleaningStatusService();
 
@@ -50,9 +51,10 @@ async function getWardWiseCleaningStatusController(req, res) {
   }
 }
 
-async function getTopComplaintCategoryController(req, res) {
+async function getTopComplaintCategoryController(req, res, next) {
   try {
-    const result = await getTopComplaintCategoryService();
+    const payload = req.query;
+    const result = await getTopComplaintCategoryService(payload);
 
     logApiSuccess(
       req,
@@ -73,9 +75,10 @@ async function getTopComplaintCategoryController(req, res) {
   }
 }
 
-async function getRecentInspectionController(req, res) {
+async function getRecentInspectionController(req, res, next) {
   try {
-    const result = await getRecentInspectionService();
+    const payload = req.query;
+    const result = await getRecentInspectionService(payload);
 
     logApiSuccess(
       req,

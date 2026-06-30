@@ -43,6 +43,7 @@ import FineList from './pages/SI/FineList';
 
 // Dashboard
 import Dashboard2 from './pages/dashboard/Dashboard';
+import ComplaintDashboard from './pages/complaintDashboard/ComplaintDashboard';
 
 function App() {
   return (
@@ -154,6 +155,15 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Dashboard2/>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/complaint-dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <ComplaintDashboard/>
                     </ProtectedRoute>
                   }
                 />

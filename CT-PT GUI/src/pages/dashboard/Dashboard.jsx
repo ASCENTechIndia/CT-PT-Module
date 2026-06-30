@@ -17,9 +17,9 @@ const Dashboard = () => {
   const [filters, setFilters] = useState({
     fromDate: getTodayDate(),
     toDate: getTodayDate(),
-    ward: "all",
-    vendor: "all",
-    complaintStatus: "all",
+    ward: "",
+    vendor: "",
+    complaintStatus: "",
   });
 
   function getTodayDate() {
@@ -38,9 +38,9 @@ const Dashboard = () => {
     setFilters({
       fromDate: "",
       toDate: "",
-      ward: "all",
-      vendor: "all",
-      complaintStatus: "all",
+      ward: "",
+      vendor: "",
+      complaintStatus: "",
     });
   };
 

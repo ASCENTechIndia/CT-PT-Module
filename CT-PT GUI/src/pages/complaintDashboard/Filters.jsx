@@ -3,7 +3,7 @@ import apiClient from "../../services/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { useLoader } from "../../context/LoaderContext";
 
-const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
+const Filters = ({ filters, onFilterChange, onClearFilters }) => {
   const { user } = useAuth();
   const { setLoader } = useLoader();
   const ulbId = user?.orgId;
@@ -13,7 +13,7 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
   const [loading, setLoading] = useState(true);
 
   const statusOptions = [
-    { label: "All", value: "" },
+    { label: "All", value: "all" },
     { label: "Pending", value: "P" },
     { label: "Assign", value: "ASSIGN" },
     { label: "Completed", value: "COMPLETED" },
@@ -107,7 +107,7 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
           value={filters.ward}
           onChange={handleChange}
         >
-          <option value="">All</option>
+          <option value="all">All</option>
           {wardOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -125,7 +125,7 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
           value={filters.vendor}
           onChange={handleChange}
         >
-          <option value="">All</option>
+          <option value="all">All</option>
           {vendorOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -160,4 +160,4 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
   );
 };
 
-export default DashboardFilter;
+export default Filters;
