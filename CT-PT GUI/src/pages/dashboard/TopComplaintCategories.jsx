@@ -108,7 +108,7 @@ const TopComplaintCategories = ({ filters }) => {
     return (
       <div className="tcc-card">
         <h6 className="tcc-title">Top Complaint Categories</h6>
-        <p className="text-muted text-center py-3">No data available</p>
+        <p className="text-muted text-center py-3 m-0">No data available</p>
       </div>
     );
   }

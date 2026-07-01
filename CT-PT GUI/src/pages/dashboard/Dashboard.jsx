@@ -72,13 +72,13 @@ const Dashboard = () => {
         </div>
 
         <div className="row mt-3">
-          <div className="col-lg-4 col-12">
+          <div className="col-lg-6 col-12">
             <CleaningCompliance filters={filters} />
           </div>
-          <div className="col-lg-4 col-12 mt-lg-0 mt-3">
+          {/* <div className="col-lg-4 col-12 mt-lg-0 mt-3">
             <CitizenComplaintStatus filters={filters} />
-          </div>
-          <div className="col-lg-4 col-12 mt-lg-0 mt-3">
+          </div> */}
+          <div className="col-lg-6 col-12 mt-lg-0 mt-3">
             <BillsOverview filters={filters} />
           </div>
         </div>
