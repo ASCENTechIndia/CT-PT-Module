@@ -193,9 +193,9 @@ const CleaningCompliance = ({ filters }) => {
   return (
     <div className="compliance-card">
       <h6 className="compliance-title">Cleaning Compliance (Today)</h6>
-      <div className="compliance-body">
+      <div className="compliance-body d-flex align-items-start gap-3">
         <div ref={chartRef} className="compliance-chart" />
-        <div className="compliance-legend">
+        <div className="compliance-legend flex-grow-1">
           <div className="legend-item">
             <span className="dot dot-green" />
             <div>
