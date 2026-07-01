@@ -108,8 +108,8 @@ async function getWardWiseCleaningStatusRepo(payload) {
 
   if (payload.date) {
     // query += ` AND TRUNC(e.dat_empctptwork_date) = TO_DATE(:date,'DD-MM-YYYY') `;
-    query += ` AND TRUNC(e.dat_empctptwork_date) = '27-JUN-2026' `;
-    // bind.date = payload.date;
+    query += ` AND TRUNC(e.dat_empctptwork_date) = TO_DATE(:workDate,'DD-MM-YYYY') `;
+    bind.workDate = payload.date;
   }
   if (payload.userType === "SI") {
     query += ` WHERE (:userId IS NOT NULL AND c.var_ctpttype_sanitinspctorid = :userId) `;
