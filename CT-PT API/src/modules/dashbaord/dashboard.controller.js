@@ -30,7 +30,8 @@ async function getSummaryCardValuesController(req, res, next) {
 
 async function getWardWiseCleaningStatusController(req, res, next) {
   try {
-    const result = await getWardWiseCleaningStatusService();
+    const payload = req.query
+    const result = await getWardWiseCleaningStatusService(payload);
 
     logApiSuccess(
       req,
@@ -112,9 +113,10 @@ async function getCleaningComplienceController(req, res) {
   }
 }
 
-async function getCitizenComplaintStatusController(req, res) {
+async function getCitizenComplaintStatusController(req, res, next) {
   try {
-    const result = await getCitizenComplaintStatusService();
+    const payload = req.query
+    const result = await getCitizenComplaintStatusService(payload);
 
     logApiSuccess(
       req,

@@ -13,7 +13,7 @@ const Filters = ({ filters, onFilterChange, onClearFilters }) => {
   const [loading, setLoading] = useState(true);
 
   const statusOptions = [
-    { label: "All", value: "all" },
+    { label: "All", value: "" },
     { label: "Pending", value: "P" },
     { label: "Assign", value: "ASSIGN" },
     { label: "Completed", value: "COMPLETED" },
@@ -107,7 +107,7 @@ const Filters = ({ filters, onFilterChange, onClearFilters }) => {
           value={filters.ward}
           onChange={handleChange}
         >
-          <option value="all">All</option>
+          <option value="">All</option>
           {wardOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -125,7 +125,7 @@ const Filters = ({ filters, onFilterChange, onClearFilters }) => {
           value={filters.vendor}
           onChange={handleChange}
         >
-          <option value="all">All</option>
+          <option value="">All</option>
           {vendorOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

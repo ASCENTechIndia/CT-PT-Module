@@ -7,6 +7,11 @@ const TopComplaintCategories = ({ filters }) => {
   const { user } = useAuth();
   const ulbId = user?.orgId || "";
   const userId = user?.userId || "";
+  const userType = !user.designation
+    ? "ADMIN"
+    : user.designation === "Sanitary Inspector"
+      ? "SI"
+      : "SUP";
   const { setLoader } = useLoader();
 
   const [data, setData] = useState([]);
@@ -24,6 +29,7 @@ const TopComplaintCategories = ({ filters }) => {
   const fetchData = async () => {
     if (!ulbId || !userId) {
       setLoading(false);
+      setLoader(false);
       return;
     }
     try {
@@ -31,13 +37,12 @@ const TopComplaintCategories = ({ filters }) => {
       setLoading(true);
 
       const params = new URLSearchParams();
-      console.log("filtes dta :", filters.fromDate, filters.toDate);
       params.append("ulbId", ulbId);
       params.append("userId", userId);
       params.append("fromDate", formatDateForApi(filters.fromDate));
       params.append("toDate", formatDateForApi(filters.toDate));
-      params.append("ward", filters.ward);
-      params.append("userType", "SI");
+      if (filters.ward) params.append("ward", filters.ward);
+      params.append("userType", userType);
       const response = await apiClient.get(
         `/dashboard/top-complaint-category?${params.toString()}`,
       );

@@ -10,7 +10,6 @@ async function getSummaryCardsValuesRepo(payload) {
   const query2 = `select count(num_vendor_id) as total_vendor from aorts_vendor_mas where num_vendor_ulbid = :ulbId`;
   const bind2 = { ulbId: Number(payload.ulbId) };
   const totalVendors = await executeQuery(query2, bind2);
-  const totalVendorsRows = totalVendors.rows[0] || [];
 
   // Todays inspection
   let query3 = `select count(*) as today_inspection from aorts_empctptwork_mst w 
@@ -53,7 +52,6 @@ async function getSummaryCardsValuesRepo(payload) {
     query4 += `and num_ctpttype_wardid = :ward `;
     bind4.ward = Number(payload.ward);
   }
-
   const pendingVerification = await executeQuery(query4, bind4);
 
   // Total Fine
@@ -73,10 +71,10 @@ async function getSummaryCardsValuesRepo(payload) {
     bind7.fromDate = payload.fromDate;
     bind7.toDate = payload.toDate;
   }
-  if (payload.userId === "DMCSI01") {
+  if (payload.userType === "SI") {
     query7 += `and ctpt.var_ctpttype_sanitinspctorid = :userId `;
     bind7.userId = payload.userId;
-  } else if (payload.userId === "DMCSUPPC") {
+  } else if (payload.userType === "SUP") {
     query7 += `and ctpt.var_ctpttype_suppid = :userId `;
     bind7.userId = payload.userId;
   }
@@ -95,22 +93,39 @@ async function getSummaryCardsValuesRepo(payload) {
   return result;
 }
 
-async function getWardWiseCleaningStatusRepo() {
-    const query = `SELECT
-      c.num_ctpttype_wardid AS Wards,
-      COUNT(c.num_ctpttype_id) AS Total_toilets,
-      SUM(CASE WHEN e.var_empctptwork_status = 'A' THEN 1 ELSE 0 END) AS Cleaned,
-      SUM(CASE WHEN e.var_empctptwork_status IS NULL OR e.var_empctptwork_status = 'P' THEN 1 ELSE 0 END) AS Not_cleaned,
-      SUM(CASE WHEN e.var_empctptwork_status = 'C' THEN 1 ELSE 0 END) AS Pending,
-      SUM(CASE WHEN e.var_empctptwork_status = 'R' THEN 1 ELSE 0 END) AS Rejected
-  FROM aorts_ctptlist_mas c
-  LEFT JOIN aorts_empctptwork_mst e
-      ON e.num_empctptwork_toiletid = c.num_ctpttype_id
-    AND TRUNC(e.dat_empctptwork_date) = TRUNC(sysdate) 
-  GROUP BY c.num_ctpttype_wardid
-  ORDER BY c.num_ctpttype_wardid`;
-  
-  const result = await executeQuery(query, {});
+async function getWardWiseCleaningStatusRepo(payload) {
+  let query = `SELECT
+    c.num_ctpttype_wardid AS Wards,
+    COUNT(c.num_ctpttype_id) AS Total_toilets,
+    SUM(CASE WHEN e.var_empctptwork_status = 'A' THEN 1 ELSE 0 END) AS Cleaned,
+    SUM(CASE WHEN e.var_empctptwork_status IS NULL OR e.var_empctptwork_status = 'P' THEN 1 ELSE 0 END) AS Not_cleaned,
+    SUM(CASE WHEN e.var_empctptwork_status = 'C' THEN 1 ELSE 0 END) AS Pending,
+    SUM(CASE WHEN e.var_empctptwork_status = 'R' THEN 1 ELSE 0 END) AS Rejected
+    FROM aorts_ctptlist_mas c
+    LEFT JOIN aorts_empctptwork_mst e
+    ON e.num_empctptwork_toiletid = c.num_ctpttype_id `;
+  const bind = {};
+
+  if (payload.date) {
+    // query += ` AND TRUNC(e.dat_empctptwork_date) = TO_DATE(:date,'DD-MM-YYYY') `;
+    query += ` AND TRUNC(e.dat_empctptwork_date) = '27-JUN-2026' `;
+    // bind.date = payload.date;
+  }
+  if (payload.userType === "SI") {
+    query += ` WHERE (:userId IS NOT NULL AND c.var_ctpttype_sanitinspctorid = :userId) `;
+    bind.userId = payload.userId;
+  } else if (payload.userType === "SUP") {
+    query += ` WHERE (:userId IS NOT NULL AND c.var_ctpttype_suppid = :userId) `;
+    bind.userId = payload.userId;
+  }
+  if (payload.ward) {
+    query += ` and c.num_ctpttype_wardid = :ward `;
+    bind.ward = Number(payload.ward);
+  }
+  query += ` GROUP BY c.num_ctpttype_wardid
+            ORDER BY c.num_ctpttype_wardid `;
+  console.log("query :", query);
+  const result = await executeQuery(query, bind);
   return result.rows;
 }
 
@@ -143,26 +158,26 @@ async function getTopComplaintCategoryRepo(payload) {
 async function getRecentInspectionRepo(payload) {
   let query = `select * from vw_ctptwork_recent `;
   const bind = {};
-  if(payload.fromDate && payload.toDate){
+  if (payload.fromDate && payload.toDate) {
     query += `where trunc(workdate) BETWEEN TO_DATE(:fromDate,'DD-MM-YYYY')
-              AND TO_DATE(:toDate,'DD-MM-YYYY') `
-    bind.fromDate = payload.fromDate
-    bind.toDate = payload.toDate
+              AND TO_DATE(:toDate,'DD-MM-YYYY') `;
+    bind.fromDate = payload.fromDate;
+    bind.toDate = payload.toDate;
   }
-  if(payload.ward){
-    query += `and wardid = :ward `
-    bind.ward = payload.ward
+  if (payload.ward) {
+    query += `and wardid = :ward `;
+    bind.ward = payload.ward;
   }
-  if(payload.vendor){
-    query += `and  vendorid = :vendor `
-    bind.vendor = payload.vendor
+  if (payload.vendor) {
+    query += `and  vendorid = :vendor `;
+    bind.vendor = payload.vendor;
   }
-  if(payload.userType === "SI"){
-    query += `and sistatus in ('A','R') and  siid = :userId `
-    bind.userId = payload.userId
-  } else if(payload.userType === "SUP"){
-    query += `and superstatus in ('A','R') and superid  = :userId `
-    bind.userId = payload.userId
+  if (payload.userType === "SI") {
+    query += `and sistatus in ('A','R') and  siid = :userId `;
+    bind.userId = payload.userId;
+  } else if (payload.userType === "SUP") {
+    query += `and superstatus in ('A','R') and superid  = :userId `;
+    bind.userId = payload.userId;
   }
   const result = await executeQuery(query, bind);
   return result.rows;
@@ -175,11 +190,55 @@ async function getCleaningComplienceRepo() {
   return result;
 }
 
-async function getCitizenComplaintStatusRepo() {
-  const query = ``;
-  const bind = {};
+async function getCitizenComplaintStatusRepo(payload) {
+  let query = `SELECT
+              SUM(
+                  CASE
+                      WHEN c.var_complaint_status IN ('P','ASSIGN','COMPLETED','REJECTED','CLOSED')
+                      THEN 1
+                      ELSE 0
+                  END
+              ) AS total_complaints,
+              SUM(
+                  CASE
+                      WHEN c.var_complaint_status IN ('P', 'REJECTED')
+                      THEN 1
+                      ELSE 0
+                  END
+              ) AS open_complaints,
+              SUM(
+                  CASE
+                      WHEN c.var_complaint_status IN ('ASSIGN', 'COMPLETED')
+                      THEN 1
+                      ELSE 0
+                  END
+              ) AS in_progress_complaints,
+              SUM(
+                  CASE
+                      WHEN c.var_complaint_status = 'CLOSED'
+                      THEN 1
+                      ELSE 0
+                  END
+              ) AS resolved_complaints
+          FROM aorts_ctptcitizencomplaint_mas c
+          INNER JOIN aorts_ctptlist_mas ctpt
+              ON c.num_complaint_toilet = ctpt.num_ctpttype_id
+          WHERE c.num_complaint_ulbid = :ulbId `;
+  const bind = { ulbId: Number(payload.ulbId) };
+
+  if (payload.fromDate && payload.toDate) {
+    query += `AND TRUNC(c.dat_complaint_insdt)
+          BETWEEN TO_DATE(:fromDate, 'DD-MM-YYYY')
+          AND TO_DATE(:toDate, 'DD-MM-YYYY') `;
+    bind.fromDate = payload.fromDate;
+    bind.toDate = payload.toDate;
+  }
+  if (payload.ward) {
+    query += `AND c.num_complaint_wardid = :ward `;
+    bind.ward = payload.ward;
+  }
   const result = await executeQuery(query, bind);
-  return result;
+  return result.rows[0];
 }
 
 async function getBillOverviewRepo() {

@@ -8,36 +8,66 @@ const WardWiseStatus = ({ filters }) => {
   const { user } = useAuth();
   const ulbId = user?.orgId || "";
   const userId = user?.userId || "";
+  const userType = !user.designation
+    ? "ADMIN"
+    : user.designation === "Sanitary Inspector"
+      ? "SI"
+      : "SUP";
   const { setLoader } = useLoader();
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
 
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
 
+  // Helper to get today's date in YYYY-MM-DD
+  function getTodayDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Format date from YYYY-MM-DD to DD-JAN-YYYY for the API
   const formatDateForApi = (dateStr) => {
     if (!dateStr) return "";
     const parts = dateStr.split("-");
     if (parts.length !== 3) return dateStr;
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    const [year, month, day] = parts;
+    const months = [
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC",
+    ];
+    const monthIndex = parseInt(month, 10) - 1;
+    const monthAbbr = months[monthIndex] || month;
+    return `${day}-${monthAbbr}-${year}`;
   };
 
   const buildParams = () => {
     const params = new URLSearchParams();
-    params.append("ulbId", ulbId);
     params.append("userId", userId);
-    params.append("fromDate", formatDateForApi(filters.fromDate) || "");
-    params.append("toDate", formatDateForApi(filters.toDate) || "");
+    params.append("date", formatDateForApi(selectedDate) || "");
     if (filters.ward) params.append("ward", filters.ward);
-    params.append("vendor", filters.vendor);
-    params.append("complaintStatus", filters.complaintStatus);
-    params.append("userType", "SI")
+    params.append("userType", userType);
     return params;
   };
 
   const fetchData = async () => {
-    if (!ulbId || !userId) {
+    if (!userId) {
       setLoading(false);
+      setLoader(false);
       return;
     }
     try {
@@ -47,7 +77,6 @@ const WardWiseStatus = ({ filters }) => {
       const response = await apiClient.get(
         `/dashboard/ward-wise-cleaning-status?${params.toString()}`,
       );
-
       if (response.success && Array.isArray(response.data?.data)) {
         setChartData(response.data.data);
       } else {
@@ -64,26 +93,26 @@ const WardWiseStatus = ({ filters }) => {
 
   useEffect(() => {
     fetchData();
-  }, [ulbId, userId, filters.fromDate, filters.toDate, filters.ward]);
+  }, [userId, selectedDate, filters.ward]);
 
-  // Cleanup chart instance on unmount only
+  // Cleanup chart on unmount
   useEffect(() => {
     return () => {
       chartInstance.current?.dispose();
       chartInstance.current = null;
     };
   }, []);
+
+  // Update chart when data changes
   useEffect(() => {
     if (!chartRef.current || chartData.length === 0) return;
 
     if (!chartInstance.current) {
       chartInstance.current = echarts.init(chartRef.current);
-
       const ro = new ResizeObserver(() => {
         chartInstance.current?.resize();
       });
       ro.observe(chartRef.current);
-
       chartInstance.current.__resizeObserver = ro;
     }
 
@@ -151,10 +180,39 @@ const WardWiseStatus = ({ filters }) => {
     chartInstance.current.resize();
   }, [chartData]);
 
+  if (loading) {
+    return (
+      <div className="ward-card">
+        <h6 className="ward-title">Ward Wise Cleaning Status</h6>
+        <div className="d-flex justify-content-center py-4">
+          <div
+            className="spinner-border spinner-border-sm text-primary"
+            role="status"
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (chartData.length === 0) {
     return (
       <div className="ward-card">
         <h6 className="ward-title">Ward Wise Cleaning Status</h6>
+        <div className="filter-group mb-3">
+          <label htmlFor="statusDate" className="fw-semibold me-2">
+            Select Date
+          </label>
+          <input
+            type="date"
+            id="statusDate"
+            className="filter-input"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{ width: "auto" }}
+          />
+        </div>
         <p className="text-muted text-center py-3">No data available</p>
       </div>
     );
@@ -162,7 +220,29 @@ const WardWiseStatus = ({ filters }) => {
 
   return (
     <div className="ward-card">
-      <h6 className="ward-title">Ward Wise Cleaning Status</h6>
+      <div className="d-flex justify-content-between align-items-center">
+        <h6 className="ward-title">Ward Wise Cleaning Status</h6>
+        <div
+          className="filter-group"
+          style={{ flexDirection: "row", gap: "8px", alignItems: "center" }}
+        >
+          <label
+            htmlFor="statusDate"
+            className="fw-semibold"
+            style={{ fontSize: "13px" }}
+          >
+            Date
+          </label>
+          <input
+            type="date"
+            id="statusDate"
+            className="filter-input"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{ width: "160px" }}
+          />
+        </div>
+      </div>
       <div ref={chartRef} className="ward-chart" />
     </div>
   );

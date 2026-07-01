@@ -16,6 +16,11 @@ const SummaryCards = ({ filters }) => {
   const { user } = useAuth();
   const userId = user?.userId || "";
   const ulbId = user?.orgId || "";
+  const userType = !user.designation
+    ? "ADMIN"
+    : user.designation === "Sanitary Inspector"
+      ? "SI"
+      : "SUP";
   const { setLoader } = useLoader();
 
   const [cardValues, setCardValues] = useState({
@@ -114,8 +119,8 @@ const SummaryCards = ({ filters }) => {
       params.append("userId", String(userId));
       params.append("fromDate", formatDateForApi(filters.fromDate) || "");
       params.append("toDate", formatDateForApi(filters.toDate) || "");
-      params.append("ward", filters.ward || "");
-      params.append("userType", "SI")
+      if (filters.ward) params.append("ward", filters.ward || "");
+      params.append("userType", userType);
 
       const response = await apiClient.get(
         `/dashboard/summary-cards?${params.toString()}`,

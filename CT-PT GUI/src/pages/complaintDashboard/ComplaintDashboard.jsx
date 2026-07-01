@@ -13,9 +13,9 @@ const ComplaintDashboard = () => {
   const [filters, setFilters] = useState({
     fromDate: getTodayDate(),
     toDate: getTodayDate(),
-    ward: "all",
-    vendor: "all",
-    complaintStatus: "all",
+    ward: "",
+    vendor: "",
+    complaintStatus: "",
   });
 
   function getTodayDate() {
@@ -34,9 +34,9 @@ const ComplaintDashboard = () => {
     setFilters({
       fromDate: "",
       toDate: "",
-      ward: "all",
-      vendor: "all",
-      complaintStatus: "all",
+      ward: "",
+      vendor: "",
+      complaintStatus: "",
     });
   };
 

@@ -12,8 +12,8 @@ async function getSummaryCardsValueService(payload) {
   return getSummaryCardsValuesRepo(payload);
 }
 
-async function getWardWiseCleaningStatusService() {
-  return getWardWiseCleaningStatusRepo();
+async function getWardWiseCleaningStatusService(payload) {
+  return getWardWiseCleaningStatusRepo(payload);
 }
 
 async function getTopComplaintCategoryService(payload) {
@@ -28,8 +28,8 @@ async function getCleaningComplienceService() {
   return getCleaningComplienceRepo();
 }
 
-async function getCitizenComplaintStatusService() {
-  return getCitizenComplaintStatusRepo();
+async function getCitizenComplaintStatusService(payload) {
+  return getCitizenComplaintStatusRepo(payload);
 }
 
 async function getBillOverviewService() {

@@ -11,9 +11,6 @@ import TopComplaintCategories from "./TopComplaintCategories";
 import { useAuth } from "../../context/AuthContext";
 
 const Dashboard = () => {
-  const {user} = useAuth()
-  const ulbId = user?.orgId;
-
   const [filters, setFilters] = useState({
     fromDate: getTodayDate(),
     toDate: getTodayDate(),

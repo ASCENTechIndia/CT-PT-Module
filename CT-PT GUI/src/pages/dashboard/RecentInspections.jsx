@@ -7,12 +7,17 @@ const RecentInspections = ({ filters }) => {
   const { user } = useAuth();
   const ulbId = user?.orgId || "";
   const userId = user?.userId || "";
+  const userType = !user.designation
+    ? "ADMIN"
+    : user.designation === "Sanitary Inspector"
+      ? "SI"
+      : "SUP";
   const { setLoader } = useLoader();
 
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Format date from ISO to DD MMM YYYY (e.g., "26 Jun 2026")
+  // Format date from ISO to DD MMM YYYY (e.g. "26 Jun 2026")
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -59,6 +64,7 @@ const RecentInspections = ({ filters }) => {
   const fetchInspections = async () => {
     if (!ulbId || !userId) {
       setLoading(false);
+      setLoader(false);
       return;
     }
     try {
@@ -68,9 +74,9 @@ const RecentInspections = ({ filters }) => {
       params.append("userId", userId);
       params.append("fromDate", formatDateForApi(filters.fromDate) || "");
       params.append("toDate", formatDateForApi(filters.toDate) || "");
-      params.append("ward", filters.ward);
-      params.append("vendor", "");
-      
+      if (filters.ward) params.append("ward", filters.ward);
+      if (filters.vendor) params.append("vendor", vendor);
+      params.append("userType", userType);
 
       const response = await apiClient.get(
         `/dashboard/recent-inspection?${params.toString()}`,
@@ -139,7 +145,10 @@ const RecentInspections = ({ filters }) => {
   return (
     <div className="inspections-card">
       <h6 className="inspections-title">Recent Inspections</h6>
-      <div className="inspections-table-wrapper" style={{height: "auto", maxHeight: "350px", overflowY: "auto"}}>
+      <div
+        className="inspections-table-wrapper"
+        style={{ height: "auto", maxHeight: "350px", overflowY: "auto" }}
+      >
         <table className="inspections-table">
           <thead>
             <tr>
