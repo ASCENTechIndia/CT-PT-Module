@@ -7,6 +7,7 @@ const {
   getCleaningComplienceService,
   getCitizenComplaintStatusService,
   getBillOverviewService,
+  getRecentComplaintService,
 } = require("./dashboard.service");
 
 async function getSummaryCardValuesController(req, res, next) {
@@ -155,6 +156,25 @@ async function getBillOverviewController(req, res) {
   }
 }
 
+async function getRecentComplaintController(req, res, next) {
+  try {
+    const payload = req.query
+    const result = await getRecentComplaintService(payload);
+
+    logApiSuccess(
+      req,
+      200,
+      { count: result?.length || 0 },
+      "Recent complaint fetched successfully",
+    );
+
+    return res.ok({ data: result?.data || result || [] });
+  } catch (error) {
+    logApiError(req, 500, error.message, "Recent complaint fetching error");
+    return next(error);
+  }
+}
+
 module.exports = {
   getSummaryCardValuesController,
   getWardWiseCleaningStatusController,
@@ -163,4 +183,5 @@ module.exports = {
   getCleaningComplienceController,
   getCitizenComplaintStatusController,
   getBillOverviewController,
+  getRecentComplaintController,
 };

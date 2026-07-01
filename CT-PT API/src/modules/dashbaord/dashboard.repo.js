@@ -248,6 +248,32 @@ async function getBillOverviewRepo() {
   return result;
 }
 
+async function getRecentComplaintRepo(payload) {
+  let query = `select * from aorts.vw_recent_complaint where ulbid = :ulbId `;
+  const bind = { ulbId: payload.ulbId };
+
+  if (payload.fromDate && payload.toDate) {
+    query += `and TRUNC(complaint_date) 
+        between TO_DATE(:fromDate,'DD-MM-YYYY') and 
+        TO_DATE(:toDate,'DD-MM-YYYY') `;
+    bind.fromDate = payload.fromDate;
+    bind.toDate = payload.toDate;
+  }
+  if (payload.userType === "SI") {
+    query += `and siid = :userId `;
+    bind.userId = payload.userId;
+  } else if (payload.userType === "SUP") {
+    query += `and superid = :userId `;
+    bind.userId = payload.userId;
+  }
+  if(payload.ward){
+    query += `and wardid = :ward`
+    bind.ward = payload.ward
+  }
+  const result = await executeQuery(query, bind);
+  return result.rows;
+}
+
 module.exports = {
   getSummaryCardsValuesRepo,
   getWardWiseCleaningStatusRepo,
@@ -256,4 +282,5 @@ module.exports = {
   getCleaningComplienceRepo,
   getCitizenComplaintStatusRepo,
   getBillOverviewRepo,
+  getRecentComplaintRepo,
 };

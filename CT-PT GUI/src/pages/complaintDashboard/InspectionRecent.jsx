@@ -1,82 +1,158 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import apiClient from "../../services/apiClient";
+import { useLoader } from "../../context/LoaderContext";
+import { useAuth } from "../../context/AuthContext";
 
-const inspections = [
-  {
-    date: "26 May 2025",
-    ward: "Ward 1",
-    toiletId: "CT-101",
-    toiletName: "Shivaji Chowk",
-    vendor: "CleanCare Services",
-    mukadamStatus: "Approved",
-    siStatus: "Approved",
-    remarks: "Good",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 2",
-    toiletId: "PT-205",
-    toiletName: "Market Road",
-    vendor: "Sai Swachh Seva",
-    mukadamStatus: "Approved",
-    siStatus: "Pending",
-    remarks: "Pending Verification",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 3",
-    toiletId: "CT-312",
-    toiletName: "School Road",
-    vendor: "City Clean Solutions",
-    mukadamStatus: "Rejected",
-    siStatus: "Pending",
-    remarks: "Not Clean",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 4",
-    toiletId: "PT-410",
-    toiletName: "Bus Stand",
-    vendor: "Green Planet Enterprises",
-    mukadamStatus: "Approved",
-    siStatus: "Approved",
-    remarks: "Good",
-  },
-  {
-    date: "26 May 2025",
-    ward: "Ward 5",
-    toiletId: "CT-501",
-    toiletName: "Municipal Office",
-    vendor: "CleanCare Services",
-    mukadamStatus: "Approved",
-    siStatus: "Approved",
-    remarks: "Good",
-  },
-];
+const InspectionRecent = ({ filters }) => {
+  const { user } = useAuth();
+  const ulbId = user?.orgId || "";
+  const userId = user?.userId || "";
+  const userType = !user.designation
+    ? "ADMIN"
+    : user.designation === "Sanitary Inspector"
+      ? "SI"
+      : "SUP";
+  const { setLoader } = useLoader();
 
-const statusBadge = (status) => {
-  const map = {
-    Approved: "badge-approved",
-    Pending: "badge-pending",
-    Rejected: "badge-rejected",
+  const [inspections, setInspections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Format date from YYYY-MM-DD to DD-MM-YYYY for API
+  const formatDateForApi = (dateStr) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
-  return <span className={`status-badge ${map[status] || ""}`}>{status}</span>;
-};
 
-const InspectionRecent = ({filters}) => {
+  // Format ISO date to "DD MMM YYYY" for display
+  const formatDisplayDate = (isoDate) => {
+    if (!isoDate) return "";
+    const date = new Date(isoDate);
+    const day = date.getDate();
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
+  // Map status to badge class
+  const getStatusBadge = (status) => {
+    const map = {
+      APPROVE: { label: "Approved", className: "badge-approved" },
+      REJECT: { label: "Rejected", className: "badge-rejected" },
+      PENDING: { label: "Pending", className: "badge-pending" },
+    };
+    const s = map[status] || {
+      label: status || "Pending",
+      className: "badge-pending",
+    };
+    return <span className={`status-badge ${s.className}`}>{s.label}</span>;
+  };
+
+  const fetchData = async () => {
+    if (!ulbId || !userId) {
+      setLoading(false);
+      setLoader(false);
+      return;
+    }
+    try {
+      setLoader(true);
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.append("ulbId", ulbId);
+      params.append("userId", userId);
+      params.append("userType", userType);
+      params.append("fromDate", formatDateForApi(filters.fromDate) || "");
+      params.append("toDate", formatDateForApi(filters.toDate) || "");
+      if (filters.ward) params.append("ward", filters.ward);
+
+      const response = await apiClient.get(
+        `/dashboard/recent-complaint?${params.toString()}`,
+      );
+
+      if (response.success && Array.isArray(response.data?.data)) {
+        const mapped = response.data.data.map((item) => ({
+          date: formatDisplayDate(item.COMPLAINT_DATE),
+          ward: `Ward ${item.WARDID}`,
+          toiletId: item.TOILETID,
+          toiletName: item.TOILETNAME,
+          citizen: item.CITIZEN_NAME,
+          superStatus: item.SUPERSTATUS,
+          siStatus: item.SISTATUS,
+          complaintId: item.COMPLAINT_ID,
+        }));
+        setInspections(mapped);
+      } else {
+        setInspections([]);
+      }
+    } catch (err) {
+      console.error("Error fetching recent complaints:", err);
+      setInspections([]);
+    } finally {
+      setLoader(false);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [ulbId, userId, userType, filters.fromDate, filters.toDate, filters.ward]);
+
+  if (loading) {
+    return (
+      <div className="inspections-card">
+        <h6 className="inspections-title">Recent Inspections</h6>
+        <div className="d-flex justify-content-center py-4">
+          <div
+            className="spinner-border spinner-border-sm text-primary"
+            role="status"
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (inspections.length === 0) {
+    return (
+      <div className="inspections-card">
+        <h6 className="inspections-title">Recent Inspections</h6>
+        <p className="text-muted text-center py-3">No inspections found</p>
+      </div>
+    );
+  }
+
   return (
     <div className="inspections-card">
       <h6 className="inspections-title">Recent Inspections</h6>
-      <div className="inspections-table-wrapper">
+      <div
+        className="inspections-table-wrapper"
+        style={{ height: "auto", maxHeight: "350px", overflowY: "auto" }}
+      >
         <table className="inspections-table">
           <thead>
             <tr>
               <th>Date</th>
               <th>Ward / Prabhag</th>
               <th>Toilet ID / Name</th>
-              <th>Vendor Name</th>
+              <th>Citizen</th>
               <th>Mukadam Status</th>
               <th>SI Status</th>
-              <th>Remarks</th>
               <th>Details</th>
             </tr>
           </thead>
@@ -89,12 +165,16 @@ const InspectionRecent = ({filters}) => {
                   <div className="toilet-id">{row.toiletId}</div>
                   <div className="toilet-name">{row.toiletName}</div>
                 </td>
-                <td>{row.vendor}</td>
-                <td>{statusBadge(row.mukadamStatus)}</td>
-                <td>{statusBadge(row.siStatus)}</td>
-                <td className="remarks-cell">{row.remarks}</td>
+                <td>{row.citizen}</td>
+                <td>{getStatusBadge(row.superStatus)}</td>
+                <td>{getStatusBadge(row.siStatus)}</td>
                 <td>
-                  <button className="view-btn">View &raquo;</button>
+                  <button
+                    className="view-btn"
+                    onClick={() => alert(`View complaint #${row.complaintId}`)}
+                  >
+                    View &raquo;
+                  </button>
                 </td>
               </tr>
             ))}
