@@ -724,24 +724,63 @@ async function complaintWorkStatusIns(req, res, next) {
 
 async function getUserDetailsController(req, res, next) {
   try {
-    const payload = req.body;
+    const { userId, ulbId, toiletId, workDate } = req.body;
 
-    const result = await userDetailsService(
-      payload.userId,
-      payload.ulbId,
-      payload.toiletId,
+    const formatDate = (dateStr) => {
+      if (!dateStr) return null;
+
+      let date;
+
+      // ISO format (e.g. 2026-06-21T18:30:00.000Z)
+      if (dateStr.includes('T')) {
+        date = new Date(dateStr);
+      }
+      // DD-MM-YYYY or DD-MM-YYYY HH:mm:ss
+      else {
+        const [datePart] = dateStr.split(' ');
+        const [day, month, year] = datePart.split('-');
+        date = new Date(Number(year), Number(month) - 1, Number(day));
+      }
+
+      // Invalid date
+      if (isNaN(date.getTime())) {
+        return null;
+      }
+
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+
+      return `${String(date.getDate()).padStart(2, '0')}-${months[date.getMonth()]}-${date.getFullYear()}`;
+    };
+
+    const formattedDate = formatDate(workDate);
+
+    const result =  await userDetailsService(
+      userId,
+      ulbId,
+      toiletId,
+      formattedDate
     );
-    // console.log("Login result:", result);
+
     if (!result.success) {
-      logApiError(req, 401, result.message, `user details not found: ${payload.userId}`);
-      return res.fail(result.message, 401, { errorCode: result.errorCode });
+      logApiError(
+        req,
+        401,
+        result.message,
+        `User details not found: ${userId}`
+      );
+
+      return res.fail(result.message, 401, {
+        errorCode: result.errorCode,
+      });
     }
 
-    // logApiSuccess(req, 200, { userId: result.user.userId, userName: result.user.userFullName }, `Login successful for user: ${result.user.userFullName}`);
     return res.ok(result.data);
 
   } catch (error) {
-    logApiError(req, 500, error.message, 'user details error');
+    logApiError(req, 500, error.message, 'User details error');
     return next(error);
   }
 }

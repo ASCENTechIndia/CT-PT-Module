@@ -137,9 +137,10 @@ async function vendorListService(fromDate, toDate, status, userId) {
 async function userDetailsService(
   userId,
   ulbId,
-  toiletId
+  toiletId,
+  workDate
 ) {
-  return userDetailsRepo(userId, ulbId, toiletId);
+  return userDetailsRepo(userId, ulbId, toiletId,workDate);
 }
 
 module.exports = {

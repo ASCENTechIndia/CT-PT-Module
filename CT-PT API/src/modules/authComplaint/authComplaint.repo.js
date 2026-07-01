@@ -630,7 +630,7 @@ async function rslvdListbyVendorRepo(
 async function getVendorListRepo(fromDate, toDate, status, userId) {
   let sql = `
     select a.num_empctptwork_id,
-    CAST(a.dat_empctptwork_date + 1 AS TIMESTAMP) AS dat_empctptwork_date,
+    TO_CHAR(a.dat_empctptwork_date, 'DD-MM-YYYY') AS dat_empctptwork_date,
     a.var_empctptwork_latitude,
     a.var_empctptwork_longitude,
     ctpt.num_ctpttype_wardid,
@@ -657,8 +657,8 @@ async function getVendorListRepo(fromDate, toDate, status, userId) {
   if (fromDate && toDate) {
     sql += `
       AND TRUNC(a.dat_empctptwork_date)
-      BETWEEN TO_DATE(:fromDate,'YYYY-MM-DD')
-      AND TO_DATE(:toDate,'YYYY-MM-DD')
+      BETWEEN TO_DATE(:fromDate,'DD-MM-YYYY')
+      AND TO_DATE(:toDate,'DD-MM-YYYY')
     `;
 
     binds.fromDate = fromDate;
@@ -1226,13 +1226,14 @@ async function complaintWorkStatusInsRepo(payload) {
   };
 }
 
-async function userDetailsRepo(userId, ulbId, toiletId) {
+async function userDetailsRepo(userId, ulbId, toiletId, workDate) {
   const plsql = `
     BEGIN
       aorts_ctptgetuserdtls_fetch(
         :in_UserId,
         :in_ULBId,
         :in_ctpttoiletid,
+        :in_WorkDate,
         :out_ErrorCode,
         :out_ErrorMsg,
         :out_newstr
@@ -1244,6 +1245,7 @@ async function userDetailsRepo(userId, ulbId, toiletId) {
     in_UserId: userId,
     in_ULBId: ulbId,
     in_ctpttoiletid: toiletId,
+    in_WorkDate: workDate ? workDate : "",
 
     out_ErrorCode: {
       dir: oracledb.BIND_OUT,
