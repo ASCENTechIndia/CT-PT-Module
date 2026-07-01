@@ -63,10 +63,10 @@ const Dashboard = () => {
         </div>
 
         <div className="row mt-3">
-          <div className="col-lg-5 col-12">
+          {/* <div className="col-lg-5 col-12">
             <TopComplaintCategories filters={filters} />
-          </div>
-          <div className="col-lg-7 col-12 mt-lg-0 mt-3">
+          </div> */}
+          <div className="col-12 mt-3">
             <RecentInspections filters={filters} />
           </div>
         </div>

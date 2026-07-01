@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import apiClient from "../../services/apiClient";
 import { useLoader } from "../../context/LoaderContext";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const RecentInspections = ({ filters }) => {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ const RecentInspections = ({ filters }) => {
       ? "SI"
       : "SUP";
   const { setLoader } = useLoader();
+  const Navigate = useNavigate();
 
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,13 +155,12 @@ const RecentInspections = ({ filters }) => {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Ward / Prabhag</th>
+              <th>Ward / Prabhag </th>
               <th>Toilet ID / Name</th>
               <th>Vendor Name</th>
               <th>Mukadam Status</th>
               <th>SI Status</th>
-              <th>Remarks</th>
-              <th>Details</th>
+              {/* <th>Details</th> */}
             </tr>
           </thead>
           <tbody>
@@ -174,17 +175,16 @@ const RecentInspections = ({ filters }) => {
                 <td>{row.vendor}</td>
                 <td>{getStatusBadge(row.mukadamStatus)}</td>
                 <td>{getStatusBadge(row.siStatus)}</td>
-                <td className="remarks-cell">{row.remarks || "—"}</td>
-                <td>
+                {/* <td>
                   <button className="view-btn">View &raquo;</button>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <div className="inspections-footer">
-        <button className="view-all-btn">View All Inspections &raquo;</button>
+        <button onClick={()=> Navigate("/application-list")} className="view-all-btn">View All Inspections &raquo;</button>
       </div>
     </div>
   );

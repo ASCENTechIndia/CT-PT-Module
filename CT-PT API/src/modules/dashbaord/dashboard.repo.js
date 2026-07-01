@@ -45,7 +45,7 @@ async function getSummaryCardsValuesRepo(payload) {
     query4 += ` and w.var_empctptwork_siflag is null and ctpt.var_ctpttype_sanitinspctorid = :userId `;
     bind4.userId = payload.userId;
   } else if (payload.userType === "SUP") {
-    query4 += ` and w.var_empctptwork_supflag is and ctpt.var_ctpttype_suppid = :userId `;
+    query4 += ` and w.var_empctptwork_supflag is null and ctpt.var_ctpttype_suppid = :userId `;
     bind4.userId = payload.userId;
   }
   if (payload.ward) {
@@ -172,7 +172,7 @@ async function getRecentInspectionRepo(payload) {
     bind.vendor = payload.vendor;
   }
   if (payload.userType === "SI") {
-    query += `and sistatus in ('A','R') and  siid = :userId `;
+    query += `and sistatus in ('A','R') and and sistatus i and  siid = :userId `;
     bind.userId = payload.userId;
   } else if (payload.userType === "SUP") {
     query += `and superstatus in ('A','R') and superid  = :userId `;
