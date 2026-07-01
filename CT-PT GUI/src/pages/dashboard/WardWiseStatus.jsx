@@ -21,7 +21,6 @@ const WardWiseStatus = ({ filters }) => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
 
-  // Helper to get today's date in YYYY-MM-DD
   function getTodayDate() {
     const today = new Date();
     const year = today.getFullYear();
@@ -30,7 +29,6 @@ const WardWiseStatus = ({ filters }) => {
     return `${year}-${month}-${day}`;
   }
 
-  // Format date from YYYY-MM-DD to DD-MM-YYYY for the API
   const formatDateForApi = (dateStr) => {
     if (!dateStr) return "";
     const parts = dateStr.split("-");
@@ -78,26 +76,33 @@ const WardWiseStatus = ({ filters }) => {
     fetchData();
   }, [userId, selectedDate, filters.ward]);
 
-  // Cleanup chart on unmount
+  // Cleanup on unmount only
   useEffect(() => {
     return () => {
+      chartInstance.current?.__resizeObserver?.disconnect();
       chartInstance.current?.dispose();
       chartInstance.current = null;
     };
   }, []);
 
-  // Update chart when data changes
+  // Update chart whenever chartData changes
   useEffect(() => {
-    if (!chartRef.current || chartData.length === 0) return;
-
-    if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current);
-      const ro = new ResizeObserver(() => {
-        chartInstance.current?.resize();
-      });
-      ro.observe(chartRef.current);
-      chartInstance.current.__resizeObserver = ro;
+    if (!chartRef.current) return;
+    if (chartInstance.current) {
+      chartInstance.current.__resizeObserver?.disconnect();
+      chartInstance.current.dispose();
+      chartInstance.current = null;
     }
+
+    if (chartData.length === 0) return;
+
+    chartInstance.current = echarts.init(chartRef.current);
+
+    const ro = new ResizeObserver(() => {
+      chartInstance.current?.resize();
+    });
+    ro.observe(chartRef.current);
+    chartInstance.current.__resizeObserver = ro;
 
     const wards = chartData.map((item) => `Ward ${item.WARDS}`);
     const cleaned = chartData.map((item) => item.CLEANED || 0);
@@ -163,48 +168,10 @@ const WardWiseStatus = ({ filters }) => {
     chartInstance.current.resize();
   }, [chartData]);
 
-  if (loading) {
-    return (
-      <div className="ward-card">
-        <h6 className="ward-title">Ward Wise Cleaning Status</h6>
-        <div className="d-flex justify-content-center py-4">
-          <div
-            className="spinner-border spinner-border-sm text-primary"
-            role="status"
-          >
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (chartData.length === 0) {
-    return (
-      <div className="ward-card">
-        <h6 className="ward-title">Ward Wise Cleaning Status</h6>
-        <div className="filter-group mb-3">
-          <label htmlFor="statusDate" className="fw-semibold me-2">
-            Select Date
-          </label>
-          <input
-            type="date"
-            id="statusDate"
-            className="filter-input"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ width: "auto" }}
-          />
-        </div>
-        <p className="text-muted text-center py-3">No data available</p>
-      </div>
-    );
-  }
-
   return (
     <div className="ward-card">
-      <div className="d-flex justify-content-between align-items-center">
-        <h6 className="ward-title">Ward Wise Cleaning Status</h6>
+      <div className="d-flex justify-content-between align-items-center mb-2">
+        <h6 className="ward-title mb-0">Ward Wise Cleaning Status</h6>
         <div
           className="filter-group"
           style={{ flexDirection: "row", gap: "8px", alignItems: "center" }}
@@ -226,7 +193,30 @@ const WardWiseStatus = ({ filters }) => {
           />
         </div>
       </div>
-      <div ref={chartRef} className="ward-chart" />
+
+      {loading && (
+        <div className="d-flex justify-content-center py-4">
+          <div
+            className="spinner-border spinner-border-sm text-primary"
+            role="status"
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && chartData.length === 0 && (
+        <p className="text-muted text-center py-3">No data available</p>
+      )}
+
+      <div
+        ref={chartRef}
+        className="ward-chart"
+        style={{
+          display: loading || chartData.length === 0 ? "none" : "block",
+        }}
+      />
     </div>
   );
 };

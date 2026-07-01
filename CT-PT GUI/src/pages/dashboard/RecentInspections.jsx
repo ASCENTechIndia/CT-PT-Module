@@ -77,7 +77,7 @@ const RecentInspections = ({ filters }) => {
       params.append("fromDate", formatDateForApi(filters.fromDate) || "");
       params.append("toDate", formatDateForApi(filters.toDate) || "");
       if (filters.ward) params.append("ward", filters.ward);
-      if (filters.vendor) params.append("vendor", vendor);
+      if (filters.vendor) params.append("vendor", filters.vendor);
       params.append("userType", userType);
 
       const response = await apiClient.get(
