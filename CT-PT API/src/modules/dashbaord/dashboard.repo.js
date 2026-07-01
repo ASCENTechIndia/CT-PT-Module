@@ -182,11 +182,37 @@ async function getRecentInspectionRepo(payload) {
   return result.rows;
 }
 
-async function getCleaningComplienceRepo() {
-  const query = ``;
+async function getCleaningComplienceRepo(payload) {
+  let query = `SELECT
+    COUNT(c.num_ctpttype_id) AS Total_Toilets,
+    SUM(CASE WHEN e.var_empctptwork_status = 'A' THEN 1 ELSE 0 END) AS Cleaned,
+    SUM(CASE WHEN e.var_empctptwork_status = 'C' THEN 1 ELSE 0 END) AS Pending,
+    SUM(CASE WHEN e.var_empctptwork_status = 'R' THEN 1 ELSE 0 END) AS Rejected,
+    SUM(CASE
+            WHEN e.num_empctptwork_toiletid IS NULL
+                 OR e.var_empctptwork_status = 'P'
+            THEN 1
+            ELSE 0
+        END) AS Not_Cleaned
+    FROM aorts_ctptlist_mas c
+    LEFT JOIN aorts_empctptwork_mst e
+          ON e.num_empctptwork_toiletid = c.num_ctpttype_id
+          AND TRUNC(e.dat_empctptwork_date) = TRUNC(sysdate) `;
   const bind = {};
+
+  if (payload.userType === "SI") {
+    query += `WHERE (:userId IS NOT NULL AND c.var_ctpttype_sanitinspctorid = :userId) `;
+    bind.userId = payload.userId;
+  } else if (payload.userType === "SUP") {
+    query += `WHERE (:userId IS NOT NULL AND c.var_ctpttype_suppid = :userId) `;
+    bind.userId = payload.userId;
+  }
+  if (payload.ward) {
+    query += `and c.num_ctpttype_wardid = :ward `;
+    bind.ward = payload.ward;
+  }
   const result = await executeQuery(query, bind);
-  return result;
+  return result.rows[0];
 }
 
 async function getCitizenComplaintStatusRepo(payload) {
@@ -265,9 +291,9 @@ async function getRecentComplaintRepo(payload) {
     query += `and superid = :userId `;
     bind.userId = payload.userId;
   }
-  if(payload.ward){
-    query += `and wardid = :ward`
-    bind.ward = payload.ward
+  if (payload.ward) {
+    query += `and wardid = :ward`;
+    bind.ward = payload.ward;
   }
   const result = await executeQuery(query, bind);
   return result.rows;

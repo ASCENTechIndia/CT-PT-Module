@@ -96,9 +96,10 @@ async function getRecentInspectionController(req, res, next) {
   }
 }
 
-async function getCleaningComplienceController(req, res) {
+async function getCleaningComplienceController(req, res, next) {
   try {
-    const result = await getCleaningComplienceService();
+    const payload = req.query
+    const result = await getCleaningComplienceService(payload);
 
     logApiSuccess(
       req,

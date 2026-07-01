@@ -25,8 +25,8 @@ async function getRecentInspectionService(payload) {
   return getRecentInspectionRepo(payload);
 }
 
-async function getCleaningComplienceService() {
-  return getCleaningComplienceRepo();
+async function getCleaningComplienceService(payload) {
+  return getCleaningComplienceRepo(payload);
 }
 
 async function getCitizenComplaintStatusService(payload) {
