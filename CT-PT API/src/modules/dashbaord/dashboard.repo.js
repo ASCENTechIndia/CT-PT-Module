@@ -124,7 +124,6 @@ async function getWardWiseCleaningStatusRepo(payload) {
   }
   query += ` GROUP BY c.num_ctpttype_wardid
             ORDER BY c.num_ctpttype_wardid `;
-  console.log("query :", query);
   const result = await executeQuery(query, bind);
   return result.rows;
 }

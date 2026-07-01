@@ -30,29 +30,12 @@ const WardWiseStatus = ({ filters }) => {
     return `${year}-${month}-${day}`;
   }
 
-  // Format date from YYYY-MM-DD to DD-JAN-YYYY for the API
+  // Format date from YYYY-MM-DD to DD-MM-YYYY for the API
   const formatDateForApi = (dateStr) => {
     if (!dateStr) return "";
     const parts = dateStr.split("-");
     if (parts.length !== 3) return dateStr;
-    const [year, month, day] = parts;
-    const months = [
-      "JAN",
-      "FEB",
-      "MAR",
-      "APR",
-      "MAY",
-      "JUN",
-      "JUL",
-      "AUG",
-      "SEP",
-      "OCT",
-      "NOV",
-      "DEC",
-    ];
-    const monthIndex = parseInt(month, 10) - 1;
-    const monthAbbr = months[monthIndex] || month;
-    return `${day}-${monthAbbr}-${year}`;
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
 
   const buildParams = () => {
