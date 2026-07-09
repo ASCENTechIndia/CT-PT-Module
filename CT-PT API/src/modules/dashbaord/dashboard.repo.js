@@ -130,10 +130,10 @@ async function getWardWiseCleaningStatusRepo(payload) {
   }
 
   if (payload.userType === "SI") {
-    query += ` WHERE (:userId IS NOT NULL AND c.var_ctpttype_sanitinspctorid = :userId) `;
+    query += ` AND (:userId IS NOT NULL AND c.var_ctpttype_sanitinspctorid = :userId) `;
     bind.userId = payload.userId;
   } else if (payload.userType === "SUP") {
-    query += ` WHERE (:userId IS NOT NULL AND c.var_ctpttype_suppid = :userId) `;
+    query += ` AND (:userId IS NOT NULL AND c.var_ctpttype_suppid = :userId) `;
     bind.userId = payload.userId;
   }
 
@@ -143,6 +143,8 @@ async function getWardWiseCleaningStatusRepo(payload) {
   }
   query += ` GROUP BY c.num_ctpttype_wardid
             ORDER BY c.num_ctpttype_wardid `;
+
+            console.log("full query :", query)
   const result = await executeQuery(query, bind);
   return result.rows;
 }
