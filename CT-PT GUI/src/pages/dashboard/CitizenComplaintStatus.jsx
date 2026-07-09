@@ -7,6 +7,12 @@ import { useAuth } from "../../context/AuthContext";
 const CitizenComplaintStatus = ({ filters }) => {
   const { user } = useAuth();
   const ulbId = user?.orgId || "";
+  const userId = user?.userId || "";
+  const userType = !user.designation
+    ? "ADMIN"
+    : user.designation === "Sanitary Inspector"
+      ? "SI"
+      : "SUP";
   const { setLoader } = useLoader();
 
   const [data, setData] = useState({
@@ -36,8 +42,10 @@ const CitizenComplaintStatus = ({ filters }) => {
       setLoading(true);
       const params = new URLSearchParams();
       params.append("ulbId", ulbId);
+      params.append("userId", userId);
       params.append("fromDate", formatDateForApi(filters.fromDate) || "");
       params.append("toDate", formatDateForApi(filters.toDate) || "");
+      params.append("userType", userType);
       if (filters.ward) params.append("ward", filters.ward);
 
       const response = await apiClient.get(

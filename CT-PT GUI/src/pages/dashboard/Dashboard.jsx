@@ -12,7 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 
 const Dashboard = () => {
   const [filters, setFilters] = useState({
-    fromDate: getTodayDate(),
+    fromDate: getCurrentMonthFirstDate(),
     toDate: getTodayDate(),
     ward: "",
     vendor: "",
@@ -26,6 +26,14 @@ const Dashboard = () => {
     const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
+
+  function getCurrentMonthFirstDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}-01`;
+}
 
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({ ...prev, [name]: value }));

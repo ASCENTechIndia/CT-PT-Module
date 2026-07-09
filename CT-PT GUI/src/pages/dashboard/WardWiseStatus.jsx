@@ -9,9 +9,11 @@ const WardWiseStatus = ({ filters }) => {
   const ulbId = user?.orgId || "";
   const userId = user?.userId || "";
   const userType = !user.designation
-    ? "ADMIN"
-    : user.designation === "Sanitary Inspector"
-      ? "SI"
+  ? "ADMIN"
+  : user.designation === "Sanitary Inspector"
+    ? "SI"
+    : user.designation === "Vendor"
+      ? "ADMIN"
       : "SUP";
   const { setLoader } = useLoader();
   const chartRef = useRef(null);
@@ -39,6 +41,7 @@ const WardWiseStatus = ({ filters }) => {
   const buildParams = () => {
     const params = new URLSearchParams();
     params.append("userId", userId);
+    params.append("ulbId", ulbId);
     params.append("date", formatDateForApi(selectedDate) || "");
     if (filters.ward) params.append("ward", filters.ward);
     params.append("userType", userType);

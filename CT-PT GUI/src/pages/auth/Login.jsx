@@ -13,7 +13,7 @@ export default function Login() {
   const { login } = useAuth();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const {
@@ -28,240 +28,240 @@ export default function Login() {
     },
   });
 
-  const onSubmit = async (values) => {
-    // console.log(values);
-    // e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    try {
-      // Validate inputs
-      if (!values.userId || !values.password) {
-        setError('User ID and password are required.');
-        setIsLoading(false);
-        return;
-      }
-
-      // if (values.password.length < 8) {
-      //   setError('Password must be at least 8 characters.');
-      //   setIsLoading(false);
-      //   return;
-      // }
-      const ipAddress = await GetIPAddress();
-      const payload = {
-        "userId": values.userId,
-        "password": values.password,
-        "macaddr": config.macAddress,
-        "ipaddr": ipAddress,
-        "hostname": config.hostName,
-        "source": config.source
-      };
-
-      // Simulate API call (replace with actual API)
-      const response = await apiClient.post(`/auth/login`, payload);
-
-      if (response.success) {
-        const userData = response?.data?.user;
-        login(userData);
-        reset();
-        userData.designation === "Supervisor" ? navigate("/supervisor-complaint-list") : navigate("/application-list-sanitary");
-      } else {
-        setError('Login failed. Please try again.');
-      }
-    } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  //  without sso
-  // const loginUser = async (userid, password) => {
-  //   try {
-  //     const ipAddress = await GetIPAddress();
-
-  //     const payload = {
-  //       userId: userid,
-  //       password,
-  //       macaddr: config.macAddress,
-  //       ipaddr: ipAddress,
-  //       hostname: config.hostName,
-  //       source: config.source,
-  //     };
-
-  //     // console.log("🚀 Login Payload:", payload);
-
-  //     const res = await apiClient.post("/auth/login", payload, {
-  //       withCredentials: true,
-  //     });
-
-  //     // console.log("✅ Login API Response:", res);
-
-  //     if (!res.success) {
-  //       throw new Error("Login failed. Please try again.");
-  //     }
-
-  //     const { token, user } = res.data;
-
-  //     localStorage.setItem("token", token);
-  //     localStorage.setItem("user", JSON.stringify(user));
-
-  //     return { token, user };
-  //   } catch (err) {
-  //     console.error("❌ Login Error:", err);
-  //     throw err;
-  //   }
-  // };
-
   // const onSubmit = async (values) => {
-  //   setError("");
+  //   // console.log(values);
+  //   // e.preventDefault();
+  //   setError('');
   //   setIsLoading(true);
 
   //   try {
+  //     // Validate inputs
   //     if (!values.userId || !values.password) {
-  //       setError("User ID and password are required.");
+  //       setError('User ID and password are required.');
+  //       setIsLoading(false);
   //       return;
   //     }
-  //     const ipAddress = await GetIPAddress();
 
+  //     // if (values.password.length < 8) {
+  //     //   setError('Password must be at least 8 characters.');
+  //     //   setIsLoading(false);
+  //     //   return;
+  //     // }
+  //     const ipAddress = await GetIPAddress();
   //     const payload = {
-  //       userId: values.userId,
-  //       password: values.password,
-  //       macaddr: config.macAddress,
-  //       ipaddr: ipAddress,
-  //       hostname: config.hostName,
-  //       source: config.source,
+  //       "userId": values.userId,
+  //       "password": values.password,
+  //       "macaddr": config.macAddress,
+  //       "ipaddr": ipAddress,
+  //       "hostname": config.hostName,
+  //       "source": config.source
   //     };
 
-  //     const response = await apiClient.post("/auth/login", payload);
+  //     // Simulate API call (replace with actual API)
+  //     const response = await apiClient.post(`/auth/login`, payload);
 
-  //     if (!response.success) {
-  //       setError("Login failed. Please try again.");
-  //       return;
-  //     }
-
-  //     const { token, user } = response.data;
-
-  //     // Store data
-  //     localStorage.setItem("token", token);
-  //     localStorage.setItem("user", JSON.stringify(user));
-
-  //     // Existing auth context
-  //     login(user);
-
-  //     // If you have separate admin context
-  //     // loginAdmin(user, token);
-
-  //     reset();
-
-  //     // OTP Flow
-  //     if (user.otpValidate === "Y") {
-  //       navigate("/otp-verification", {
-  //         state: {
-  //           userId: user.userId,
-  //           mobile: user.mobileNo,
-  //           ulbId: user.out_OrgId,
-  //           maskedMobile: user.mobileNo?.replace(
-  //             /^(\d{2})\d{6}(\d{2})$/,
-  //             "$1******$2",
-  //           ),
-  //         },
-  //       });
+  //     if (response.success) {
+  //       const userData = response?.data?.user;
+  //       login(userData);
+  //       reset();
+  //       userData.designation === "Supervisor" ? navigate("/dashboard") : navigate("/dashboard");
   //     } else {
-  //       // Existing Role Based Navigation
-  //       user.designation === "Supervisor"
-  //         ? navigate("/supervisor-complaint-list")
-  //         : navigate("/application-list-sanitary");
+  //       setError('Login failed. Please try again.');
   //     }
   //   } catch (err) {
-  //     setError(err.message || "Login failed. Please try again.");
+  //     setError(err.message || 'Login failed. Please try again.');
   //   } finally {
   //     setIsLoading(false);
   //   }
   // };
 
-  // const handleSilentSubmit = async (userid, password) => {
-  //   try {
-  //     // console.log("🚀 Silent Login Start");
-  //     // console.log("Userid:", userid);
-  //     // console.log("Password:", password);
+  //  without sso
+  const loginUser = async (userid, password) => {
+    try {
+      const ipAddress = await GetIPAddress();
 
-  //     setLoading(true);
+      const payload = {
+        userId: userid,
+        password,
+        macaddr: config.macAddress,
+        ipaddr: ipAddress,
+        hostname: config.hostName,
+        source: config.source,
+      };
 
-  //     const data = await loginUser(userid, password);
+      // console.log("🚀 Login Payload:", payload);
 
-  //     // console.log("✅ Login Response:", data);
+      const res = await apiClient.post("/auth/login", payload, {
+        withCredentials: true,
+      });
 
-  //     const { token, user } = data;
+      // console.log("✅ Login API Response:", res);
 
-  //     // console.log("Token:", token);
-  //     // console.log("User:", user);
+      if (!res.success) {
+        throw new Error("Login failed. Please try again.");
+      }
 
-  //     localStorage.setItem("token", token);
-  //     localStorage.setItem("user", JSON.stringify(user));
+      const { token, user } = res.data;
 
-  //     login(user, token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
-  //     navigate("/");
-  //   } catch (err) {
-  //     console.error("❌ Silent Login Error:", err);
-  //     setError(err.message || "Silent login failed.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+      return { token, user };
+    } catch (err) {
+      console.error("❌ Login Error:", err);
+      throw err;
+    }
+  };
 
-  // const validateTokenAndLogin = async () => {
-  //   try {
-  //     // console.log("🚀 Calling validate-token API...");
+  const onSubmit = async (values) => {
+    setError("");
+    setIsLoading(true);
 
-  //     const response = await axios.post(
-  //       `${API_BASE_URL}/auth/validate-token`,
-  //       {},
-  //       {
-  //         withCredentials: true,
-  //       },
-  //     );
+    try {
+      if (!values.userId || !values.password) {
+        setError("User ID and password are required.");
+        return;
+      }
+      const ipAddress = await GetIPAddress();
 
-  //     // console.log("✅ Validate Response:", response.data);
+      const payload = {
+        userId: values.userId,
+        password: values.password,
+        macaddr: config.macAddress,
+        ipaddr: ipAddress,
+        hostname: config.hostName,
+        source: config.source,
+      };
 
-  //     const outBinds = response?.data?.outBinds;
+      const response = await apiClient.post("/auth/login", payload);
 
-  //     // console.log("🔥 outBinds:", outBinds);
+      if (!response.success) {
+        setError("Login failed. Please try again.");
+        return;
+      }
 
-  //     if (Number(outBinds?.out_ErrorCode) === 9999) {
-  //       // console.log("✅ Token Valid");
+      const { token, user } = response.data;
 
-  //       await handleSilentSubmit(outBinds.out_userid, outBinds.out_encpassword);
+      // Store data
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
-  //       return true;
-  //     }
+      // Existing auth context
+      login(user);
 
-  //     // console.log(
-  //     //   "❌ Token Invalid:",
-  //     //   outBinds?.out_ErrorCode,
-  //     //   outBinds?.out_ErrorMsg
-  //     // );
+      // If you have separate admin context
+      // loginAdmin(user, token);
 
-  //     return false;
-  //   } catch (err) {
-  //     console.error("❌ Validate Token Error:", err);
-  //     console.error("❌ Response Data:", err?.response?.data);
+      reset();
 
-  //     return false;
-  //   }
-  // };
+      // OTP Flow
+      if (user.otpValidate === "Y") {
+        navigate("/otp-verification", {
+          state: {
+            userId: user.userId,
+            mobile: user.mobileNo,
+            ulbId: user.out_OrgId,
+            maskedMobile: user.mobileNo?.replace(
+              /^(\d{2})\d{6}(\d{2})$/,
+              "$1******$2",
+            ),
+          },
+        });
+      } else {
+        // Existing Role Based Navigation
+        user.designation === "Supervisor"
+          ? navigate("/dashboard")
+          : navigate("/dashboard");
+      }
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // useEffect(() => {
-  //   debugger;
-  //   const checkSession = async () => {
-  //     const ok = await validateTokenAndLogin();
-  //     if (!ok) {
-  //       window.location.href = "https://nagarkaryavalinewuat.com/";
-  //     }
-  //   };
-  //   checkSession();
-  // }, []);
+  const handleSilentSubmit = async (userid, password) => {
+    try {
+      // console.log("🚀 Silent Login Start");
+      // console.log("Userid:", userid);
+      // console.log("Password:", password);
+
+      setLoading(true);
+
+      const data = await loginUser(userid, password);
+
+      // console.log("✅ Login Response:", data);
+
+      const { token, user } = data;
+
+      // console.log("Token:", token);
+      // console.log("User:", user);
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      login(user, token);
+
+      navigate("/");
+    } catch (err) {
+      console.error("❌ Silent Login Error:", err);
+      setError(err.message || "Silent login failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateTokenAndLogin = async () => {
+    try {
+      // console.log("🚀 Calling validate-token API...");
+
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/validate-token`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+
+      // console.log("✅ Validate Response:", response.data);
+
+      const outBinds = response?.data?.outBinds;
+
+      // console.log("🔥 outBinds:", outBinds);
+
+      if (Number(outBinds?.out_ErrorCode) === 9999) {
+        // console.log("✅ Token Valid");
+
+        await handleSilentSubmit(outBinds.out_userid, outBinds.out_encpassword);
+
+        return true;
+      }
+
+      // console.log(
+      //   "❌ Token Invalid:",
+      //   outBinds?.out_ErrorCode,
+      //   outBinds?.out_ErrorMsg
+      // );
+
+      return false;
+    } catch (err) {
+      console.error("❌ Validate Token Error:", err);
+      console.error("❌ Response Data:", err?.response?.data);
+
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    debugger;
+    const checkSession = async () => {
+      const ok = await validateTokenAndLogin();
+      if (!ok) {
+        window.location.href = "https://nagarkaryavalinewuat.com/";
+      }
+    };
+    checkSession();
+  }, []);
 
   return (
     <>

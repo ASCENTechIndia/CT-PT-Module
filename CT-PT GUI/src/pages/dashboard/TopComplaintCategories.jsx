@@ -8,9 +8,11 @@ const TopComplaintCategories = ({ filters }) => {
   const ulbId = user?.orgId || "";
   const userId = user?.userId || "";
   const userType = !user.designation
-    ? "ADMIN"
-    : user.designation === "Sanitary Inspector"
-      ? "SI"
+  ? "ADMIN"
+  : user.designation === "Sanitary Inspector"
+    ? "SI"
+    : user.designation === "Vendor"
+      ? "ADMIN"
       : "SUP";
   const { setLoader } = useLoader();
 

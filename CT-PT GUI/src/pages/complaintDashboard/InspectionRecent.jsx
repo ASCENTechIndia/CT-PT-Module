@@ -2,20 +2,24 @@ import React, { useState, useEffect } from "react";
 import apiClient from "../../services/apiClient";
 import { useLoader } from "../../context/LoaderContext";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const InspectionRecent = ({ filters }) => {
   const { user } = useAuth();
   const ulbId = user?.orgId || "";
   const userId = user?.userId || "";
   const userType = !user.designation
-    ? "ADMIN"
-    : user.designation === "Sanitary Inspector"
-      ? "SI"
+  ? "ADMIN"
+  : user.designation === "Sanitary Inspector"
+    ? "SI"
+    : user.designation === "Vendor"
+      ? "ADMIN"
       : "SUP";
   const { setLoader } = useLoader();
 
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const Navigate = useNavigate();
 
   // Format date from YYYY-MM-DD to DD-MM-YYYY for API
   const formatDateForApi = (dateStr) => {
@@ -115,7 +119,7 @@ const InspectionRecent = ({ filters }) => {
   if (loading) {
     return (
       <div className="inspections-card">
-        <h6 className="inspections-title">Recent Inspections</h6>
+        <h6 className="inspections-title">Recent Complaints</h6>
         <div className="d-flex justify-content-center py-4">
           <div
             className="spinner-border spinner-border-sm text-primary"
@@ -131,15 +135,15 @@ const InspectionRecent = ({ filters }) => {
   if (inspections.length === 0) {
     return (
       <div className="inspections-card">
-        <h6 className="inspections-title">Recent Inspections</h6>
-        <p className="text-muted text-center py-3">No inspections found</p>
+        <h6 className="inspections-title">Recent Complaints</h6>
+        <p className="text-muted text-center py-3">No complaints found</p>
       </div>
     );
   }
 
   return (
     <div className="inspections-card">
-      <h6 className="inspections-title">Recent Inspections</h6>
+      <h6 className="inspections-title">Recent Complaints</h6>
       <div
         className="inspections-table-wrapper"
         style={{ height: "auto", maxHeight: "350px", overflowY: "auto" }}
@@ -148,12 +152,11 @@ const InspectionRecent = ({ filters }) => {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Ward / Prabhag</th>
-              <th>Toilet ID / Name</th>
+              <th>Ward</th>
+              <th>Toilet</th>
               <th>Citizen</th>
               <th>Mukadam Status</th>
               <th>SI Status</th>
-              <th>Details</th>
             </tr>
           </thead>
           <tbody>
@@ -168,22 +171,20 @@ const InspectionRecent = ({ filters }) => {
                 <td>{row.citizen}</td>
                 <td>{getStatusBadge(row.superStatus)}</td>
                 <td>{getStatusBadge(row.siStatus)}</td>
-                <td>
-                  <button
-                    className="view-btn"
-                    onClick={() => alert(`View complaint #${row.complaintId}`)}
-                  >
-                    View &raquo;
-                  </button>
-                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="inspections-footer">
-        <button className="view-all-btn">View All Inspections &raquo;</button>
+
+       { userType !== "ADMIN" && (
+<div className="inspections-footer">
+        <button className="view-all-btn" onClick={()=>Navigate({
+          pathname: userType == 'SI' ? "/resolved-complaint" : "/supervisor-complaint-list"
+        })}>View All Inspections &raquo;</button>
       </div>
+       )}
+      
     </div>
   );
 };

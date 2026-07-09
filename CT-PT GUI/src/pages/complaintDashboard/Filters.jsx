@@ -30,8 +30,8 @@ const Filters = ({ filters, onFilterChange, onClearFilters }) => {
       try {
         setLoader(true);
         const [wardRes, vendorRes] = await Promise.allSettled([
-          apiClient.get(`/registerComplaint/wardList?ulbid=${ulbId}`),
-          apiClient.get(`/registerComplaint/vendorList?ulbid=${ulbId}`),
+          apiClient.get(`/dashboard/wardList?ulbid=${ulbId}&userId=${user.userId}${user.designation ? `&userType=${user.designation}` : ""}`),
+                    apiClient.get(`/registerComplaint/vendorList?ulbid=${ulbId}`),
         ]);
 
         // Ward options

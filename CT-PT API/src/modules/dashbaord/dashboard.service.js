@@ -7,6 +7,7 @@ const {
   getCitizenComplaintStatusRepo,
   getBillOverviewRepo,
   getRecentComplaintRepo,
+  repoWardList
 } = require("./dashboard.repo");
 
 async function getSummaryCardsValueService(payload) {
@@ -41,6 +42,10 @@ async function getRecentComplaintService(payload) {
   return getRecentComplaintRepo(payload);
 }
 
+async function serviceWardList(payload) {
+  return repoWardList(payload);
+}
+
 module.exports = {
   getSummaryCardsValueService,
   getWardWiseCleaningStatusService,
@@ -50,4 +55,5 @@ module.exports = {
   getCitizenComplaintStatusService,
   getBillOverviewService,
   getRecentComplaintService,
+  serviceWardList
 };

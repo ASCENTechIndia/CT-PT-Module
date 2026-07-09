@@ -12,14 +12,14 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
   const [vendorOptions, setVendorOptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const statusOptions = [
-    { label: "All", value: "" },
-    { label: "Pending", value: "P" },
-    { label: "Assign", value: "ASSIGN" },
-    { label: "Completed", value: "COMPLETED" },
-    { label: "Approved", value: "APPROVED" },
-    { label: "Rejected", value: "REJECTED" },
-  ];
+  // const statusOptions = [
+  //   { label: "All", value: "" },
+  //   { label: "Pending", value: "P" },
+  //   { label: "Assign", value: "ASSIGN" },
+  //   { label: "Completed", value: "COMPLETED" },
+  //   { label: "Approved", value: "APPROVED" },
+  //   { label: "Rejected", value: "REJECTED" },
+  // ];
 
   useEffect(() => {
     if (!ulbId) {
@@ -30,7 +30,7 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
       try {
         setLoader(true);
         const [wardRes, vendorRes] = await Promise.allSettled([
-          apiClient.get(`/registerComplaint/wardList?ulbid=${ulbId}`),
+          apiClient.get(`/dashboard/wardList?ulbid=${ulbId}&userId=${user.userId}${user.designation ? `&userType=${user.designation}` : ""}`),
           apiClient.get(`/registerComplaint/vendorList?ulbid=${ulbId}`),
         ]);
 
@@ -49,7 +49,7 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
         if (vendorRes.status === "fulfilled" && vendorRes.value?.success) {
           const vendors = vendorRes.value.data.map((item) => ({
             label: item.VAR_VENDOR_FORMNM,
-            value: String(item.NUM_VENDOR_ID),
+            value: item.NUM_VENDOR_ID,
           }));
           setVendorOptions(vendors);
         } else {
@@ -134,7 +134,7 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
         </select>
       </div>
 
-      <div className="filter-group">
+      {/* <div className="filter-group">
         <label htmlFor="complaintStatus">Complaint Status</label>
         <select
           id="complaintStatus"
@@ -149,7 +149,7 @@ const DashboardFilter = ({ filters, onFilterChange, onClearFilters }) => {
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
 
       <div className="filter-group filter-actions">
         <button className="btn-clear-filters" onClick={onClearFilters}>

@@ -8,6 +8,7 @@ const {
   getCitizenComplaintStatusService,
   getBillOverviewService,
   getRecentComplaintService,
+  serviceWardList
 } = require("./dashboard.service");
 
 async function getSummaryCardValuesController(req, res, next) {
@@ -176,6 +177,17 @@ async function getRecentComplaintController(req, res, next) {
   }
 }
 
+async function getWardList(req, res, next) {
+  try {
+    const rows = await serviceWardList(req.query);
+    logApiSuccess( req, 200, { count: rows?.length || 0 }, 'Ward List Report completed' );
+    return res.ok(rows);
+  } catch (error) {
+    logApiError(req, 500, error.message, 'Ward List Report search error');
+    return next(error);
+  }
+}
+
 module.exports = {
   getSummaryCardValuesController,
   getWardWiseCleaningStatusController,
@@ -185,4 +197,5 @@ module.exports = {
   getCitizenComplaintStatusController,
   getBillOverviewController,
   getRecentComplaintController,
+  getWardList
 };

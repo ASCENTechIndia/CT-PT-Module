@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
 
 const billsData = {
-  total: 312,
-  approved: { count: 248, pct: 79.49 },
-  rejected: { count: 64, pct: 20.51 },
+  total: 0,
+  approved: { count: 0, pct: 0 },
+  rejected: { count: 0, pct: 0 },
 };
 
 const BillsOverview = ({ filters }) => {

@@ -9,9 +9,11 @@ const RecentInspections = ({ filters }) => {
   const ulbId = user?.orgId || "";
   const userId = user?.userId || "";
   const userType = !user.designation
-    ? "ADMIN"
-    : user.designation === "Sanitary Inspector"
-      ? "SI"
+  ? "ADMIN"
+  : user.designation === "Sanitary Inspector"
+    ? "SI"
+    : user.designation === "Vendor"
+      ? "ADMIN"
       : "SUP";
   const { setLoader } = useLoader();
   const Navigate = useNavigate();
@@ -79,6 +81,8 @@ const RecentInspections = ({ filters }) => {
       if (filters.ward) params.append("ward", filters.ward);
       if (filters.vendor) params.append("vendor", filters.vendor);
       params.append("userType", userType);
+      params.append("ulbId", ulbId);
+      
 
       const response = await apiClient.get(
         `/dashboard/recent-inspection?${params.toString()}`,
@@ -183,9 +187,15 @@ const RecentInspections = ({ filters }) => {
           </tbody>
         </table>
       </div>
-      <div className="inspections-footer">
-        <button onClick={()=> Navigate("/application-list")} className="view-all-btn">View All Inspections &raquo;</button>
+
+      { userType !== "ADMIN" && (
+ <div className="inspections-footer">
+        <button onClick={()=> Navigate({
+          pathname: userType == 'SI' ?  "/application-list-sanitary" : "/application-list"
+        })} className="view-all-btn">View All Inspections &raquo;</button>
       </div>
+      )}
+     
     </div>
   );
 };

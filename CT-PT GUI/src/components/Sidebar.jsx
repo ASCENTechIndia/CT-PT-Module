@@ -12,6 +12,17 @@ export default function Sidebar() {
     const allLinks = {
       supervisor: [
         {
+          path: "/dashboard",
+          icon: "bi-bar-chart",
+          label: "Dashboard",
+        },
+        {
+          path: "/complaint-dashboard",
+          icon: "bi-bar-chart",
+          label: "Complaints Dashboard",
+        },
+
+        {
           path: "/supervisor-complaint-list",
           icon: "bi-envelope-paper",
           label: "Complaints",
@@ -28,6 +39,16 @@ export default function Sidebar() {
         },
       ],
       sanitary: [
+        {
+          path: "/dashboard",
+          icon: "bi-bar-chart",
+          label: "Dashboard",
+        },
+        {
+          path: "/complaint-dashboard",
+          icon: "bi-bar-chart",
+          label: "Complaints Dashboard",
+        },
         {
           path: "/all-complaint",
           icon: "bi-file-earmark-text",
@@ -49,10 +70,22 @@ export default function Sidebar() {
           label: "Fine Report",
         },
       ],
+      vendor: [
+        {
+          path: "/dashboard",
+          icon: "bi-bar-chart",
+          label: "Dashboard",
+        },
+        {
+          path: "/complaint-dashboard",
+          icon: "bi-bar-chart",
+          label: "Complaints Dashboard",
+        }]
     };
 
     if (user?.designation === "Supervisor") return allLinks.supervisor;
     if (user?.designation === "Sanitary Inspector") return allLinks.sanitary;
+    if (user?.designation === "Vendor") return allLinks.vendor;
     return [];
   };
 

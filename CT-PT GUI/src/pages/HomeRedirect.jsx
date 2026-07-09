@@ -7,13 +7,13 @@ const HomeRedirect = () => {
 
   switch (designation) {
     case "Supervisor":
-      return <Navigate to="/supervisor-complaint-list" replace />;
+      return <Navigate to="/dashboard" replace />;
 
     case "Sanitary Inspector":
-      return <Navigate to="/all-complaint" replace />;
+      return <Navigate to="/dashboard" replace />;
 
     default:
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/dashboard" replace />;
   }
 };
 

@@ -8,6 +8,7 @@ const {
   getCitizenComplaintStatusController,
   getBillOverviewController,
   getRecentComplaintController,
+  getWardList
 } = require("./dashboard.controller");
 
 const router = express.Router();
@@ -23,5 +24,6 @@ router.get("/bill-overview", getBillOverviewController);
 
 // Comlaint dashboard
 router.get("/recent-complaint", getRecentComplaintController);
+router.get('/wardList', getWardList);
 
 module.exports = router;

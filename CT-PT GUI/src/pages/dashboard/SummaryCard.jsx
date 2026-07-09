@@ -17,9 +17,11 @@ const SummaryCards = ({ filters }) => {
   const userId = user?.userId || "";
   const ulbId = user?.orgId || "";
   const userType = !user.designation
-    ? "ADMIN"
-    : user.designation === "Sanitary Inspector"
-      ? "SI"
+  ? "ADMIN"
+  : user.designation === "Sanitary Inspector"
+    ? "SI"
+    : user.designation === "Vendor"
+      ? "ADMIN"
       : "SUP";
   const { setLoader } = useLoader();
 

@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import Layout from "../../components/Layout";
 import InspectionRecent from "./InspectionRecent";
-import TopComplaint from "./TopComplaint";
 import CitizenComplaintSummary from "./CitizenComplaintSummary";
 import { useAuth } from "../../context/AuthContext";
 import Filters from "./Filters";
+import TopComplaintCategories from "../dashboard/TopComplaintCategories";
 
 const ComplaintDashboard = () => {
   const { user } = useAuth();
   const ulbId = user?.orgId;
 
   const [filters, setFilters] = useState({
-    fromDate: getTodayDate(),
+    fromDate: getCurrentMonthFirstDate(),
     toDate: getTodayDate(),
     ward: "",
     vendor: "",
@@ -25,6 +25,14 @@ const ComplaintDashboard = () => {
     const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
+
+  function getCurrentMonthFirstDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}-01`;
+}
 
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -57,7 +65,7 @@ const ComplaintDashboard = () => {
 
         <div className="row mt-3">
           <div className="col-lg-5 col-12">
-            <TopComplaint filters={filters} />
+            <TopComplaintCategories filters={filters} />
           </div>
           <div className="col-lg-7 col-12 mt-lg-0 mt-3">
             <InspectionRecent filters={filters} />
