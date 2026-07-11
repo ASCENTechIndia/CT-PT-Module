@@ -149,16 +149,12 @@ const ApplicationList = () => {
   };
 
   // Format date
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+ const formatDate = (dateString) => {
+  if (!dateString) return "";
+
+  const [year, month, day] = dateString.split("T")[0].split("-");
+  return `${day}/${month}/${year}`;
+};
 
   // Group images by stage
   const getImagesByStage = () => {

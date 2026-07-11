@@ -25,7 +25,11 @@ const complaintStatusSchema = z.object({
   si_status: z.string().optional(),
   si_remrk: z.string().optional(),
   wardno: z.coerce.number().int().positive(),
-  ulbid: z.coerce.number().int().positive(),
+   ulbId: z.union([
+    z.string(),
+    z.number()
+  ]).transform((val) => Number(val))
+   .pipe(z.number().int().positive()),
   vendorId: z.coerce.number().int().positive().optional(),
   solvedImg1: z.string().nullable().optional(),
   solvedImg2: z.string().nullable().optional(),

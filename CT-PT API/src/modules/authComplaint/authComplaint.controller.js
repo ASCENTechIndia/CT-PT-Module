@@ -294,6 +294,7 @@ async function resolvedListbyVendor(req, res, next) {
         VENDEREMARK: row.VENDEREMARK,
         SUPERSTATUS: row.SUPERSTATUS,
         SUPERREMARK: row.SUPERREMARK,
+        COMPLAINTTYPE: row.COMPLTYPE_NAME,
       };
 
       // Only include image fields if they are strings (base64) and not LOB objects
@@ -603,7 +604,7 @@ async function complaintStatusUpdate(req, res, next) {
       si_status: body.si_status,
       si_remrk: body.si_remrk,
       wardno: body.wardno,
-      ulbid: body.ulbid,
+      ulbid: Number(body.ulbid || body.ulbId),
       vendorId: body.vendorId,
       solvedImg1: body.solvedImg1,
       solvedImg2: body.solvedImg2,
@@ -674,7 +675,7 @@ async function complaintWorkStatusIns(req, res, next) {
 
     const payload = {
       userId: body.userId,
-      ulbId: body.ulbId,
+      ulbId: Number(body.ulbId),
       attndDate: formatDate(body.attndDate),
       attndLat: body.attndLat,
       attndLong: body.attndLong,

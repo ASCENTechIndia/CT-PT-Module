@@ -260,7 +260,8 @@ async function compListforSIRepo(
   let sql = `
      SELECT 
       e.num_empctptwork_id,
-      e.dat_empctptwork_date,
+      CAST(e.dat_empctptwork_date + 1 AS TIMESTAMP) AS dat_empctptwork_date,
+      --e.dat_empctptwork_date,
       e.num_empctptwork_id AS unique_id,
       u.var_user_username AS username,
       e.var_empctptwork_latitude,
@@ -516,7 +517,8 @@ async function rslvdListbyVendorRepo(
       a.complaintid,
       a.venderemark,
       a.superstatus,
-      a.superremark
+      a.superremark,
+      a.compltype_name
     FROM vw_ctptsuperwisercomplaint_list a
     WHERE a.ulbid = :ulbid
       AND a.superwiser_id = :supervisorId

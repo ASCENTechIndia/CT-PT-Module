@@ -864,17 +864,17 @@ const SupervisorComplaintsList = () => {
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-muted">
-                      Toilet
+                      Toilet Name
                     </label>
                     <p className="h6 mb-0">
-                      {selectedComplaint.NUM_COMPLAINT_TOILET}
+                      {selectedComplaint.LOCATION}
                     </p>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-muted">
-                      Address
+                      Complaint Type
                     </label>
-                    <p className="h6 mb-0">{selectedComplaint.LOCATION}</p>
+                    <p className="h6 mb-0">{selectedComplaint.COMPLAINTTYPE}</p>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-muted">
